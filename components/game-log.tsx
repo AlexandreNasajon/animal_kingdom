@@ -19,7 +19,7 @@ export function GameLog({ logs }: GameLogProps) {
   }, [logs])
 
   return (
-    <Card className="border border-green-700 bg-green-900/40 shadow-md">
+    <Card className="border border-green-700 bg-green-900 shadow-md">
       <CardContent className="p-0.5">
         <ScrollArea className="h-[60px] w-full rounded-sm pr-2">
           <div ref={scrollRef} className="space-y-0.5">
@@ -30,7 +30,7 @@ export function GameLog({ logs }: GameLogProps) {
                 <div
                   key={index}
                   className={`rounded px-1 py-0.25 text-[8px] ${
-                    log.startsWith("AI") ? "bg-red-900/30 text-red-200" : "bg-green-900/30 text-green-200"
+                    log.startsWith("AI") ? "bg-red-900 text-red-200" : "bg-green-900 text-green-200"
                   }`}
                 >
                   {log}

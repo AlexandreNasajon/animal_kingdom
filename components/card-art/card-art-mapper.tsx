@@ -1,3 +1,5 @@
+"use client"
+
 import type { GameCard } from "@/types/game"
 import { AquaticArt } from "./aquatic-art"
 import { TerrestrialArt } from "./terrestrial-art"

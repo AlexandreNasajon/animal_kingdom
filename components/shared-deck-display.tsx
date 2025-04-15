@@ -1,4 +1,5 @@
 "use client"
+
 import { useState } from "react"
 import type { GameCard } from "@/types/game"
 import Image from "next/image"
@@ -13,13 +14,13 @@ interface SharedDeckDisplayProps {
 const getEnvironmentColor = (environment?: string) => {
   switch (environment) {
     case "terrestrial":
-      return "border-red-600 bg-red-900/20"
+      return "border-red-600 bg-red-900"
     case "aquatic":
-      return "border-blue-600 bg-blue-900/20"
+      return "border-blue-600 bg-blue-900"
     case "amphibian":
-      return "border-green-600 bg-green-900/20"
+      return "border-green-600 bg-green-900"
     default:
-      return "border-gray-600"
+      return "border-gray-600 bg-gray-800"
   }
 }
 
@@ -45,7 +46,7 @@ export function SharedDeckDisplay({ deckCount, discardPile }: SharedDeckDisplayP
         {/* Discard Pile */}
         <div className="flex flex-col items-center">
           <div
-            className="relative h-[60px] w-[45px] rounded-lg border border-green-700 bg-green-900/30 shadow-md card-zoom cursor-pointer"
+            className="relative h-[60px] w-[45px] rounded-lg border border-green-700 bg-green-900 shadow-md card-zoom cursor-pointer"
             onClick={() => setShowDiscardGallery(true)}
           >
             {topDiscard ? (

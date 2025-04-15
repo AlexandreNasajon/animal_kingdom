@@ -1,3 +1,5 @@
+"use client"
+
 import { useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -19,7 +21,7 @@ export default function Home() {
         <p className="text-sm text-green-200">Strategic card game of wildlife dominance</p>
       </div>
 
-      <Card className="w-full max-w-xs border-2 border-green-700 bg-green-900/60 shadow-xl">
+      <Card className="w-full max-w-xs border-2 border-green-700 bg-green-900 shadow-xl">
         <CardContent className="p-3">
           <Link href="/game/match?mode=ai">
             <Button
