@@ -39,7 +39,7 @@ export function OpponentHand({ cardCount, isThinking, playingCardId }: OpponentH
           }}
         >
           <Card
-            className={`h-[70px] w-[50px] cursor-not-allowed border border-red-700 bg-red-900 shadow-md
+            className={`h-[60px] w-[45px] cursor-not-allowed border border-red-700 bg-red-900 shadow-md
               ${animatedIndex === index ? "animate-ai-play-from-hand" : ""} 
               ${isThinking && index === 0 ? "animate-ai-thinking-card" : ""}
               relative overflow-hidden`}

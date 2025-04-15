@@ -33,7 +33,7 @@ export function SharedDeckDisplay({ deckCount, discardPile }: SharedDeckDisplayP
       <div className="flex items-center justify-center gap-2">
         {/* Deck */}
         <div className="flex flex-col items-center">
-          <div className="relative h-[60px] w-[45px] rounded-lg border border-green-600 bg-green-800 shadow-md card-zoom">
+          <div className="relative h-[50px] w-[40px] rounded-lg border border-green-600 bg-green-800 shadow-md card-zoom">
             {deckCount > 0 && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-xs font-bold text-white">{deckCount}</span>
@@ -46,7 +46,7 @@ export function SharedDeckDisplay({ deckCount, discardPile }: SharedDeckDisplayP
         {/* Discard Pile */}
         <div className="flex flex-col items-center">
           <div
-            className="relative h-[60px] w-[45px] rounded-lg border border-green-700 bg-green-900 shadow-md card-zoom cursor-pointer"
+            className="relative h-[50px] w-[40px] rounded-lg border border-green-700 bg-green-900 shadow-md card-zoom cursor-pointer"
             onClick={() => setShowDiscardGallery(true)}
           >
             {topDiscard ? (

@@ -14,7 +14,6 @@ export function ReleaseArt() {
       <line x1="30" y1="40" x2="70" y2="40" stroke="#A9A9A9" strokeWidth="2" />
       <line x1="30" y1="50" x2="70" y2="50" stroke="#A9A9A9" strokeWidth="2" />
       <line x1="30" y1="60" x2="70" y2="60" stroke="#A9A9A9" strokeWidth="2" />
-      <line x1="40" y1="30" x2="40" y y1="60" x2="70" y2="60" stroke="#A9A9A9" strokeWidth="2" />
       <line x1="40" y1="30" x2="40" y2="70" stroke="#A9A9A9" strokeWidth="2" />
       <line x1="50" y1="30" x2="50" y2="70" stroke="#A9A9A9" strokeWidth="2" />
       <line x1="60" y1="30" x2="60" y2="70" stroke="#A9A9A9" strokeWidth="2" />

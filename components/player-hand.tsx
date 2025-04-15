@@ -91,11 +91,23 @@ export function PlayerHand({ cards, onSelectCard, disabled, newCardIds = [], pla
             }}
           >
             <Card
-              className={`h-[100px] w-[70px] cursor-pointer border card-zoom ${
+              className={`h-[90px] w-[65px] cursor-pointer border card-zoom ${
                 card.type === "animal" ? getEnvironmentColor(card.environment) : "border-purple-600 bg-purple-900"
               } p-0.5 shadow-md ${disabled ? "opacity-70" : ""} 
                 ${isAnimating ? "animate-draw" : ""} 
-                ${isPlaying ? "animate-play" : ""}
+                ${
+                  isPlaying
+                    ? card.type === "impact"
+                      ? "animate-play-impact"
+                      : card.environment === "aquatic"
+                        ? "animate-play-aquatic"
+                        : card.environment === "terrestrial"
+                          ? "animate-play-terrestrial"
+                          : card.environment === "amphibian"
+                            ? "animate-play-amphibian"
+                            : "animate-play-animal"
+                    : ""
+                }
                 relative overflow-hidden`}
               onClick={() => !disabled && onSelectCard(index)}
               style={{

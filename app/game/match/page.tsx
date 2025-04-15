@@ -69,6 +69,10 @@ export default function GameMatch() {
   const [aiDiscardedCardIds, setAiDiscardedCardIds] = useState<number[]>([])
   const [aiDrawnCardCount, setAiDrawnCardCount] = useState(0)
 
+  // Add new animation states for discard/return to deck
+  const [discardingCardId, setDiscardingCardId] = useState<number | null>(null)
+  const [returningToDeckCardId, setReturningToDeckCardId] = useState<number | null>(null)
+
   // States for card selection modals
   const [showDiscardModal, setShowDiscardModal] = useState(false)
   const [discardCount, setDiscardCount] = useState(0)
@@ -80,6 +84,10 @@ export default function GameMatch() {
 
   // Add a new state for player card indices
   const [playerCardIndices, setPlayerCardIndices] = useState<number[]>([])
+
+  // First, add a new state for handling AI trap selection
+  // Add this with the other state declarations:
+  const [showAITrapModal, setShowAITrapModal] = useState(false)
 
   // Helper function to add logs
   const addLog = (message: string) => {
@@ -213,16 +221,65 @@ export default function GameMatch() {
         return
       }
 
-      // Log AI's action if no card was played or drawn
-      if (afterAIMove.message !== gameState.message) {
-        addLog(afterAIMove.message)
+      // Check if AI played Trap card
+      if (afterAIMove.message.includes("AI played Trap")) {
+        addLog("AI played Trap. You must choose an animal to give.")
+
+        // End AI thinking state
+        setIsAIThinking(false)
+
+        // Set up the trap selection modal
+        setTargetTitle("Choose Animal to Give")
+        setTargetDescription("AI played Trap. Select one of your animals to give to the AI.")
+        setTargetFilter(undefined)
+        setTargetCards(afterAIMove.playerField)
+        setPlayerCardIndices(Array.from({ length: afterAIMove.playerField.length }, (_, i) => i))
+
+        // Show the trap selection modal
+        setShowAITrapModal(true)
+
+        // Store the current state but don't end AI turn yet
+        setGameState({
+          ...afterAIMove,
+          pendingEffect: {
+            type: "trap",
+            forPlayer: false,
+          },
+        })
       }
+      // Check if player played Trap - need to let AI choose an animal
+      else if (
+        afterAIMove.pendingEffect &&
+        afterAIMove.pendingEffect.type === "trap" &&
+        afterAIMove.pendingEffect.forPlayer
+      ) {
+        // AI automatically selects the lowest value animal
+        addLog("AI is choosing an animal to give you.")
 
-      // End AI thinking state
-      setIsAIThinking(false)
+        // Resolve the effect automatically without showing a modal
+        const resolvedState = resolveEffect(afterAIMove, 0) // The AI choice logic is in resolveEffect
 
-      // End AI turn
-      setGameState(endAITurn(afterAIMove))
+        if (resolvedState.message !== afterAIMove.message) {
+          addLog(resolvedState.message)
+        }
+
+        // End AI thinking state
+        setIsAIThinking(false)
+
+        // End AI turn
+        setGameState(endAITurn(resolvedState))
+      } else {
+        // Log AI's action if no card was played or drawn
+        if (afterAIMove.message !== gameState.message) {
+          addLog(afterAIMove.message)
+        }
+
+        // End AI thinking state
+        setIsAIThinking(false)
+
+        // End AI turn
+        setGameState(endAITurn(afterAIMove))
+      }
     }, 1500)
 
     return () => clearTimeout(aiTimer)
@@ -258,6 +315,35 @@ export default function GameMatch() {
     setShowTargetModal(false)
   }
 
+  // Now add a handler for the AI trap selection
+  // Add this function with the other handlers:
+  // Handle AI trap selection
+  const handleAITrapSelection = (targetIndex: number | number[]) => {
+    if (!gameState || !gameState.pendingEffect) return
+
+    // Show discard animation for the selected card
+    const cardId = gameState.playerField[targetIndex as number].id
+    setDiscardingCardId(cardId)
+
+    // Resolve the trap effect after a short delay for animation
+    setTimeout(() => {
+      // Resolve the trap effect
+      const newState = resolveEffect(gameState, targetIndex as number)
+
+      // Log the effect resolution
+      if (newState.message !== gameState.message) {
+        addLog(newState.message)
+      }
+
+      // Clear the animation state
+      setDiscardingCardId(null)
+
+      // End AI's turn
+      setGameState(endAITurn(newState))
+      setShowAITrapModal(false)
+    }, 800)
+  }
+
   // Check for pending effects
   useEffect(() => {
     if (!gameState || !gameState.pendingEffect) return
@@ -276,6 +362,7 @@ export default function GameMatch() {
       case "hunter":
         setTargetTitle("Select Target")
         setTargetDescription("Select a terrestrial animal to destroy.")
+        // Updated to include amphibians as valid targets for terrestrial effects
         setTargetFilter((card) => card?.environment === "terrestrial" || card?.environment === "amphibian")
         setTargetCards(gameState.opponentField)
         setShowTargetModal(true)
@@ -286,6 +373,7 @@ export default function GameMatch() {
       case "fisher":
         setTargetTitle("Select Target")
         setTargetDescription("Select an aquatic animal to destroy.")
+        // Updated to include amphibians as valid targets for aquatic effects
         setTargetFilter((card) => card?.environment === "aquatic" || card?.environment === "amphibian")
         setTargetCards(gameState.opponentField)
         setShowTargetModal(true)
@@ -314,23 +402,13 @@ export default function GameMatch() {
         break
 
       case "confuse":
-        if (!gameState.pendingEffect.firstSelection) {
-          setTargetTitle("Select First Animal")
-          setTargetDescription("Select the first animal to exchange control.")
-          setTargetFilter(undefined)
-          setTargetCards([...gameState.playerField, ...gameState.opponentField])
-          setShowTargetModal(true)
-          // Mark player's cards
-          playerCardIndices = Array.from({ length: gameState.playerField.length }, (_, i) => i)
-        } else {
-          setTargetTitle("Select Second Animal")
-          setTargetDescription("Select the second animal to exchange control.")
-          setTargetFilter(undefined)
-          setTargetCards([...gameState.playerField, ...gameState.opponentField])
-          setShowTargetModal(true)
-          // Mark player's cards
-          playerCardIndices = Array.from({ length: gameState.playerField.length }, (_, i) => i)
-        }
+        setTargetTitle("Exchange Animals")
+        setTargetDescription("Select one of your animals and one of the opponent's animals to exchange control.")
+        setTargetFilter(undefined)
+        setTargetCards([...gameState.playerField, ...gameState.opponentField])
+        setShowTargetModal(true)
+        // Mark player's cards
+        playerCardIndices = Array.from({ length: gameState.playerField.length }, (_, i) => i)
         break
 
       case "domesticate":
@@ -366,12 +444,13 @@ export default function GameMatch() {
       case "epidemic":
         setTargetTitle("Select Target Animal")
         setTargetDescription(
-          "Select an animal. All animals of the same environment with more points will be sent to the bottom of the deck.",
+          "Select one of your animals. All animals of the same environment with more points will be sent to the bottom of the deck.",
         )
         setTargetFilter((card) => card?.type === "animal")
-        setTargetCards([...gameState.playerField, ...gameState.opponentField])
+        // Only show player's field for epidemic
+        setTargetCards(gameState.playerField)
         setShowTargetModal(true)
-        // Mark player's cards
+        // All cards are player's cards
         playerCardIndices = Array.from({ length: gameState.playerField.length }, (_, i) => i)
         break
 
@@ -401,16 +480,18 @@ export default function GameMatch() {
 
       case "cage":
         if (!gameState.pendingEffect.firstSelection) {
-          setTargetTitle("Select Animal from Hand")
-          setTargetDescription("Select an animal from your hand to send to the bottom of the deck.")
+          // First selection: animal from field to send to discard pile
+          setTargetTitle("Select Animal from Field")
+          setTargetDescription("Select one of your animals to send to the discard pile.")
           setTargetFilter((card) => card?.type === "animal")
-          setTargetCards(gameState.playerHand)
+          setTargetCards(gameState.playerField)
           setShowTargetModal(true)
           // All cards are player's cards
-          playerCardIndices = Array.from({ length: gameState.playerHand.length }, (_, i) => i)
+          playerCardIndices = Array.from({ length: gameState.playerField.length }, (_, i) => i)
         } else {
+          // Second selection: animal on opponent's field to gain control of
           setTargetTitle("Select Animal to Cage")
-          setTargetDescription("Select an animal on the field to gain control of.")
+          setTargetDescription("Select an opponent's animal to gain control of.")
           setTargetFilter((card) => card?.type === "animal")
           setTargetCards(gameState.opponentField)
           setShowTargetModal(true)
@@ -562,27 +643,88 @@ export default function GameMatch() {
   }
 
   // Handle target selection
-  const handleTargetConfirm = (targetIndex: number) => {
+  const handleTargetConfirm = (targetIndex: number | number[]) => {
     if (!gameState) return
 
-    // Resolve the effect
-    const newState = resolveEffect(gameState, targetIndex)
+    // Show appropriate animation based on the effect type
+    if (gameState.pendingEffect) {
+      const { type } = gameState.pendingEffect
 
-    // Log the effect resolution
-    if (newState.message !== gameState.message) {
-      addLog(newState.message)
+      // For effects that discard cards
+      if (["hunter", "fisher", "limit"].includes(type)) {
+        // Get the card ID for animation
+        const idx = targetIndex as number
+        const cardId = gameState.opponentField[idx].id
+        setDiscardingCardId(cardId)
+      }
+
+      // For effects that return cards to deck
+      else if (["scare", "epidemic", "compete", "prey"].includes(type)) {
+        // Handle single index or array of indices
+        if (typeof targetIndex === "number") {
+          let cardId
+          if (type === "epidemic") {
+            // For epidemic, we're only selecting from player field
+            cardId = gameState.playerField[targetIndex].id
+          } else if (type === "compete" || type === "prey") {
+            // For compete, we're selecting from player hand or field
+            cardId = gameState.playerHand[targetIndex].id
+          } else {
+            // For scare, we need to check if it's player or opponent field
+            const playerFieldLength = gameState.playerField.length
+            if (targetIndex < playerFieldLength) {
+              cardId = gameState.playerField[targetIndex].id
+            } else {
+              cardId = gameState.opponentField[targetIndex - playerFieldLength].id
+            }
+          }
+          setReturningToDeckCardId(cardId)
+        }
+      }
+      // Add animation for Cage card's first selection (sending to discard)
+      else if (type === "cage" && !gameState.pendingEffect.firstSelection) {
+        const cardId = gameState.playerField[targetIndex as number].id
+        setDiscardingCardId(cardId)
+      }
+      // Add animation for Cage card's second selection (gaining control)
+      else if (type === "cage" && gameState.pendingEffect.firstSelection) {
+        const cardId = gameState.opponentField[targetIndex as number].id
+        // Use a different animation for gaining control
+        setNewPlayerFieldCardId(cardId)
+      }
+      // Add animation for Trap card (when AI plays it and player selects)
+      else if (type === "trap" && !gameState.pendingEffect.forPlayer) {
+        const cardId = gameState.playerField[targetIndex as number].id
+        setDiscardingCardId(cardId)
+      }
     }
 
-    // If there's still a pending effect, don't end turn yet
-    if (newState.pendingEffect) {
-      setGameState(newState)
+    // Delay the effect resolution to allow animation to complete
+    setTimeout(() => {
+      // Resolve the effect
+      const newState = resolveEffect(gameState, targetIndex)
+
+      // Log the effect resolution
+      if (newState.message !== gameState.message) {
+        addLog(newState.message)
+      }
+
+      // Clear animation states
+      setDiscardingCardId(null)
+      setReturningToDeckCardId(null)
+      setNewPlayerFieldCardId(null)
+
+      // If there's still a pending effect, don't end turn yet
+      if (newState.pendingEffect) {
+        setGameState(newState)
+        setShowTargetModal(false)
+        return
+      }
+
+      // End player's turn
+      setGameState(endPlayerTurn(newState))
       setShowTargetModal(false)
-      return
-    }
-
-    // End player's turn
-    setGameState(endPlayerTurn(newState))
-    setShowTargetModal(false)
+    }, 800)
   }
 
   // Handle game restart
@@ -617,6 +759,7 @@ export default function GameMatch() {
         >
           <ArrowLeft className="h-3 w-3" /> Back
         </Button>
+        <div className="text-center text-sm font-bold text-green-300">BioQuest</div>
         <div className="flex gap-1">
           <Button
             variant="outline"
@@ -650,7 +793,7 @@ export default function GameMatch() {
         <div className="mb-0.5">
           <div className="mb-0.5 flex items-center justify-between">
             <div className="flex items-center gap-1">
-              <div className={`h-3 w-3 rounded-full bg-red-700 ${isAIThinking ? "animate-ai-thinking" : ""}`}></div>
+              <div className={`h-2.5 w-2.5 rounded-full bg-red-700 ${isAIThinking ? "animate-ai-thinking" : ""}`}></div>
               <span className="text-[8px] flex items-center gap-1">
                 AI {isAIThinking && <Brain className="h-2 w-2 animate-pulse" />}
                 {aiDrawingCards && <span className="text-yellow-300">(Drawing {aiDrawnCardCount} cards...)</span>}
@@ -692,6 +835,8 @@ export default function GameMatch() {
             isOpponent={true}
             points={gameState.opponentPoints}
             newCardId={newOpponentFieldCardId}
+            discardingCardId={discardingCardId}
+            returningToDeckCardId={returningToDeckCardId}
           />
         </div>
 
@@ -714,6 +859,8 @@ export default function GameMatch() {
             isOpponent={false}
             points={gameState.playerPoints}
             newCardId={newPlayerFieldCardId}
+            discardingCardId={discardingCardId}
+            returningToDeckCardId={returningToDeckCardId}
           />
           <div className="mt-0.5 flex items-center justify-between">
             <div className="flex items-center gap-1">
@@ -821,6 +968,31 @@ export default function GameMatch() {
         cards={targetCards}
         onConfirm={handleTargetConfirm}
         onCancel={handleCancelEffect}
+        title={targetTitle}
+        description={targetDescription}
+        filter={targetFilter}
+        playerCardIndices={playerCardIndices}
+      />
+
+      {/* AI Trap selection modal */}
+      <TargetSelectionModal
+        open={showAITrapModal}
+        onClose={() => setShowAITrapModal(false)}
+        cards={targetCards}
+        onConfirm={handleAITrapSelection}
+        onCancel={() => {
+          setShowAITrapModal(false)
+          // If player cancels, AI will choose the lowest value animal
+          if (gameState && gameState.playerField.length > 0) {
+            const lowestValueIndex = gameState.playerField
+              .map((card, index) => ({ card, index }))
+              .sort((a, b) => (a.card.points || 0) - (b.card.points || 0))[0].index
+            handleAITrapSelection(lowestValueIndex)
+          } else {
+            // If no animals on field, just end AI turn
+            setGameState(endAITurn(gameState!))
+          }
+        }}
         title={targetTitle}
         description={targetDescription}
         filter={targetFilter}

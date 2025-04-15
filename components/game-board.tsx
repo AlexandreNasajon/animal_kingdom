@@ -12,6 +12,8 @@ interface GameBoardProps {
   isOpponent: boolean
   points?: number
   newCardId?: number // ID of newly played card to animate
+  discardingCardId?: number | null // ID of card being discarded
+  returningToDeckCardId?: number | null // ID of card returning to deck
 }
 
 // Helper function to get environment color
@@ -42,7 +44,40 @@ const getEnvironmentBadgeColor = (environment?: string) => {
   }
 }
 
-export function GameBoard({ cards, isOpponent, points = 0, newCardId }: GameBoardProps) {
+// Helper function to get environment-specific animation
+const getEnvironmentAnimation = (environment?: string, id?: number) => {
+  // Base animations that cycle based on card ID
+  const baseAnimations = ["animate-breathe", "animate-wiggle", "animate-bounce-slow", "animate-sway"]
+  const baseAnimation = baseAnimations[(id || 0) % 4]
+
+  // Environment-specific animations
+  switch (environment) {
+    case "terrestrial":
+      return `${baseAnimation} animate-terrestrial`
+    case "aquatic":
+      return `${baseAnimation} animate-aquatic`
+    case "amphibian":
+      // Amphibians get a combined animation that includes both terrestrial and aquatic properties
+      return `${baseAnimation} animate-amphibian animate-aquatic animate-terrestrial`
+    default:
+      return baseAnimation
+  }
+}
+
+// Helper function to get impact card animation
+const getImpactAnimation = (id?: number) => {
+  const animations = ["animate-pulse-slow", "animate-glow", "animate-rotate"]
+  return animations[(id || 0) % 3]
+}
+
+export function GameBoard({
+  cards,
+  isOpponent,
+  points = 0,
+  newCardId,
+  discardingCardId,
+  returningToDeckCardId,
+}: GameBoardProps) {
   const isWinning = points >= 7
   const [animatedCardId, setAnimatedCardId] = useState<number | null>(null)
   const [hoveredCardIndex, setHoveredCardIndex] = useState<number | null>(null)
@@ -82,80 +117,100 @@ export function GameBoard({ cards, isOpponent, points = 0, newCardId }: GameBoar
             {isOpponent ? "Opponent's field is empty" : "Your field is empty"}
           </div>
         ) : (
-          cards.map((card, index) => (
-            <div
-              key={card.id}
-              className="card-zoom-container"
-              onMouseEnter={() => setHoveredCardIndex(index)}
-              onMouseLeave={() => setHoveredCardIndex(null)}
-              onClick={() => handleCardClick(card)}
-            >
-              <Card
-                className={`h-[70px] w-[50px] ${
-                  card.type === "animal" ? getEnvironmentColor(card.environment) : "border-purple-600 bg-purple-900"
-                } shadow-md card-zoom ${
-                  animatedCardId === card.id
-                    ? isOpponent
-                      ? "animate-ai-play border-2 border-red-500"
-                      : "animate-appear"
-                    : ""
-                } relative overflow-hidden cursor-pointer`}
+          cards.map((card, index) => {
+            // Determine which animation to use
+            let animationClass = ""
+
+            // Check if this card is being discarded
+            if (discardingCardId === card.id) {
+              animationClass = "animate-discard"
+            }
+            // Check if this card is being returned to deck
+            else if (returningToDeckCardId === card.id) {
+              animationClass = "animate-return-to-deck"
+            }
+            // Otherwise use the normal animations
+            else if (animatedCardId === card.id) {
+              animationClass = isOpponent ? "animate-ai-play" : "animate-appear"
+            }
+            // Idle animations based on card type and environment
+            else if (card.type === "animal") {
+              animationClass = getEnvironmentAnimation(card.environment, card.id)
+            } else {
+              animationClass = getImpactAnimation(card.id)
+            }
+
+            return (
+              <div
+                key={card.id}
+                className="card-zoom-container"
+                onMouseEnter={() => setHoveredCardIndex(index)}
+                onMouseLeave={() => setHoveredCardIndex(null)}
+                onClick={() => handleCardClick(card)}
               >
-                {/* Card frame decoration */}
-                <div className="absolute inset-0 border-4 border-transparent bg-gradient-to-br from-white/10 to-black/20 pointer-events-none"></div>
-                <div className="absolute inset-0 border border-white/10 rounded-sm pointer-events-none"></div>
+                <Card
+                  className={`h-[60px] w-[45px] ${
+                    card.type === "animal" ? getEnvironmentColor(card.environment) : "border-purple-600 bg-purple-900"
+                  } shadow-md card-zoom ${animationClass} relative overflow-hidden cursor-pointer`}
+                >
+                  {/* Card frame decoration */}
+                  <div className="absolute inset-0 border-4 border-transparent bg-gradient-to-br from-white/10 to-black/20 pointer-events-none"></div>
+                  <div className="absolute inset-0 border border-white/10 rounded-sm pointer-events-none"></div>
 
-                <CardContent className="flex h-full flex-col items-center justify-center p-0">
-                  <div className="relative h-full w-full overflow-hidden">
-                    {/* Use card art based on name */}
-                    {getCardArt(card)}
+                  <CardContent className="flex h-full flex-col items-center justify-center p-0">
+                    <div className="relative h-full w-full overflow-hidden">
+                      {/* Use card art based on name */}
+                      {getCardArt(card)}
 
-                    <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-0.5 text-center text-[8px]">
-                      {card.name}
-                      {card.points && <span className="ml-1 font-bold text-yellow-400">({card.points})</span>}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Enlarged card preview on hover */}
-              {hoveredCardIndex === index && (
-                <div className="absolute left-1/2 bottom-full mb-2 transform -translate-x-1/2 z-50 pointer-events-none">
-                  <Card
-                    className={`h-[180px] w-[130px] border-2 ${
-                      card.type === "animal" ? getEnvironmentColor(card.environment) : "border-purple-600 bg-purple-900"
-                    } p-1 shadow-xl relative overflow-hidden`}
-                  >
-                    {/* Card frame decoration */}
-                    <div className="absolute inset-0 border-8 border-transparent bg-gradient-to-br from-white/10 to-black/20 pointer-events-none"></div>
-                    <div className="absolute inset-0 border border-white/10 rounded-sm pointer-events-none"></div>
-
-                    <CardContent className="flex h-full flex-col items-center justify-between p-1">
-                      <div className="w-full text-center text-xs font-medium">{card.name}</div>
-
-                      <div className="relative h-[100px] w-full">{getCardArt(card)}</div>
-
-                      <div className="w-full">
-                        {card.type === "animal" ? (
-                          <div className="flex items-center justify-between">
-                            <Badge
-                              variant="outline"
-                              className={`${getEnvironmentBadgeColor(card.environment)} text-[9px]`}
-                            >
-                              {card.environment}
-                            </Badge>
-                            <Badge className="bg-yellow-600 text-[9px]">{card.points} pts</Badge>
-                          </div>
-                        ) : (
-                          <div className="text-center text-[9px] text-gray-300">{card.effect}</div>
-                        )}
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-0.5 text-center text-[8px]">
+                        {card.name}
+                        {card.points && <span className="ml-1 font-bold text-yellow-400">({card.points})</span>}
                       </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-            </div>
-          ))
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Enlarged card preview on hover */}
+                {hoveredCardIndex === index && (
+                  <div className="absolute left-1/2 bottom-full mb-2 transform -translate-x-1/2 z-50 pointer-events-none">
+                    <Card
+                      className={`h-[180px] w-[130px] border-2 ${
+                        card.type === "animal"
+                          ? getEnvironmentColor(card.environment)
+                          : "border-purple-600 bg-purple-900"
+                      } p-1 shadow-xl relative overflow-hidden`}
+                    >
+                      {/* Card frame decoration */}
+                      <div className="absolute inset-0 border-8 border-transparent bg-gradient-to-br from-white/10 to-black/20 pointer-events-none"></div>
+                      <div className="absolute inset-0 border border-white/10 rounded-sm pointer-events-none"></div>
+
+                      <CardContent className="flex h-full flex-col items-center justify-between p-1">
+                        <div className="w-full text-center text-xs font-medium">{card.name}</div>
+
+                        <div className="relative h-[100px] w-full">{getCardArt(card)}</div>
+
+                        <div className="w-full">
+                          {card.type === "animal" ? (
+                            <div className="flex items-center justify-between">
+                              <Badge
+                                variant="outline"
+                                className={`${getEnvironmentBadgeColor(card.environment)} text-[9px]`}
+                              >
+                                {card.environment}
+                              </Badge>
+                              <Badge className="bg-yellow-600 text-[9px]">{card.points} pts</Badge>
+                            </div>
+                          ) : (
+                            <div className="text-center text-[9px] text-gray-300">{card.effect}</div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+              </div>
+            )
+          })
         )}
       </div>
 

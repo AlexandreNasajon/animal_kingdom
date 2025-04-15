@@ -255,7 +255,7 @@ export function playImpactCard(state: GameState, cardIndex: number, forPlayer: b
 
       case "Confuse":
         // Check if there are at least 2 animals on the field
-        if (state.opponentField.length + state.playerField.length >= 2) {
+        if (state.opponentField.length > 0 && state.playerField.length > 0) {
           return {
             ...newState,
             pendingEffect: {
@@ -290,12 +290,14 @@ export function playImpactCard(state: GameState, cardIndex: number, forPlayer: b
       case "Trap":
         // Check if opponent has animals on their field
         if (state.opponentField.length > 0) {
+          // For trap, the opponent chooses which animal to give
           return {
             ...newState,
             pendingEffect: {
               type: "trap",
               forPlayer: true,
             },
+            message: `You played Trap. Your opponent will choose which animal to give you.`,
           }
         } else {
           return {
@@ -392,7 +394,8 @@ export function playImpactCard(state: GameState, cardIndex: number, forPlayer: b
 
       case "Epidemic":
         // Send 1 animal to the bottom along with all animals of same environment with more points
-        if (state.playerField.length > 0 || state.opponentField.length > 0) {
+        // Fixed: Only allow selecting from player's field
+        if (state.playerField.length > 0) {
           return {
             ...newState,
             pendingEffect: {
@@ -403,7 +406,7 @@ export function playImpactCard(state: GameState, cardIndex: number, forPlayer: b
         } else {
           return {
             ...newState,
-            message: "You played Epidemic, but there are no animals on the field.",
+            message: "You played Epidemic, but you have no animals on your field.",
           }
         }
 
@@ -442,11 +445,8 @@ export function playImpactCard(state: GameState, cardIndex: number, forPlayer: b
         }
 
       case "Cage":
-        // Send 1 animal to the bottom to gain control of an animal on the field
-        if (
-          newState.playerHand.some((c) => c.type === "animal") &&
-          (state.opponentField.length > 0 || state.playerField.length > 0)
-        ) {
+        // Send 1 animal from your field to the discard pile to gain control of an opponent's animal
+        if (state.playerField.length > 0 && state.opponentField.length > 0) {
           return {
             ...newState,
             pendingEffect: {
@@ -458,7 +458,7 @@ export function playImpactCard(state: GameState, cardIndex: number, forPlayer: b
           return {
             ...newState,
             message:
-              "You played Cage, but you either have no animal cards in hand or there are no animals on the field.",
+              "You played Cage, but you either have no animals on your field or there are no opponent animals to target.",
           }
         }
 
@@ -657,24 +657,16 @@ export function playImpactCard(state: GameState, cardIndex: number, forPlayer: b
         }
 
       case "Trap":
-        // Opponent gives you 1 animal from their field
+        // When AI plays Trap, player should choose which animal to give
+        // This already works correctly in the existing implementation
         if (state.playerField.length > 0) {
-          // Find the highest value animal in player's field
-          const targetIndex = state.playerField
-            .map((c, i) => ({ card: c, index: i }))
-            .sort((a, b) => (b.card.points || 0) - (a.card.points || 0))[0].index
-
-          const targetCard = state.playerField[targetIndex]
-          const newPlayerField = [...state.playerField]
-          newPlayerField.splice(targetIndex, 1)
-
           return {
             ...newState,
-            playerField: newPlayerField,
-            opponentField: [...state.opponentField, targetCard],
-            playerPoints: state.playerPoints - (targetCard.points || 0),
-            opponentPoints: state.opponentPoints + (targetCard.points || 0),
-            message: `AI played Trap and took control of your ${targetCard.name}.`,
+            message: "AI played Trap. You must choose an animal to give.",
+            pendingEffect: {
+              type: "trap",
+              forPlayer: false,
+            },
           }
         } else {
           return {
@@ -795,7 +787,7 @@ export function playImpactCard(state: GameState, cardIndex: number, forPlayer: b
 }
 
 // Handle effect resolution
-export function resolveEffect(state: GameState, targetIndex: number): GameState {
+export function resolveEffect(state: GameState, targetIndex: number | number[]): GameState {
   if (!state.pendingEffect || !state.pendingEffect.type) return state
 
   const { type, forPlayer } = state.pendingEffect
@@ -804,12 +796,12 @@ export function resolveEffect(state: GameState, targetIndex: number): GameState 
     case "hunter":
       if (forPlayer) {
         // Player targeting opponent's terrestrial animal (or amphibian)
-        const targetCard = state.opponentField[targetIndex]
+        const targetCard = state.opponentField[targetIndex as number]
         if (!targetCard || (targetCard.environment !== "terrestrial" && targetCard.environment !== "amphibian"))
           return state
 
         const newOpponentField = [...state.opponentField]
-        newOpponentField.splice(targetIndex, 1)
+        newOpponentField.splice(targetIndex as number, 1)
         return {
           ...state,
           opponentField: newOpponentField,
@@ -824,12 +816,12 @@ export function resolveEffect(state: GameState, targetIndex: number): GameState 
     case "fisher":
       if (forPlayer) {
         // Player targeting opponent's aquatic animal (or amphibian)
-        const targetCard = state.opponentField[targetIndex]
+        const targetCard = state.opponentField[targetIndex as number]
         if (!targetCard || (targetCard.environment !== "aquatic" && targetCard.environment !== "amphibian"))
           return state
 
         const newOpponentField = [...state.opponentField]
-        newOpponentField.splice(targetIndex, 1)
+        newOpponentField.splice(targetIndex as number, 1)
         return {
           ...state,
           opponentField: newOpponentField,
@@ -846,22 +838,23 @@ export function resolveEffect(state: GameState, targetIndex: number): GameState 
       // targetIndex refers to the combined array of [playerField, opponentField]
       const playerFieldLength = state.playerField.length
       const totalFieldLength = playerFieldLength + state.opponentField.length
+      const singleTargetIndex = targetIndex as number
 
-      if (targetIndex >= 0 && targetIndex < totalFieldLength) {
+      if (singleTargetIndex >= 0 && singleTargetIndex < totalFieldLength) {
         let targetCard: GameCard
         const newPlayerField = [...state.playerField]
         const newOpponentField = [...state.opponentField]
         let newPlayerPoints = state.playerPoints
         let newOpponentPoints = state.opponentPoints
 
-        if (targetIndex < playerFieldLength) {
+        if (singleTargetIndex < playerFieldLength) {
           // Target is in player's field
-          targetCard = state.playerField[targetIndex]
-          newPlayerField.splice(targetIndex, 1)
+          targetCard = state.playerField[singleTargetIndex]
+          newPlayerField.splice(singleTargetIndex, 1)
           newPlayerPoints -= targetCard.points || 0
         } else {
           // Target is in opponent's field
-          const opponentIndex = targetIndex - playerFieldLength
+          const opponentIndex = singleTargetIndex - playerFieldLength
           targetCard = state.opponentField[opponentIndex]
           newOpponentField.splice(opponentIndex, 1)
           newOpponentPoints -= targetCard.points || 0
@@ -884,8 +877,8 @@ export function resolveEffect(state: GameState, targetIndex: number): GameState 
     case "veterinarian":
       // Play an animal card from the discard pile
       const discardAnimals = state.sharedDiscard.filter((card) => card.type === "animal")
-      if (targetIndex >= 0 && targetIndex < discardAnimals.length) {
-        const targetCard = discardAnimals[targetIndex]
+      if ((targetIndex as number) >= 0 && (targetIndex as number) < discardAnimals.length) {
+        const targetCard = discardAnimals[targetIndex as number]
         const newDiscard = state.sharedDiscard.filter((card) => card.id !== targetCard.id)
 
         if (forPlayer) {
@@ -905,11 +898,11 @@ export function resolveEffect(state: GameState, targetIndex: number): GameState 
     case "limit":
       // Destroy 1 animal on opponent's field
       if (forPlayer) {
-        const targetCard = state.opponentField[targetIndex]
+        const targetCard = state.opponentField[targetIndex as number]
         if (!targetCard) return state
 
         const newOpponentField = [...state.opponentField]
-        newOpponentField.splice(targetIndex, 1)
+        newOpponentField.splice(targetIndex as number, 1)
         return {
           ...state,
           opponentField: newOpponentField,
@@ -922,83 +915,37 @@ export function resolveEffect(state: GameState, targetIndex: number): GameState 
       break
 
     case "confuse":
-      // Exchange control of 2 animals
-      // targetIndex refers to the first animal, we'll need a second selection
-      // For simplicity, we'll store the first selection and wait for the second
-      if (!state.pendingEffect.firstSelection) {
-        return {
-          ...state,
-          pendingEffect: {
-            ...state.pendingEffect,
-            firstSelection: targetIndex,
-          },
-          message: "Select a second animal to exchange control.",
-        }
-      } else {
-        // We have both selections, perform the exchange
-        const firstIndex = state.pendingEffect.firstSelection
-        const secondIndex = targetIndex
+      // Handle exchange of two animals
+      if (Array.isArray(targetIndex) && targetIndex.length === 2) {
+        const firstIndex = targetIndex[0]
+        const secondIndex = targetIndex[1]
 
         // Determine which fields the animals are in
         const playerFieldLength = state.playerField.length
-        const totalFieldLength = playerFieldLength + state.opponentField.length
 
-        if (firstIndex >= 0 && firstIndex < totalFieldLength && secondIndex >= 0 && secondIndex < totalFieldLength) {
-          let newPlayerField = [...state.playerField]
-          let newOpponentField = [...state.opponentField]
+        if (firstIndex >= 0 && firstIndex < playerFieldLength && secondIndex >= playerFieldLength) {
+          // First card is from player's field, second is from opponent's field
+          const newPlayerField = [...state.playerField]
+          const newOpponentField = [...state.opponentField]
           let newPlayerPoints = state.playerPoints
           let newOpponentPoints = state.opponentPoints
 
-          let firstCard: GameCard
-          let secondCard: GameCard
+          // Get first card (player's) and remove from original field
+          const firstCard = state.playerField[firstIndex]
+          newPlayerField.splice(firstIndex, 1)
+          newPlayerPoints -= firstCard.points || 0
 
-          // Get first card and remove from original field
-          if (firstIndex < playerFieldLength) {
-            firstCard = state.playerField[firstIndex]
-            newPlayerField.splice(firstIndex, 1)
-            newPlayerPoints -= firstCard.points || 0
-          } else {
-            const opponentIndex = firstIndex - playerFieldLength
-            firstCard = state.opponentField[opponentIndex]
-            newOpponentField.splice(opponentIndex, 1)
-            newOpponentPoints -= firstCard.points || 0
-          }
-
-          // Get second card and remove from original field
-          // Adjust indices if first card was removed from the same field
-          if (secondIndex < playerFieldLength) {
-            const adjustedIndex =
-              firstIndex < playerFieldLength && secondIndex > firstIndex ? secondIndex - 1 : secondIndex
-            secondCard = state.playerField[adjustedIndex]
-            newPlayerField = newPlayerField.filter((_, i) => i !== adjustedIndex)
-            newPlayerPoints -= secondCard.points || 0
-          } else {
-            const opponentIndex = secondIndex - playerFieldLength
-            const adjustedIndex =
-              firstIndex >= playerFieldLength && opponentIndex > firstIndex - playerFieldLength
-                ? opponentIndex - 1
-                : opponentIndex
-            secondCard = state.opponentField[adjustedIndex]
-            newOpponentField = newOpponentField.filter((_, i) => i !== adjustedIndex)
-            newOpponentPoints -= secondCard.points || 0
-          }
+          // Get second card (opponent's) and remove from original field
+          const opponentIndex = secondIndex - playerFieldLength
+          const secondCard = state.opponentField[opponentIndex]
+          newOpponentField.splice(opponentIndex, 1)
+          newOpponentPoints -= secondCard.points || 0
 
           // Add cards to their new fields
-          if (firstIndex < playerFieldLength) {
-            newOpponentField.push(firstCard)
-            newOpponentPoints += firstCard.points || 0
-          } else {
-            newPlayerField.push(firstCard)
-            newPlayerPoints += firstCard.points || 0
-          }
-
-          if (secondIndex < playerFieldLength) {
-            newOpponentField.push(secondCard)
-            newOpponentPoints += secondCard.points || 0
-          } else {
-            newPlayerField.push(secondCard)
-            newPlayerPoints += secondCard.points || 0
-          }
+          newOpponentField.push(firstCard)
+          newPlayerField.push(secondCard)
+          newOpponentPoints += firstCard.points || 0
+          newPlayerPoints += secondCard.points || 0
 
           return {
             ...state,
@@ -1011,16 +958,17 @@ export function resolveEffect(state: GameState, targetIndex: number): GameState 
           }
         }
       }
-      break
+      // If we reach here, the target indices are invalid
+      return state
 
     case "domesticate":
       // Gain control of an animal worth 2 points
       if (forPlayer) {
-        const targetCard = state.opponentField[targetIndex]
+        const targetCard = state.opponentField[targetIndex as number]
         if (!targetCard || targetCard.points !== 2) return state
 
         const newOpponentField = [...state.opponentField]
-        newOpponentField.splice(targetIndex, 1)
+        newOpponentField.splice(targetIndex as number, 1)
 
         return {
           ...state,
@@ -1035,13 +983,18 @@ export function resolveEffect(state: GameState, targetIndex: number): GameState 
       break
 
     case "trap":
-      // Opponent gives you 1 animal from their field
       if (forPlayer) {
-        const targetCard = state.opponentField[targetIndex]
-        if (!targetCard) return state
+        // When player uses trap, AI gives an animal
+        // For now, we'll make AI give the lowest point value animal
+        const sortedAICards = state.opponentField
+          .map((card, idx) => ({ card, idx }))
+          .sort((a, b) => (a.card.points || 0) - (b.card.points || 0))
+
+        const aiChoiceIndex = sortedAICards[0].idx
+        const targetCard = state.opponentField[aiChoiceIndex]
 
         const newOpponentField = [...state.opponentField]
-        newOpponentField.splice(targetIndex, 1)
+        newOpponentField.splice(aiChoiceIndex, 1)
 
         return {
           ...state,
@@ -1050,47 +1003,70 @@ export function resolveEffect(state: GameState, targetIndex: number): GameState 
           playerPoints: state.playerPoints + (targetCard.points || 0),
           opponentPoints: state.opponentPoints - (targetCard.points || 0),
           pendingEffect: null,
-          message: `You trapped the opponent's ${targetCard.name} and gained control of it.`,
+          message: `AI gave you their ${targetCard.name}.`,
+        }
+      } else {
+        // AI played trap, player chooses which animal to give
+        const targetCard = state.playerField[targetIndex as number]
+        if (!targetCard) return state
+
+        const newPlayerField = [...state.playerField]
+        newPlayerField.splice(targetIndex as number, 1)
+
+        return {
+          ...state,
+          opponentField: [...state.opponentField, targetCard],
+          playerField: newPlayerField,
+          opponentPoints: state.opponentPoints + (targetCard.points || 0),
+          playerPoints: state.playerPoints - (targetCard.points || 0),
+          pendingEffect: null,
+          message: `You gave your ${targetCard.name} to the AI.`,
         }
       }
       break
 
-    case "release":
-      // Play up to 2 animals from your hand
-      // targetIndex is the index of the animal in hand
+    case "cage":
+      // First select an animal from your field to send to the discard pile
       if (forPlayer) {
-        const targetCard = state.playerHand[targetIndex]
-        if (!targetCard || targetCard.type !== "animal") return state
+        if (!state.pendingEffect.firstSelection) {
+          // First selection: animal from field to send to discard pile
+          const targetCard = state.playerField[targetIndex as number]
+          if (!targetCard) return state
 
-        const newHand = [...state.playerHand]
-        newHand.splice(targetIndex, 1)
+          // Remove the card from field
+          const newField = [...state.playerField]
+          newField.splice(targetIndex as number, 1)
 
-        // Check if we've played 2 animals or if there are no more animals in hand
-        const animalsPlayed = (state.pendingEffect.animalsPlayed || 0) + 1
-        const moreAnimalsInHand = newHand.some((card) => card.type === "animal")
-
-        if (animalsPlayed >= 2 || !moreAnimalsInHand) {
-          // We're done with the effect
           return {
             ...state,
-            playerHand: newHand,
-            playerField: [...state.playerField, targetCard],
-            playerPoints: state.playerPoints + (targetCard.points || 0),
-            pendingEffect: null,
-            message: `You played ${targetCard.name} from your hand (${animalsPlayed}/2 animals).`,
+            playerField: newField,
+            playerPoints: state.playerPoints - (targetCard.points || 0),
+            pendingEffect: {
+              type: "cage",
+              forPlayer: true,
+              firstSelection: targetCard.id,
+            },
+            sharedDiscard: [...state.sharedDiscard, targetCard], // Send to discard pile
+            message: `You sent ${targetCard.name} to the discard pile. Now select an opponent's animal to gain control of.`,
           }
         } else {
-          // Continue selecting animals
+          // Second selection: animal on the opponent's field to gain control of
+          const targetCard = state.opponentField[targetIndex as number]
+          if (!targetCard) return state
+
+          // Remove the card from opponent's field
+          const newOpponentField = [...state.opponentField]
+          newOpponentField.splice(targetIndex as number, 1)
+
+          // Add the card to player's field and update points
           return {
             ...state,
-            playerHand: newHand,
             playerField: [...state.playerField, targetCard],
+            opponentField: newOpponentField,
             playerPoints: state.playerPoints + (targetCard.points || 0),
-            pendingEffect: {
-              ...state.pendingEffect,
-              animalsPlayed,
-            },
-            message: `You played ${targetCard.name} from your hand (${animalsPlayed}/2 animals). Select another animal or cancel.`,
+            opponentPoints: state.opponentPoints - (targetCard.points || 0),
+            pendingEffect: null,
+            message: `You caged and gained control of ${targetCard.name}.`,
           }
         }
       }
@@ -1099,65 +1075,76 @@ export function resolveEffect(state: GameState, targetIndex: number): GameState 
     case "epidemic":
       // Send 1 animal to the bottom along with all animals of same environment with more points
       if (forPlayer) {
-        // targetIndex refers to the combined array of [playerField, opponentField]
-        const playerFieldLength = state.playerField.length
-        const totalFieldLength = playerFieldLength + state.opponentField.length
+        // Fixed: For epidemic, we're only selecting from player's field
+        const targetCard = state.playerField[targetIndex as number]
+        if (!targetCard) return state
 
-        if (targetIndex >= 0 && targetIndex < totalFieldLength) {
-          let targetCard: GameCard
-          let targetEnvironment: string | undefined
+        const targetEnvironment = targetCard.environment
+        if (!targetEnvironment) return state
 
-          if (targetIndex < playerFieldLength) {
-            // Target is in player's field
-            targetCard = state.playerField[targetIndex]
-          } else {
-            // Target is in opponent's field
-            const opponentIndex = targetIndex - playerFieldLength
-            targetCard = state.opponentField[opponentIndex]
+        // Find all animals of the same environment with more points
+        // Modified to handle amphibians properly
+        const playerCardsToRemove = state.playerField.filter((card) => {
+          // If target is amphibian, it affects both terrestrial and aquatic
+          if (targetEnvironment === "amphibian") {
+            return (
+              (card.environment === "terrestrial" ||
+                card.environment === "aquatic" ||
+                card.environment === "amphibian") &&
+              (card.points || 0) > (targetCard.points || 0) &&
+              card !== targetCard
+            )
           }
-
-          targetEnvironment = targetCard.environment
-          if (!targetEnvironment) return state
-
-          // Find all animals of the same environment with more points
-          const playerCardsToRemove = state.playerField.filter(
-            (card) => card.environment === targetEnvironment && (card.points || 0) > (targetCard.points || 0),
+          // If target is terrestrial or aquatic, it also affects amphibians
+          return (
+            (card.environment === targetEnvironment || card.environment === "amphibian") &&
+            (card.points || 0) > (targetCard.points || 0) &&
+            card !== targetCard
           )
-          const opponentCardsToRemove = state.opponentField.filter(
-            (card) => card.environment === targetEnvironment && (card.points || 0) > (targetCard.points || 0),
-          )
+        })
 
-          // Also remove the target card
-          const newPlayerField = state.playerField.filter(
-            (card) => !(card === targetCard || playerCardsToRemove.includes(card)),
-          )
-          const newOpponentField = state.opponentField.filter(
-            (card) => !(card === targetCard || opponentCardsToRemove.includes(card)),
-          )
-
-          // Calculate point changes
-          const playerPointsChange = playerCardsToRemove.reduce(
-            (sum, card) => sum - (card.points || 0),
-            targetIndex < playerFieldLength ? -(targetCard.points || 0) : 0,
-          )
-          const opponentPointsChange = opponentCardsToRemove.reduce(
-            (sum, card) => sum - (card.points || 0),
-            targetIndex >= playerFieldLength ? -(targetCard.points || 0) : 0,
-          )
-
-          // Combine all cards to send to bottom
-          const cardsToBottom = [targetCard, ...playerCardsToRemove, ...opponentCardsToRemove]
-
-          return {
-            ...state,
-            playerField: newPlayerField,
-            opponentField: newOpponentField,
-            playerPoints: state.playerPoints + playerPointsChange,
-            opponentPoints: state.opponentPoints + opponentPointsChange,
-            sharedDeck: [...state.sharedDeck, ...cardsToBottom],
-            pendingEffect: null,
-            message: `You played Epidemic. ${targetCard.name} and all ${targetEnvironment} animals with more points were sent to the bottom of the deck.`,
+        const opponentCardsToRemove = state.opponentField.filter((card) => {
+          // If target is amphibian, it affects both terrestrial and aquatic
+          if (targetEnvironment === "amphibian") {
+            return (
+              (card.environment === "terrestrial" ||
+                card.environment === "aquatic" ||
+                card.environment === "amphibian") &&
+              (card.points || 0) > (targetCard.points || 0)
+            )
           }
+          // If target is terrestrial or aquatic, it also affects amphibians
+          return (
+            (card.environment === targetEnvironment || card.environment === "amphibian") &&
+            (card.points || 0) > (targetCard.points || 0)
+          )
+        })
+
+        // Also remove the target card
+        const newPlayerField = state.playerField.filter(
+          (card) => !(card === targetCard || playerCardsToRemove.includes(card)),
+        )
+        const newOpponentField = state.opponentField.filter((card) => !opponentCardsToRemove.includes(card))
+
+        // Calculate point changes
+        const playerPointsChange = playerCardsToRemove.reduce(
+          (sum, card) => sum - (card.points || 0),
+          -(targetCard.points || 0), // Include target card in point calculation
+        )
+        const opponentPointsChange = opponentCardsToRemove.reduce((sum, card) => sum - (card.points || 0), 0)
+
+        // Combine all cards to send to bottom
+        const cardsToBottom = [targetCard, ...playerCardsToRemove, ...opponentCardsToRemove]
+
+        return {
+          ...state,
+          playerField: newPlayerField,
+          opponentField: newOpponentField,
+          playerPoints: state.playerPoints + playerPointsChange,
+          opponentPoints: state.opponentPoints + opponentPointsChange,
+          sharedDeck: [...state.sharedDeck, ...cardsToBottom],
+          pendingEffect: null,
+          message: `You played Epidemic. ${targetCard.name} and all ${targetEnvironment} animals with more points were sent to the bottom of the deck.`,
         }
       }
       break
@@ -1165,14 +1152,14 @@ export function resolveEffect(state: GameState, targetIndex: number): GameState 
     case "compete":
       // Send 1 animal from your hand to the bottom along with all animals of same points
       if (forPlayer) {
-        const targetCard = state.playerHand[targetIndex]
+        const targetCard = state.playerHand[targetIndex as number]
         if (!targetCard || targetCard.type !== "animal") return state
 
         const targetPoints = targetCard.points || 0
 
         // Remove the target card from hand
         const newHand = [...state.playerHand]
-        newHand.splice(targetIndex, 1)
+        newHand.splice(targetIndex as number, 1)
 
         // Find all animals on the field with the same points
         const playerCardsToRemove = state.playerField.filter((card) => (card.points || 0) === targetPoints)
@@ -1206,7 +1193,7 @@ export function resolveEffect(state: GameState, targetIndex: number): GameState 
     case "prey":
       // Choose 1 animal on your field. Send all animals of same environment with fewer points to the bottom
       if (forPlayer) {
-        const targetCard = state.playerField[targetIndex]
+        const targetCard = state.playerField[targetIndex as number]
         if (!targetCard) return state
 
         const targetEnvironment = targetCard.environment
@@ -1215,12 +1202,42 @@ export function resolveEffect(state: GameState, targetIndex: number): GameState 
         if (!targetEnvironment) return state
 
         // Find all animals of the same environment with fewer points
-        const playerCardsToRemove = state.playerField.filter(
-          (card) => card.environment === targetEnvironment && (card.points || 0) < targetPoints && card !== targetCard,
-        )
-        const opponentCardsToRemove = state.opponentField.filter(
-          (card) => card.environment === targetEnvironment && (card.points || 0) < targetPoints,
-        )
+        // Modified to handle amphibians properly
+        const playerCardsToRemove = state.playerField.filter((card) => {
+          // If target is amphibian, it affects both terrestrial and aquatic
+          if (targetEnvironment === "amphibian") {
+            return (
+              (card.environment === "terrestrial" ||
+                card.environment === "aquatic" ||
+                card.environment === "amphibian") &&
+              (card.points || 0) < targetPoints &&
+              card !== targetCard
+            )
+          }
+          // If target is terrestrial or aquatic, it also affects amphibians
+          return (
+            (card.environment === targetEnvironment || card.environment === "amphibian") &&
+            (card.points || 0) < targetPoints &&
+            card !== targetCard
+          )
+        })
+
+        const opponentCardsToRemove = state.opponentField.filter((card) => {
+          // If target is amphibian, it affects both terrestrial and aquatic
+          if (targetEnvironment === "amphibian") {
+            return (
+              (card.environment === "terrestrial" ||
+                card.environment === "aquatic" ||
+                card.environment === "amphibian") &&
+              (card.points || 0) < targetPoints
+            )
+          }
+          // If target is terrestrial or aquatic, it also affects amphibians
+          return (
+            (card.environment === targetEnvironment || card.environment === "amphibian") &&
+            (card.points || 0) < targetPoints
+          )
+        })
 
         // Create new fields without the removed cards
         const newPlayerField = state.playerField.filter((card) => !playerCardsToRemove.includes(card))
@@ -1247,65 +1264,47 @@ export function resolveEffect(state: GameState, targetIndex: number): GameState 
       break
 
     case "cage":
-      // First select an animal from your hand to send to the bottom
+      // First select an animal from your field to send to the discard pile
       if (forPlayer) {
         if (!state.pendingEffect.firstSelection) {
-          // First selection: animal from hand to send to bottom
-          const targetCard = state.playerHand[targetIndex]
-          if (!targetCard || targetCard.type !== "animal") return state
+          // First selection: animal from field to send to discard pile
+          const targetCard = state.playerField[targetIndex as number]
+          if (!targetCard) return state
 
-          // Remove the card from hand
-          const newHand = [...state.playerHand]
-          newHand.splice(targetIndex, 1)
+          // Remove the card from field
+          const newField = [...state.playerField]
+          newField.splice(targetIndex as number, 1)
 
           return {
             ...state,
-            playerHand: newHand,
+            playerField: newField,
+            playerPoints: state.playerPoints - (targetCard.points || 0),
             pendingEffect: {
-              ...state.pendingEffect,
+              type: "cage",
+              forPlayer: true,
               firstSelection: targetCard.id,
             },
-            sharedDeck: [...state.sharedDeck, targetCard], // Send to bottom
-            message: `You sent ${targetCard.name} to the bottom of the deck. Now select an animal to gain control of.`,
+            sharedDiscard: [...state.sharedDiscard, targetCard], // Send to discard pile
+            message: `You sent ${targetCard.name} to the discard pile. Now select an opponent's animal to gain control of.`,
           }
         } else {
-          // Second selection: animal on the field to gain control of
-          // targetIndex refers to the combined array of [playerField, opponentField]
-          const playerFieldLength = state.playerField.length
-          const totalFieldLength = playerFieldLength + state.opponentField.length
+          // Second selection: animal on the opponent's field to gain control of
+          const targetCard = state.opponentField[targetIndex as number]
+          if (!targetCard) return state
 
-          if (targetIndex >= 0 && targetIndex < totalFieldLength) {
-            let targetCard: GameCard
-            const newPlayerField = [...state.playerField]
-            const newOpponentField = [...state.opponentField]
-            let playerPointsChange = 0
-            let opponentPointsChange = 0
+          // Remove the card from opponent's field
+          const newOpponentField = [...state.opponentField]
+          newOpponentField.splice(targetIndex as number, 1)
 
-            if (targetIndex < playerFieldLength) {
-              // Target is in player's field - can't cage your own animal
-              return {
-                ...state,
-                pendingEffect: null,
-                message: "You can't cage your own animal. Effect canceled.",
-              }
-            } else {
-              // Target is in opponent's field
-              const opponentIndex = targetIndex - playerFieldLength
-              targetCard = state.opponentField[opponentIndex]
-              newOpponentField.splice(opponentIndex, 1)
-              opponentPointsChange = -(targetCard.points || 0)
-              playerPointsChange = targetCard.points || 0
-            }
-
-            return {
-              ...state,
-              playerField: [...newPlayerField, targetCard],
-              opponentField: newOpponentField,
-              playerPoints: state.playerPoints + playerPointsChange,
-              opponentPoints: state.opponentPoints + opponentPointsChange,
-              pendingEffect: null,
-              message: `You caged and gained control of ${targetCard.name}.`,
-            }
+          // Add the card to player's field and update points
+          return {
+            ...state,
+            playerField: [...state.playerField, targetCard],
+            opponentField: newOpponentField,
+            playerPoints: state.playerPoints + (targetCard.points || 0),
+            opponentPoints: state.opponentPoints - (targetCard.points || 0),
+            pendingEffect: null,
+            message: `You caged and gained control of ${targetCard.name}.`,
           }
         }
       }
@@ -1402,6 +1401,12 @@ export function makeAIDecision(state: GameState): GameState {
     const earthquakeIndex = state.opponentHand.findIndex((card) => card.name === "Earthquake")
     if (earthquakeIndex !== -1 && state.playerField.some((card) => (card.points || 0) >= 3)) {
       return playImpactCard(state, earthquakeIndex, false)
+    }
+
+    // Try to use any impact card that might help
+    const anyImpactIndex = state.opponentHand.findIndex((card) => card.type === "impact")
+    if (anyImpactIndex !== -1) {
+      return playImpactCard(state, anyImpactIndex, false)
     }
   }
 

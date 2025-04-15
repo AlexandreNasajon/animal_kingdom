@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import type { GameCard } from "@/types/game"
 import { Button } from "@/components/ui/button"
 import {
@@ -20,7 +20,7 @@ interface TargetSelectionModalProps {
   open: boolean
   onClose: () => void
   cards: GameCard[]
-  onConfirm: (selectedIndex: number) => void
+  onConfirm: (selectedIndex: number | number[]) => void
   onCancel: () => void
   title: string
   description: string
@@ -68,11 +68,55 @@ export function TargetSelectionModal({
   playerCardIndices = [],
 }: TargetSelectionModalProps) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
-  const filteredCards = filter ? cards.filter((card) => card && filter(card)) : cards
+  const [playerSelectedIndex, setPlayerSelectedIndex] = useState<number | null>(null)
+  const [opponentSelectedIndex, setOpponentSelectedIndex] = useState<number | null>(null)
+  const [isExchangeMode, setIsExchangeMode] = useState(false)
+  const [filteredCards, setFilteredCards] = useState<GameCard[]>(cards)
+
+  const initialFilteredCards = filter ? cards.filter((card) => card && filter(card)) : cards
 
   // Separate player and opponent cards
-  const playerCards = filteredCards.filter((_, index) => playerCardIndices.includes(index))
-  const opponentCards = filteredCards.filter((_, index) => !playerCardIndices.includes(index))
+  const playerCards = initialFilteredCards.filter((_, index) => playerCardIndices.includes(index))
+  const opponentCards = initialFilteredCards.filter((_, index) => !playerCardIndices.includes(index))
+
+  useEffect(() => {
+    // Check if this is the Confuse card effect
+    setIsExchangeMode(title.includes("Exchange") || description.includes("exchange"))
+
+    // Apply filters based on card effect
+    if (filter) {
+      setFilteredCards(initialFilteredCards)
+    } else if (title.includes("Hunter") || description.includes("Hunter")) {
+      // For Hunter, filter for terrestrial and amphibian animals
+      setFilteredCards(
+        initialFilteredCards.filter(
+          (card) => card.type === "animal" && (card.environment === "terrestrial" || card.environment === "amphibian"),
+        ),
+      )
+    } else if (title.includes("Fisher") || description.includes("Fisher")) {
+      // For Fisher, filter for aquatic and amphibian animals
+      setFilteredCards(
+        initialFilteredCards.filter(
+          (card) => card.type === "animal" && (card.environment === "aquatic" || card.environment === "amphibian"),
+        ),
+      )
+    } else if (title.includes("Domesticate") || description.includes("Domesticate")) {
+      // For Domesticate, filter for animals worth 2 points
+      setFilteredCards(initialFilteredCards.filter((card) => card.type === "animal" && card.points === 2))
+    } else if (title.includes("Cage") && description.includes("discard")) {
+      // For Cage (first selection), filter for player's animals
+      setFilteredCards(initialFilteredCards.filter((card) => card.type === "animal"))
+    } else if (title.includes("Cage") && description.includes("opponent")) {
+      // For Cage (second selection), filter for opponent's animals
+      setFilteredCards(initialFilteredCards.filter((card) => card.type === "animal"))
+    } else if (title.includes("Epidemic") || description.includes("Epidemic")) {
+      // For Epidemic, we only want to show player's cards
+      setFilteredCards(playerCards)
+    } else {
+      // Default case - show all cards
+      setFilteredCards(initialFilteredCards)
+    }
+  }, [title, description, playerCards, initialFilteredCards, filter])
 
   // Create a mapping from the new index to the original index
   const indexMapping: Record<string, number> = {}
@@ -81,7 +125,7 @@ export function TargetSelectionModal({
     indexMapping[`player-${i}`] = originalIndex
   })
   opponentCards.forEach((_, i) => {
-    const originalIndex = filteredCards.findIndex(
+    const originalIndex = initialFilteredCards.findIndex(
       (card, idx) => !playerCardIndices.includes(idx) && card === opponentCards[i],
     )
     indexMapping[`opponent-${i}`] = originalIndex
@@ -89,11 +133,37 @@ export function TargetSelectionModal({
 
   const handleCardClick = (section: string, index: number) => {
     const mappedIndex = indexMapping[`${section}-${index}`]
-    setSelectedIndex(mappedIndex)
+
+    if (isExchangeMode) {
+      // In exchange mode, we track player and opponent selections separately
+      if (section === "player") {
+        setPlayerSelectedIndex(index)
+      } else {
+        setOpponentSelectedIndex(index)
+      }
+    } else {
+      // Normal mode - just select one card
+      setSelectedIndex(mappedIndex)
+    }
   }
 
   const handleConfirm = () => {
-    if (selectedIndex !== null) {
+    if (isExchangeMode) {
+      // For exchange mode, we need both selections
+      if (playerSelectedIndex !== null && opponentSelectedIndex !== null) {
+        // Map to the original indices
+        const playerMappedIndex = indexMapping[`player-${playerSelectedIndex}`]
+        const opponentMappedIndex = indexMapping[`opponent-${opponentSelectedIndex}`]
+
+        // Call onConfirm with both indices
+        onConfirm([playerMappedIndex, opponentMappedIndex])
+
+        // Reset selections
+        setPlayerSelectedIndex(null)
+        setOpponentSelectedIndex(null)
+      }
+    } else if (selectedIndex !== null) {
+      // Normal mode - just pass the single selection
       onConfirm(selectedIndex)
       setSelectedIndex(null)
     }
@@ -121,7 +191,7 @@ export function TargetSelectionModal({
                 <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
                   {playerCards.map((card, index) => {
                     const mappedIndex = indexMapping[`player-${index}`]
-                    const isSelected = selectedIndex === mappedIndex
+                    const isSelected = isExchangeMode ? playerSelectedIndex === index : selectedIndex === mappedIndex
 
                     return (
                       <div
@@ -190,7 +260,7 @@ export function TargetSelectionModal({
                 <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
                   {opponentCards.map((card, index) => {
                     const mappedIndex = indexMapping[`opponent-${index}`]
-                    const isSelected = selectedIndex === mappedIndex
+                    const isSelected = isExchangeMode ? opponentSelectedIndex === index : selectedIndex === mappedIndex
 
                     return (
                       <div
@@ -262,7 +332,11 @@ export function TargetSelectionModal({
           </Button>
           <Button
             onClick={handleConfirm}
-            disabled={selectedIndex === null || filteredCards.length === 0}
+            disabled={
+              isExchangeMode
+                ? playerSelectedIndex === null || opponentSelectedIndex === null
+                : selectedIndex === null || filteredCards.length === 0
+            }
             className="bg-green-700 hover:bg-green-600"
             size="sm"
           >

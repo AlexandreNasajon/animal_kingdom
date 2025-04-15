@@ -21,7 +21,7 @@ export function GameLog({ logs }: GameLogProps) {
   return (
     <Card className="border border-green-700 bg-green-900 shadow-md">
       <CardContent className="p-0.5">
-        <ScrollArea className="h-[60px] w-full rounded-sm pr-2">
+        <ScrollArea className="h-[50px] w-full rounded-sm pr-2">
           <div ref={scrollRef} className="space-y-0.5">
             {logs.length === 0 ? (
               <p className="text-center text-[8px] text-green-500">Game started. Good luck!</p>
