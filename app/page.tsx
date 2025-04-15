@@ -17,7 +17,7 @@ export default function Home() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-green-800 to-green-950 p-2 text-white">
       <div className="mb-4 text-center">
-        <h1 className="mb-1 text-3xl font-bold tracking-tight">Animal Kingdom</h1>
+        <h1 className="mb-1 text-3xl font-bold tracking-tight">Bioquest</h1>
         <p className="text-sm text-green-200">Strategic card game of wildlife dominance</p>
       </div>
 

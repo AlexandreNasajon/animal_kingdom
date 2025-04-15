@@ -18,7 +18,7 @@ export default function GameMenu() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-green-800 to-green-950 p-4 text-white">
       <div className="mb-8 text-center">
-        <h1 className="mb-2 text-5xl font-bold tracking-tight">Animal Kingdom</h1>
+        <h1 className="mb-2 text-5xl font-bold tracking-tight">Bioquest</h1>
         <p className="text-xl text-green-200">Main Menu</p>
       </div>
 
