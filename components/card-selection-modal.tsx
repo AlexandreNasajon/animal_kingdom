@@ -48,6 +48,18 @@ const getEnvironmentBadgeColor = (environment?: string) => {
   }
 }
 
+// Add this CSS class to the component's JSX to hide scrollbars but keep functionality
+// Add this at the top of the component, after the imports:
+const noScrollbarStyle = `
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+`
+
 export function CardSelectionModal({
   open,
   onClose,
@@ -86,14 +98,15 @@ export function CardSelectionModal({
 
   return (
     <Dialog open={open} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="border-2 border-green-700 bg-green-900 p-2 text-white max-w-md">
+      <style>{noScrollbarStyle}</style>
+      <DialogContent className="border-2 border-green-700 bg-green-900 p-2 text-white max-w-3xl">
         <DialogHeader>
           <DialogTitle className="text-base text-white">{title}</DialogTitle>
         </DialogHeader>
 
         <div className="text-xs text-white mb-2">{description}</div>
 
-        <div className="flex flex-wrap justify-center gap-2 max-h-[300px] overflow-y-auto p-1">
+        <div className="flex justify-center gap-2 p-1">
           {filteredCards.length === 0 ? (
             <div className="text-center text-sm text-white py-4">No valid cards available</div>
           ) : (
@@ -106,7 +119,7 @@ export function CardSelectionModal({
                 onClick={() => handleCardClick(index)}
               >
                 <Card
-                  className={`w-[80px] h-[120px] border-2 ${
+                  className={`w-[75px] h-[115px] border-2 ${
                     card.type === "animal" ? getEnvironmentColor(card.environment) : "border-purple-600 bg-purple-900"
                   } p-1 shadow-md relative overflow-hidden`}
                 >

@@ -75,7 +75,7 @@ export function BoardCardZoomModal({ open, onClose, card, isOpponentCard = false
           <Card
             className={`w-[180px] h-[280px] border-2 ${
               card.type === "animal" ? getEnvironmentColor(card.environment) : "border-purple-600 bg-purple-900"
-            } p-1 shadow-md transition-all animate-flip relative overflow-hidden ${
+            } p-1 shadow-md transition-all relative overflow-hidden ${
               isOpponentCard ? "border-red-500" : "border-blue-500"
             }`}
           >

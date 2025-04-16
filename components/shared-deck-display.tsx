@@ -26,20 +26,7 @@ export function SharedDeckDisplay({
 
   return (
     <div className="flex items-center justify-between gap-4 relative w-full px-4">
-      {/* Left side with Draw button */}
-      <div className="flex items-center">
-        {canDraw && (
-          <Button
-            onClick={onDrawCards}
-            className="bg-green-700 hover:bg-green-600 text-white font-bold py-1 px-2 text-xs shadow-md"
-            size="sm"
-          >
-            Draw Cards
-          </Button>
-        )}
-      </div>
-
-      {/* Right side with deck and discard pile */}
+      {/* Left side with deck and discard pile */}
       <div className="flex items-center gap-4">
         {/* Deck */}
         <div className="relative">
@@ -82,6 +69,19 @@ export function SharedDeckDisplay({
             </div>
           </Card>
         </div>
+      </div>
+
+      {/* Right side with Draw button */}
+      <div className="flex items-center">
+        {canDraw && (
+          <Button
+            onClick={onDrawCards}
+            className="bg-green-700 hover:bg-green-600 text-white font-bold py-1 px-2 text-xs shadow-md"
+            size="sm"
+          >
+            Draw Cards
+          </Button>
+        )}
       </div>
 
       {/* Last action display */}

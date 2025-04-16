@@ -356,6 +356,13 @@ export const GAME_DECK: GameCard[] = [
     effect: "Send 1 animal from the field to the top of the deck",
     imageUrl: "/placeholder.svg?height=120&width=80",
   },
+  {
+    id: 59,
+    type: "impact",
+    name: "Scare",
+    effect: "Send 1 animal from the field to the top of the deck",
+    imageUrl: "/placeholder.svg?height=120&width=80",
+  },
 
   // 1x Veterinarian (removed 1)
   {
@@ -389,15 +396,6 @@ export const GAME_DECK: GameCard[] = [
   // 0x Drought (removed 1)
 
   // 0x Flood (removed 1)
-
-  // 1x Release
-  {
-    id: 43,
-    type: "impact",
-    name: "Release",
-    effect: "Play up to 2 animals from your hand",
-    imageUrl: "/placeholder.svg?height=120&width=80",
-  },
 
   // 1x Epidemic
   {

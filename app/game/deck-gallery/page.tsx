@@ -41,13 +41,38 @@ export default function DeckGallery() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-2xl text-white">Browse Cards</CardTitle>
-              <Tabs defaultValue="all" className="w-[400px]" onValueChange={setFilter}>
-                <TabsList className="grid w-full grid-cols-5">
-                  <TabsTrigger value="all">All</TabsTrigger>
-                  <TabsTrigger value="terrestrial">Terrestrial</TabsTrigger>
-                  <TabsTrigger value="aquatic">Aquatic</TabsTrigger>
-                  <TabsTrigger value="amphibian">Amphibian</TabsTrigger>
-                  <TabsTrigger value="impact">Impact</TabsTrigger>
+              <Tabs defaultValue="all" className="w-[500px]" onValueChange={setFilter}>
+                <TabsList className="grid w-full grid-cols-5 gap-2 bg-green-900/40 p-1">
+                  <TabsTrigger
+                    value="all"
+                    className="bg-green-700 text-white data-[state=active]:bg-green-500 data-[state=active]:text-white"
+                  >
+                    All
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="terrestrial"
+                    className="bg-green-700 text-white data-[state=active]:bg-green-500 data-[state=active]:text-white"
+                  >
+                    Terrestrial
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="aquatic"
+                    className="bg-green-700 text-white data-[state=active]:bg-green-500 data-[state=active]:text-white"
+                  >
+                    Aquatic
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="amphibian"
+                    className="bg-green-700 text-white data-[state=active]:bg-green-500 data-[state=active]:text-white"
+                  >
+                    Amphibian
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="impact"
+                    className="bg-green-700 text-white data-[state=active]:bg-green-500 data-[state=active]:text-white"
+                  >
+                    Impact
+                  </TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>

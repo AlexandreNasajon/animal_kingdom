@@ -1170,9 +1170,6 @@ export default function GameMatch() {
                   </span>
                 )}
               </div>
-              <span className="rounded-md bg-red-700/80 px-1 py-0 text-[10px]">
-                Cards: {gameState.opponentHand.length}
-              </span>
             </div>
           </div>
 

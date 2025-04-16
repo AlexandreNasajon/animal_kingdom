@@ -92,13 +92,16 @@ export function AnimationStyles() {
 
       @keyframes flip {
         0% {
-          transform: rotateY(0deg);
+          transform: scale(0.95);
+          opacity: 0.9;
         }
         50% {
-          transform: rotateY(180deg);
+          transform: scale(1.05);
+          opacity: 1;
         }
         100% {
-          transform: rotateY(360deg);
+          transform: scale(1);
+          opacity: 1;
         }
       }
 
@@ -349,8 +352,6 @@ export function AnimationStyles() {
 
       .animate-flip {
         animation: flip 0.8s ease-in-out forwards;
-        transform-style: preserve-3d;
-        backface-visibility: hidden;
       }
 
       .animate-ai-thinking {
@@ -496,15 +497,15 @@ export function AnimationStyles() {
       /* Impact card animations */
       @keyframes impact-play {
         0% {
-          transform: scale(0.1) rotate(0deg);
+          transform: scale(0.1);
           opacity: 0;
         }
         50% {
-          transform: scale(1.5) rotate(180deg);
+          transform: scale(1.5);
           opacity: 1;
         }
         100% {
-          transform: scale(1) rotate(360deg);
+          transform: scale(1);
           opacity: 1;
         }
       }
@@ -535,8 +536,6 @@ export function AnimationStyles() {
       .animate-impact-play {
         animation: impact-play 0.8s ease-out forwards;
         transform-origin: center;
-        perspective: 1000px;
-        backface-visibility: hidden;
       }
 
       .animate-impact-pulse {

@@ -53,14 +53,6 @@ export function CardDetailModal({ open, onClose, card, onPlay, disabled }: CardD
   const handlePlay = () => {
     setIsPlaying(true)
 
-    // Add a class to trigger the flip animation
-    const cardElement = document.querySelector(".animate-flip")
-    if (cardElement) {
-      cardElement.classList.remove("animate-flip")
-      void cardElement.offsetWidth // Force reflow to restart animation
-      cardElement.classList.add("animate-flip")
-    }
-
     // Add a small delay to allow animation to play
     setTimeout(() => {
       onPlay()
