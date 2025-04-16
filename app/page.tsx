@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import "@/app/menu-styles.css"
+import { Play, Book, Images, Award } from "lucide-react"
 
 export default function HomePage() {
   return (
@@ -13,21 +14,33 @@ export default function HomePage() {
 
       <div className="flex flex-col items-center gap-8 w-full max-w-md px-4">
         <Link href="/game/match" className="w-full">
-          <button className="menu-button primary-button w-full">Play</button>
+          <button className="menu-button primary-button w-full flex items-center justify-center gap-2">
+            <Play className="h-5 w-5" />
+            Play
+          </button>
         </Link>
 
         <div className="flex w-full gap-6">
           <Link href="/rules" className="w-1/2">
-            <button className="menu-button secondary-button w-full">Rules</button>
+            <button className="menu-button secondary-button w-full flex items-center justify-center gap-2">
+              <Book className="h-5 w-5" />
+              Rules
+            </button>
           </Link>
 
           <Link href="/game/deck-gallery" className="w-1/2">
-            <button className="menu-button secondary-button w-full">Gallery</button>
+            <button className="menu-button secondary-button w-full flex items-center justify-center gap-2">
+              <Images className="h-5 w-5" />
+              Gallery
+            </button>
           </Link>
         </div>
 
         <Link href="/credits" className="w-full">
-          <button className="menu-button small-button w-full">Credits</button>
+          <button className="menu-button small-button w-full flex items-center justify-center gap-2">
+            <Award className="h-4 w-4" />
+            Credits
+          </button>
         </Link>
       </div>
 

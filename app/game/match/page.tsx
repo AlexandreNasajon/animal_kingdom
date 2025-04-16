@@ -1310,7 +1310,7 @@ export default function GameMatch() {
   // Update the main layout to be more compact and remove the game log
   return (
     <div
-      className="flex flex-col bg-gradient-to-b from-green-800 to-green-950 p-0 text-white w-full mx-auto"
+      className="flex flex-col bg-gradient-to-b from-green-800 to-green-950 p-0 text-white w-full min-h-screen"
       ref={gameBoardRef}
     >
       <AnimationStyles />

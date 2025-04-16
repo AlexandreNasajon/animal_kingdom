@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Grid, Mountain, Droplets, Fish, Zap } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getAllCards } from "@/utils/game-utils"
 import { getCardArt } from "@/components/card-art/card-art-mapper"
@@ -41,37 +41,42 @@ export default function DeckGallery() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-2xl text-white">Browse Cards</CardTitle>
-              <Tabs defaultValue="all" className="w-[500px]" onValueChange={setFilter}>
+              <Tabs defaultValue="all" className="w-[400px]" onValueChange={setFilter}>
                 <TabsList className="grid w-full grid-cols-5 gap-2 bg-green-900/40 p-1">
                   <TabsTrigger
                     value="all"
                     className="bg-green-700 text-white data-[state=active]:bg-green-500 data-[state=active]:text-white"
+                    title="All Cards"
                   >
-                    All
+                    <Grid className="h-5 w-5" />
                   </TabsTrigger>
                   <TabsTrigger
                     value="terrestrial"
                     className="bg-green-700 text-white data-[state=active]:bg-green-500 data-[state=active]:text-white"
+                    title="Terrestrial Animals"
                   >
-                    Terrestrial
+                    <Mountain className="h-5 w-5" />
                   </TabsTrigger>
                   <TabsTrigger
                     value="aquatic"
                     className="bg-green-700 text-white data-[state=active]:bg-green-500 data-[state=active]:text-white"
+                    title="Aquatic Animals"
                   >
-                    Aquatic
+                    <Droplets className="h-5 w-5" />
                   </TabsTrigger>
                   <TabsTrigger
                     value="amphibian"
                     className="bg-green-700 text-white data-[state=active]:bg-green-500 data-[state=active]:text-white"
+                    title="Amphibian Animals"
                   >
-                    Amphibian
+                    <Fish className="h-5 w-5" />
                   </TabsTrigger>
                   <TabsTrigger
                     value="impact"
                     className="bg-green-700 text-white data-[state=active]:bg-green-500 data-[state=active]:text-white"
+                    title="Impact Cards"
                   >
-                    Impact
+                    <Zap className="h-5 w-5" />
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
