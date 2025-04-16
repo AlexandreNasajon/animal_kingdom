@@ -3,9 +3,16 @@
 import { useState } from "react"
 import type { GameCard } from "@/types/game"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog"
+import { Card } from "@/components/ui/card"
+import { Check } from "lucide-react"
 import { getCardArt } from "./card-art/card-art-mapper"
 
 interface CardSelectionModalProps {
@@ -18,34 +25,6 @@ interface CardSelectionModalProps {
   selectionCount: number
   actionText: string
   filter?: (card: GameCard) => boolean
-}
-
-// Helper function to get environment color
-const getEnvironmentColor = (environment?: string) => {
-  switch (environment) {
-    case "terrestrial":
-      return "border-red-600 bg-red-900"
-    case "aquatic":
-      return "border-blue-600 bg-blue-900"
-    case "amphibian":
-      return "border-green-600 bg-green-900"
-    default:
-      return "border-gray-600 bg-gray-800"
-  }
-}
-
-// Helper function to get environment badge color
-const getEnvironmentBadgeColor = (environment?: string) => {
-  switch (environment) {
-    case "terrestrial":
-      return "bg-red-900 text-white"
-    case "aquatic":
-      return "bg-blue-900 text-white"
-    case "amphibian":
-      return "bg-green-900 text-white"
-    default:
-      return "bg-gray-900 text-white"
-  }
 }
 
 // Add this CSS class to the component's JSX to hide scrollbars but keep functionality
@@ -97,86 +76,78 @@ export function CardSelectionModal({
   }
 
   return (
-    <Dialog open={open} onOpenChange={(open) => !open && handleClose()}>
-      <style>{noScrollbarStyle}</style>
-      <DialogContent className="border-2 border-green-700 bg-green-900 p-2 text-white max-w-3xl">
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-[95vw] sm:max-w-md bg-green-900/95 border-green-700 text-white">
         <DialogHeader>
-          <DialogTitle className="text-base text-white">{title}</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription className="text-green-200">{description}</DialogDescription>
         </DialogHeader>
 
-        <div className="text-xs text-white mb-2">{description}</div>
-
-        <div className="flex justify-center gap-2 p-1">
+        <div className="flex flex-wrap gap-1 justify-center overflow-y-auto max-h-[60vh] no-scrollbar">
           {filteredCards.length === 0 ? (
             <div className="text-center text-sm text-white py-4">No valid cards available</div>
           ) : (
             filteredCards.map((card, index) => (
               <div
                 key={index}
-                className={`relative cursor-pointer transition-all duration-200 ease-in-out ${
-                  selectedIndices.includes(index) ? "scale-105 ring-2 ring-yellow-400" : ""
-                }`}
+                className={`relative cursor-pointer h-[90px] w-[60px] sm:h-[110px] sm:w-[70px] transform transition-all ${
+                  selectedIndices.includes(index) ? "border-2 border-yellow-400 scale-105" : ""
+                } hover:scale-105`}
                 onClick={() => handleCardClick(index)}
               >
                 <Card
-                  className={`w-[75px] h-[115px] border-2 ${
-                    card.type === "animal" ? getEnvironmentColor(card.environment) : "border-purple-600 bg-purple-900"
-                  } p-1 shadow-md relative overflow-hidden`}
+                  className={`relative h-full w-full ${
+                    card.type === "animal"
+                      ? card.environment === "terrestrial"
+                        ? "bg-red-900/60"
+                        : card.environment === "aquatic"
+                          ? "bg-blue-900/60"
+                          : "bg-green-900/60"
+                      : "bg-purple-900/60"
+                  } border-0 shadow-md`}
                 >
-                  {/* Card frame decoration */}
-                  <div className="absolute inset-0 border-4 border-transparent bg-gradient-to-br from-white/10 to-black/20 pointer-events-none"></div>
-                  <div className="absolute inset-0 border border-white/10 rounded-sm pointer-events-none"></div>
-
-                  <CardContent className="flex flex-col items-center space-y-1 p-0 h-full">
-                    <div className="text-center text-[10px] font-bold truncate w-full text-white">{card.name}</div>
-                    <div className="relative h-[70px] w-full flex items-center justify-center">{getCardArt(card)}</div>
-
-                    {card.type === "animal" ? (
-                      <div className="flex w-full items-center justify-between mt-auto">
-                        <Badge variant="outline" className={`${getEnvironmentBadgeColor(card.environment)} text-[8px]`}>
-                          {card.environment}
-                        </Badge>
-                        {card.points && (
-                          <div className="absolute top-1 left-1 bg-yellow-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-[8px] font-bold">
-                            {card.points}
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="mt-auto w-full">
-                        <div className="text-[8px] text-center line-clamp-2 text-white">Impact</div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* Selection indicator */}
-                {selectedIndices.includes(index) && (
-                  <div className="absolute top-0 right-0 bg-yellow-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
-                    {selectedIndices.indexOf(index) + 1}
+                  <div className="absolute inset-0 border-2 border-transparent bg-gradient-to-br from-white/10 to-black/20"></div>
+                  <div className="absolute inset-0 flex flex-col items-center justify-between overflow-hidden p-1">
+                    <div className="w-full text-center text-[8px] sm:text-[10px] font-bold truncate">{card.name}</div>
+                    <div className="relative h-[45px] sm:h-[60px] w-full flex items-center justify-center">
+                      {getCardArt(card)}
+                    </div>
+                    <div className="w-full text-center text-[6px] sm:text-[8px]">
+                      {card.type === "animal" ? (
+                        <div className="flex items-center justify-between">
+                          <span className="bg-gray-800 px-1 rounded truncate">{card.environment}</span>
+                          <span className="bg-yellow-600 px-1 rounded">{card.points} pts</span>
+                        </div>
+                      ) : (
+                        <div className="text-gray-300 truncate">{card.effect}</div>
+                      )}
+                    </div>
                   </div>
-                )}
+                  {selectedIndices.includes(index) && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                      <Check className="h-4 w-4 text-yellow-400" />
+                    </div>
+                  )}
+                </Card>
               </div>
             ))
           )}
         </div>
 
-        <DialogFooter className="flex justify-between pt-2">
+        <DialogFooter className="flex flex-col sm:flex-row gap-2">
           <Button
-            onClick={handleClose}
             variant="outline"
-            className="bg-green-600 text-white hover:bg-green-700"
-            size="sm"
+            onClick={onClose}
+            className="border-red-700 text-red-400 hover:bg-red-900/30 hover:text-red-300 px-3 py-1"
           >
             Cancel
           </Button>
           <Button
             onClick={handleConfirm}
             disabled={selectedIndices.length !== selectionCount || filteredCards.length === 0}
-            className="bg-green-700 hover:bg-green-600 text-white"
-            size="sm"
+            className="bg-green-700 hover:bg-green-600 text-white px-3 py-1"
           >
-            {actionText}
+            {actionText || "Confirm"}
           </Button>
         </DialogFooter>
       </DialogContent>

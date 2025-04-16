@@ -1,12 +1,18 @@
 "use client"
 
-import { useState } from "react"
-import type { GameCard } from "@/types/game"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { getCardArt } from "./card-art/card-art-mapper"
+import { Card } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { getCardArt } from "@/components/card-art/card-art-mapper"
+import type { GameCard } from "@/types/game"
 
 interface TargetSelectionModalProps {
   open: boolean
@@ -16,43 +22,11 @@ interface TargetSelectionModalProps {
   onCancel?: () => void
   title: string
   description: string
-  filter?: ((card: GameCard) => boolean) | undefined
+  filter?: (card: GameCard) => boolean
   playerCardIndices?: number[]
-  multiSelect?: boolean
-  maxSelections?: number
-}
-
-// Helper function to get environment color
-const getEnvironmentColor = (environment?: string) => {
-  switch (environment) {
-    case "terrestrial":
-      return "border-red-600 bg-red-900"
-    case "aquatic":
-      return "border-blue-600 bg-blue-900"
-    case "amphibian":
-      return "border-green-600 bg-green-900"
-    default:
-      return "border-gray-600 bg-gray-800"
-  }
-}
-
-// Helper function to get environment badge color
-const getEnvironmentBadgeColor = (environment?: string) => {
-  switch (environment) {
-    case "terrestrial":
-      return "bg-red-900 text-white"
-    case "aquatic":
-      return "bg-blue-900 text-white"
-    case "amphibian":
-      return "bg-green-900 text-white"
-    default:
-      return "bg-gray-900 text-white"
-  }
-}
-
-// Helper function to get player/opponent indicator color
-const getPlayerIndicatorColor = (isPlayerCard: boolean) => {
-  return isPlayerCard ? "bg-blue-700 text-white" : "bg-red-700 text-white"
+  isConfuseEffect?: boolean
+  playerField?: GameCard[]
+  opponentField?: GameCard[]
 }
 
 export function TargetSelectionModal({
@@ -65,147 +39,213 @@ export function TargetSelectionModal({
   description,
   filter,
   playerCardIndices = [],
-  multiSelect = false,
-  maxSelections = 2,
+  isConfuseEffect = false,
+  playerField = [],
+  opponentField = [],
 }: TargetSelectionModalProps) {
-  const [selectedIndices, setSelectedIndices] = useState<number[]>([])
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
+  const [selectedPlayerIndex, setSelectedPlayerIndex] = useState<number | null>(null)
+  const [selectedOpponentIndex, setSelectedOpponentIndex] = useState<number | null>(null)
 
-  // Filter cards if a filter function is provided
-  const filteredCards = filter ? cards.filter(filter) : cards
+  // Reset selection when modal opens
+  useEffect(() => {
+    if (open) {
+      setSelectedIndex(null)
+      setSelectedPlayerIndex(null)
+      setSelectedOpponentIndex(null)
+    }
+  }, [open])
 
   const handleCardClick = (index: number) => {
-    if (multiSelect) {
-      if (selectedIndices.includes(index)) {
-        // If already selected, deselect it
-        setSelectedIndices(selectedIndices.filter((i) => i !== index))
-      } else if (selectedIndices.length < maxSelections) {
-        // If not at max selection, select it
-        setSelectedIndices([...selectedIndices, index])
-      }
-    } else {
-      // Single select mode
-      setSelectedIndices([index])
-    }
+    setSelectedIndex(index)
+  }
+
+  const handlePlayerCardClick = (index: number) => {
+    setSelectedPlayerIndex(index)
+  }
+
+  const handleOpponentCardClick = (index: number) => {
+    setSelectedOpponentIndex(index)
   }
 
   const handleConfirm = () => {
-    if (multiSelect) {
-      onConfirm(selectedIndices)
-    } else {
-      onConfirm(selectedIndices[0])
+    if (isConfuseEffect) {
+      if (selectedPlayerIndex !== null && selectedOpponentIndex !== null) {
+        onConfirm([selectedPlayerIndex, selectedOpponentIndex])
+      }
+    } else if (selectedIndex !== null) {
+      onConfirm(selectedIndex)
     }
-    setSelectedIndices([])
   }
 
-  const handleClose = () => {
-    onClose()
-    setSelectedIndices([])
+  const isCardSelectable = (card: GameCard) => {
+    if (!filter) return true
+    return filter(card)
   }
 
+  // Special UI for Confuse effect
+  if (isConfuseEffect) {
+    return (
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="max-w-[90vw] max-h-[90vh] overflow-y-auto bg-green-900 border-2 border-green-700 text-white">
+          <DialogHeader>
+            <DialogTitle>{title}</DialogTitle>
+            <DialogDescription className="text-green-300">{description}</DialogDescription>
+          </DialogHeader>
+
+          {/* Opponent's field (AI) - shown first/on top */}
+          <div className="mb-4">
+            <h3 className="text-sm font-bold mb-2 text-red-300">AI's Animals</h3>
+            <div className="grid grid-cols-3 gap-2">
+              {opponentField.length > 0 ? (
+                opponentField.map((card, index) => (
+                  <Card
+                    key={`opponent-${index}`}
+                    className={`p-2 h-[120px] cursor-pointer transition-all ${
+                      selectedOpponentIndex === index
+                        ? "border-4 border-yellow-500 scale-105"
+                        : "border border-green-700 hover:border-green-500"
+                    } ${
+                      card.type === "animal"
+                        ? card.environment === "terrestrial"
+                          ? "bg-red-900/60"
+                          : card.environment === "aquatic"
+                            ? "bg-blue-900/60"
+                            : "bg-green-900/60"
+                        : "bg-purple-900/60"
+                    }`}
+                    onClick={() => handleOpponentCardClick(index)}
+                  >
+                    <div className="text-center text-xs font-bold mb-1">{card.name}</div>
+                    <div className="relative h-[60px] flex items-center justify-center">{getCardArt(card)}</div>
+                    <div className="mt-1 text-center text-[10px]">
+                      <span className="bg-yellow-600 px-1 rounded">{card.points} pts</span>
+                    </div>
+                  </Card>
+                ))
+              ) : (
+                <div className="col-span-3 text-center text-sm text-gray-400 py-4">No animals on AI's field</div>
+              )}
+            </div>
+          </div>
+
+          {/* Player's field - shown second/below */}
+          <div>
+            <h3 className="text-sm font-bold mb-2 text-blue-300">Your Animals</h3>
+            <div className="grid grid-cols-3 gap-2">
+              {playerField.length > 0 ? (
+                playerField.map((card, index) => (
+                  <Card
+                    key={`player-${index}`}
+                    className={`p-2 h-[120px] cursor-pointer transition-all ${
+                      selectedPlayerIndex === index
+                        ? "border-4 border-yellow-500 scale-105"
+                        : "border border-green-700 hover:border-green-500"
+                    } ${
+                      card.type === "animal"
+                        ? card.environment === "terrestrial"
+                          ? "bg-red-900/60"
+                          : card.environment === "aquatic"
+                            ? "bg-blue-900/60"
+                            : "bg-green-900/60"
+                        : "bg-purple-900/60"
+                    }`}
+                    onClick={() => handlePlayerCardClick(index)}
+                  >
+                    <div className="text-center text-xs font-bold mb-1">{card.name}</div>
+                    <div className="relative h-[60px] flex items-center justify-center">{getCardArt(card)}</div>
+                    <div className="mt-1 text-center text-[10px]">
+                      <span className="bg-yellow-600 px-1 rounded">{card.points} pts</span>
+                    </div>
+                  </Card>
+                ))
+              ) : (
+                <div className="col-span-3 text-center text-sm text-gray-400 py-4">No animals on your field</div>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter className="mt-4">
+            {onCancel && (
+              <Button variant="outline" onClick={onCancel} className="border-red-700 text-red-400">
+                Cancel
+              </Button>
+            )}
+            <Button
+              onClick={handleConfirm}
+              disabled={selectedPlayerIndex === null || selectedOpponentIndex === null}
+              className="bg-green-700 hover:bg-green-600"
+            >
+              Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
+  // Standard UI for other effects
   return (
-    <Dialog open={open} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="border-2 border-green-700 bg-green-900 p-2 text-white max-w-md">
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-[90vw] max-h-[90vh] overflow-y-auto bg-green-900 border-2 border-green-700 text-white">
         <DialogHeader>
-          <DialogTitle className="text-base text-white">{title}</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription className="text-green-300">{description}</DialogDescription>
         </DialogHeader>
 
-        <div className="text-xs text-white mb-2">{description}</div>
-
-        <div className="flex flex-wrap justify-center gap-2 max-h-[300px] overflow-y-auto p-1">
-          {filteredCards.length === 0 ? (
-            <div className="text-center text-sm text-white py-4">No valid targets available</div>
-          ) : (
-            filteredCards.map((card, index) => {
+        <div className="grid grid-cols-3 gap-2">
+          {cards.length > 0 ? (
+            cards.map((card, index) => {
+              const isSelectable = isCardSelectable(card)
               const isPlayerCard = playerCardIndices.includes(index)
+
               return (
-                <div
+                <Card
                   key={index}
-                  className={`relative cursor-pointer transition-all duration-200 ease-in-out ${
-                    selectedIndices.includes(index) ? "scale-105 ring-2 ring-yellow-400" : ""
+                  className={`p-2 h-[120px] transition-all ${
+                    selectedIndex === index
+                      ? "border-4 border-yellow-500 scale-105"
+                      : "border border-green-700 hover:border-green-500"
+                  } ${
+                    card.type === "animal"
+                      ? card.environment === "terrestrial"
+                        ? "bg-red-900/60"
+                        : card.environment === "aquatic"
+                          ? "bg-blue-900/60"
+                          : "bg-green-900/60"
+                      : "bg-purple-900/60"
+                  } ${!isSelectable ? "opacity-50" : "cursor-pointer"} ${
+                    isPlayerCard ? "border-l-4 border-l-blue-500" : ""
                   }`}
-                  onClick={() => handleCardClick(index)}
+                  onClick={() => isSelectable && handleCardClick(index)}
                 >
-                  <Card
-                    className={`w-[80px] h-[120px] border-2 ${
-                      card.type === "animal" ? getEnvironmentColor(card.environment) : "border-purple-600 bg-purple-900"
-                    } p-1 shadow-md relative overflow-hidden`}
-                  >
-                    {/* Card frame decoration */}
-                    <div className="absolute inset-0 border-4 border-transparent bg-gradient-to-br from-white/10 to-black/20 pointer-events-none"></div>
-                    <div className="absolute inset-0 border border-white/10 rounded-sm pointer-events-none"></div>
-
-                    {/* Player/opponent indicator */}
-                    <div
-                      className={`absolute top-0 left-0 right-0 ${getPlayerIndicatorColor(isPlayerCard)} text-[8px] text-center`}
-                    >
-                      {isPlayerCard ? "Your Card" : "Opponent"}
-                    </div>
-
-                    <CardContent className="flex flex-col items-center space-y-1 p-0 h-full pt-3">
-                      <div className="text-center text-[10px] font-bold truncate w-full text-white">{card.name}</div>
-                      <div className="relative h-[65px] w-full flex items-center justify-center">
-                        {getCardArt(card)}
-                      </div>
-
-                      {card.type === "animal" ? (
-                        <div className="flex w-full items-center justify-between mt-auto">
-                          <Badge
-                            variant="outline"
-                            className={`${getEnvironmentBadgeColor(card.environment)} text-[8px]`}
-                          >
-                            {card.environment}
-                          </Badge>
-                          {card.points && (
-                            <div className="absolute top-1 left-1 bg-yellow-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-[8px] font-bold">
-                              {card.points}
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="mt-auto w-full">
-                          <div className="text-[8px] text-center line-clamp-2 text-white">Impact</div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  {/* Selection indicator */}
-                  {selectedIndices.includes(index) && (
-                    <div className="absolute top-0 right-0 bg-yellow-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
-                      {multiSelect ? selectedIndices.indexOf(index) + 1 : "✓"}
-                    </div>
-                  )}
-                </div>
+                  <div className="text-center text-xs font-bold mb-1">{card.name}</div>
+                  <div className="relative h-[60px] flex items-center justify-center">{getCardArt(card)}</div>
+                  <div className="mt-1 text-center text-[10px]">
+                    {card.type === "animal" ? (
+                      <span className="bg-yellow-600 px-1 rounded">{card.points} pts</span>
+                    ) : (
+                      <span className="bg-purple-800 px-1 rounded">Impact</span>
+                    )}
+                  </div>
+                </Card>
               )
             })
+          ) : (
+            <div className="col-span-3 text-center text-sm text-gray-400 py-4">No valid targets available</div>
           )}
         </div>
 
-        <DialogFooter className="flex justify-between pt-2">
-          {onCancel ? (
-            <Button
-              onClick={onCancel}
-              variant="outline"
-              className="bg-green-600 text-white hover:bg-green-700"
-              size="sm"
-            >
-              Cancel Effect
-            </Button>
-          ) : (
-            <Button
-              onClick={handleClose}
-              variant="outline"
-              className="bg-green-600 text-white hover:bg-green-700"
-              size="sm"
-            >
-              Close
+        <DialogFooter className="mt-4">
+          {onCancel && (
+            <Button variant="outline" onClick={onCancel} className="border-red-700 text-red-400">
+              Cancel
             </Button>
           )}
           <Button
             onClick={handleConfirm}
-            disabled={selectedIndices.length === 0 || filteredCards.length === 0}
-            className="bg-green-700 hover:bg-green-600 text-white"
-            size="sm"
+            disabled={selectedIndex === null && !isConfuseEffect}
+            className="bg-green-700 hover:bg-green-600"
           >
             Confirm
           </Button>

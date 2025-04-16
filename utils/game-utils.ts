@@ -137,6 +137,86 @@ export function playAnimalCard(state: GameState, cardIndex: number, forPlayer: b
   }
 }
 
+// Check if an impact card has valid targets
+export function isImpactCardWithValidTargets(card: GameCard, state: GameState, forPlayer = true): boolean {
+  if (card.type !== "impact") return false
+
+  switch (card.name) {
+    case "Hunter":
+      // Check if there are terrestrial animals to target (including amphibians)
+      return forPlayer
+        ? state.opponentField.some((c) => c.environment === "terrestrial" || c.environment === "amphibian")
+        : state.playerField.some((c) => c.environment === "terrestrial" || c.environment === "amphibian")
+
+    case "Fisher":
+      // Check if there are aquatic animals to target (including amphibians)
+      return forPlayer
+        ? state.opponentField.some((c) => c.environment === "aquatic" || c.environment === "amphibian")
+        : state.playerField.some((c) => c.environment === "aquatic" || c.environment === "amphibian")
+
+    case "Scare":
+      // Check if there are any animals on the field
+      return state.opponentField.length > 0 || state.playerField.length > 0
+
+    case "Veterinarian":
+      // Check if there are animal cards in the discard pile
+      return state.sharedDiscard.some((c) => c.type === "animal")
+
+    case "Limit":
+      // Check if opponent has 7 or more points
+      return forPlayer
+        ? state.opponentPoints >= 7 && state.opponentField.length > 0
+        : state.playerPoints >= 7 && state.playerField.length > 0
+
+    case "Confuse":
+      // Check if there are at least 2 animals on the field
+      return state.opponentField.length > 0 && state.playerField.length > 0
+
+    case "Domesticate":
+      // Check if there are animals worth 2 points on opponent's field
+      return forPlayer ? state.opponentField.some((c) => c.points === 2) : state.playerField.some((c) => c.points === 2)
+
+    case "Trap":
+      // Check if opponent has animals on their field
+      return forPlayer ? state.opponentField.length > 0 : state.playerField.length > 0
+
+    case "Epidemic":
+      // Check if player has animals on their field
+      return forPlayer ? state.playerField.length > 0 : state.opponentField.length > 0
+
+    case "Compete":
+      // Check if player has animal cards in hand
+      return forPlayer
+        ? state.playerHand.some((c) => c.type === "animal")
+        : state.opponentHand.some((c) => c.type === "animal")
+
+    case "Prey":
+      // Check if player has animals on their field
+      return forPlayer ? state.playerField.length > 0 : state.opponentField.length > 0
+
+    case "Cage":
+      // Check if player has animals on their field and opponent has animals
+      return forPlayer
+        ? state.playerField.length > 0 && state.opponentField.length > 0
+        : state.opponentField.length > 0 && state.playerField.length > 0
+
+    case "Flourish":
+      // Check if player has 2 or fewer cards in hand
+      return forPlayer ? state.playerHand.length <= 2 : state.opponentHand.length <= 2
+
+    case "Earthquake":
+      // Always valid as it affects all animals worth 3+ points
+      return true
+
+    case "Storm":
+      // Always valid as it affects all animals worth 2 or fewer points
+      return true
+
+    default:
+      return true
+  }
+}
+
 // Play an impact card
 export function playImpactCard(state: GameState, cardIndex: number, forPlayer: boolean): GameState {
   const hand = forPlayer ? state.playerHand : state.opponentHand
@@ -144,6 +224,14 @@ export function playImpactCard(state: GameState, cardIndex: number, forPlayer: b
 
   if (!card || card.type !== "impact") {
     return state
+  }
+
+  // Check if the card has valid targets before playing it
+  if (!isImpactCardWithValidTargets(card, state, forPlayer)) {
+    return {
+      ...state,
+      message: `${forPlayer ? "You" : "AI"} cannot play ${card.name} as there are no valid targets.`,
+    }
   }
 
   const newHand = [...hand]
@@ -372,24 +460,6 @@ export function playImpactCard(state: GameState, cardIndex: number, forPlayer: b
           opponentPoints,
           sharedDeck: [...state.sharedDeck, ...cardsToBottom],
           message: `You played Flood. Each player sent up to 2 animals to the bottom of the deck.`,
-        }
-
-      case "Release":
-        // Play up to 2 animals from your hand
-        if (newState.playerHand.some((c) => c.type === "animal")) {
-          return {
-            ...newState,
-            pendingEffect: {
-              type: "release",
-              forPlayer: true,
-              animalsPlayed: 0,
-            },
-          }
-        } else {
-          return {
-            ...newState,
-            message: "You played Release, but you have no animal cards in your hand.",
-          }
         }
 
       case "Epidemic":
@@ -851,51 +921,6 @@ export function playImpactCard(state: GameState, cardIndex: number, forPlayer: b
           return {
             ...newState,
             message: "AI played Domesticate, but there are no 2-point animals to target.",
-          }
-        }
-
-      case "Release":
-        // Play up to 2 animals from AI's hand
-        const animalCards = state.opponentHand.filter((c) => c.type === "animal")
-        if (animalCards.length > 0) {
-          const newHand = [...state.opponentHand]
-          const newField = [...state.opponentField]
-          let pointsGained = 0
-          let animalsPlayed = 0
-          const playedNames = []
-
-          // Play up to 2 animals, prioritizing highest point values
-          const sortedAnimals = animalCards
-            .map((card, idx) => ({
-              card,
-              idx: state.opponentHand.findIndex((c) => c.id === card.id),
-            }))
-            .sort((a, b) => (b.card.points || 0) - (a.card.points || 0))
-            .slice(0, 2)
-
-          for (const { card, idx } of sortedAnimals) {
-            // Remove from hand (adjusting index for previous removals)
-            const adjustedIdx = newHand.findIndex((c) => c.id === card.id)
-            if (adjustedIdx !== -1) {
-              newHand.splice(adjustedIdx, 1)
-              newField.push(card)
-              pointsGained += card.points || 0
-              animalsPlayed++
-              playedNames.push(card.name)
-            }
-          }
-
-          return {
-            ...newState,
-            opponentHand: newHand,
-            opponentField: newField,
-            opponentPoints: state.opponentPoints + pointsGained,
-            message: `AI played Release and played ${animalsPlayed} animals: ${playedNames.join(", ")}.`,
-          }
-        } else {
-          return {
-            ...newState,
-            message: "AI played Release, but has no animal cards in hand.",
           }
         }
 
@@ -1658,15 +1683,7 @@ export function makeAIDecision(state: GameState): GameState {
       return playAnimalCard(state, highValueAnimalIndex, false)
     }
 
-    // 2. Use Release to play multiple animals
-    const releaseIndex = state.opponentHand.findIndex(
-      (card) => card.name === "Release" && state.opponentHand.filter((c) => c.type === "animal").length > 0,
-    )
-    if (releaseIndex !== -1) {
-      return playImpactCard(state, releaseIndex, false)
-    }
-
-    // 3. Use Veterinarian to recover a high-value animal
+    // 2. Use Veterinarian to recover a high-value animal
     const highValueInDiscard = state.sharedDiscard.some((card) => card.type === "animal" && (card.points || 0) >= 2)
     if (highValueInDiscard) {
       const veterinarianIndex = state.opponentHand.findIndex((card) => card.name === "Veterinarian")

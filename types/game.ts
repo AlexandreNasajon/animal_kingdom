@@ -363,6 +363,13 @@ export const GAME_DECK: GameCard[] = [
     effect: "Send 1 animal from the field to the top of the deck",
     imageUrl: "/placeholder.svg?height=120&width=80",
   },
+  {
+    id: 60, // New ID for the additional Scare card
+    type: "impact",
+    name: "Scare",
+    effect: "Send 1 animal from the field to the top of the deck",
+    imageUrl: "/placeholder.svg?height=120&width=80",
+  },
 
   // 1x Veterinarian (removed 1)
   {
@@ -421,15 +428,6 @@ export const GAME_DECK: GameCard[] = [
     type: "impact",
     name: "Prey",
     effect: "Choose 1 animal. Send all same-environment animals with fewer points to bottom",
-    imageUrl: "/placeholder.svg?height=120&width=80",
-  },
-
-  // 1x Flourish
-  {
-    id: 48,
-    type: "impact",
-    name: "Flourish",
-    effect: "If you have 2 or fewer cards in hand, draw until you have 6",
     imageUrl: "/placeholder.svg?height=120&width=80",
   },
 

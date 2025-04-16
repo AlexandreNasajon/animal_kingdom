@@ -28,18 +28,18 @@ export function OpponentHand({ cardCount, isThinking, playingCardId }: OpponentH
   }, [playingCardId])
 
   return (
-    <div className="flex justify-center overflow-visible p-1 min-h-[60px]">
+    <div className="flex justify-center overflow-visible p-1 min-h-[70px]">
       {Array.from({ length: cardCount }).map((_, index) => (
         <div
           key={index}
           className="relative"
           style={{
-            marginLeft: index > 0 ? "-12px" : "0", // Make cards overlap more
+            marginLeft: index > 0 ? "-15px" : "0", // Make cards overlap more
             zIndex: cardCount - index,
           }}
         >
           <Card
-            className={`h-[50px] w-[35px] cursor-not-allowed border border-red-700 bg-red-900 shadow-md
+            className={`h-[60px] w-[45px] cursor-not-allowed border border-red-700 bg-red-900 shadow-md
               ${animatedIndex === index ? "animate-ai-play-from-hand" : ""} 
               ${isThinking && index === 0 ? "animate-ai-thinking-card" : ""}
               relative overflow-hidden`}

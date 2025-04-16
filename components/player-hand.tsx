@@ -105,12 +105,12 @@ export function PlayerHand({
     // Create a custom drag image
     const card = cards[index]
     const dragImage = document.createElement("div")
-    dragImage.className = `h-[100px] w-[75px] border ${
+    dragImage.className = `h-[140px] w-[90px] border ${
       card.type === "animal" ? getEnvironmentColor(card.environment) : "border-purple-600 bg-purple-900"
     } rounded-md shadow-lg opacity-80`
 
     document.body.appendChild(dragImage)
-    e.dataTransfer.setDragImage(dragImage, 37, 50)
+    e.dataTransfer.setDragImage(dragImage, 45, 70)
 
     // Remove the element after drag starts
     setTimeout(() => {
@@ -219,17 +219,17 @@ export function PlayerHand({
   const getCardEffectPreview = (card: GameCard) => {
     if (card.name === "Prey") {
       return (
-        <div className="mt-1 text-[7px] text-center px-1 leading-tight text-white">
+        <div className="mt-1 text-[8px] text-center px-1 leading-tight text-white">
           Choose 1 animal. Send all same-environment animals with fewer points to bottom
         </div>
       )
     }
 
-    return <div className="mt-1 text-[8px] text-center px-1 text-white">{card.effect}</div>
+    return <div className="mt-1 text-[9px] text-center px-1 text-white">{card.effect}</div>
   }
 
   return (
-    <div ref={containerRef} className="flex justify-center overflow-visible p-1 min-h-[130px]">
+    <div ref={containerRef} className="flex justify-center overflow-visible p-1 min-h-[170px]">
       {cards.map((card, index) => {
         const isHovered = hoveredCardIndex === index
         const isPlaying = card.id === playingCardId
@@ -241,76 +241,51 @@ export function PlayerHand({
 
         return (
           <div
-            key={card.id}
-            className={`card-zoom-container ${isDragging ? "opacity-50" : ""}`}
+            key={index}
+            className={`relative cursor-pointer transform transition-all ${
+              disabled ? "opacity-50" : ""
+            } ${isAnimating ? "animate-new-card" : ""} ${isPlaying ? "animate-play-card" : ""}`}
+            onClick={() => onSelectCard(index)}
             onMouseEnter={() => handleMouseEnter(index)}
             onMouseLeave={handleMouseLeave}
+            onDragStart={(e) => handleDragStart(e, index)}
+            onDragEnd={handleDragEnd}
+            draggable={!disabled}
+            onTouchStart={(e) => handleTouchStart(e, index)}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            data-card-id={card.id}
             style={{
               marginLeft: index > 0 ? "-15px" : "0", // Make cards overlap
               zIndex: isHovered ? 10 : index, // Reverse stacking order so rightmost cards are on top
             }}
           >
             <Card
-              className={`h-[100px] w-[75px] cursor-pointer border card-zoom card-draggable ${
-                card.type === "animal" ? getEnvironmentColor(card.environment) : "border-purple-600 bg-purple-900"
-              } p-0.5 shadow-md ${disabled ? "opacity-70" : ""} 
-                ${isAnimating ? "animate-draw" : ""} 
-                ${isPlaying ? animationClass : ""}
-                relative overflow-hidden transition-all duration-300 ease-in-out`}
-              onClick={(e) => {
-                if (!disabled) {
-                  // Add flip animation class
-                  const cardElement = e.currentTarget
-                  cardElement.classList.add("animate-flip")
-
-                  // Call the select card function after a small delay
-                  setTimeout(() => {
-                    onSelectCard(index)
-                  }, 100)
-                }
-              }}
-              draggable={!disabled}
-              onDragStart={(e) => handleDragStart(e, index)}
-              onDragEnd={handleDragEnd}
-              onTouchStart={(e) => handleTouchStart(e, index)}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-              style={{
-                animationDelay: `${animatedCardIds.indexOf(card.id) * 0.15}s`,
-                zIndex: isHovered ? 10 : 1,
-              }}
+              className={`relative h-[140px] w-[90px] transform transition-transform ${
+                card.type === "animal"
+                  ? card.environment === "terrestrial"
+                    ? "bg-red-900/60"
+                    : card.environment === "aquatic"
+                      ? "bg-blue-900/60"
+                      : "bg-green-900/60"
+                  : "bg-purple-900/60"
+              } ${isDragging ? "scale-105" : "hover:scale-105"} border-0 shadow-md`}
             >
-              {/* Card frame decoration */}
-              <div className="absolute inset-0 border-4 border-transparent bg-gradient-to-br from-white/10 to-black/20 pointer-events-none"></div>
-              <div className="absolute inset-0 border border-white/10 rounded-sm pointer-events-none"></div>
-
-              <CardContent className="flex h-full flex-col items-center justify-between p-0.5">
-                <div className="w-full text-center text-[11px] font-medium text-white">{card.name}</div>
-
-                <div className="relative h-[55px] w-full overflow-hidden">{getCardArt(card)}</div>
-
-                <div className="w-full px-0.5">
+              <div className="absolute inset-0 border-2 border-transparent bg-gradient-to-br from-white/10 to-black/20 pointer-events-none"></div>
+              <div className="absolute inset-0 flex flex-col items-center justify-between overflow-hidden p-1">
+                <div className="w-full text-center text-[12px] font-bold truncate">{card.name}</div>
+                <div className="relative h-[90px] w-full flex items-center justify-center">{getCardArt(card)}</div>
+                <div className="w-full text-center text-[10px]">
                   {card.type === "animal" ? (
                     <div className="flex items-center justify-between">
-                      <Badge
-                        variant="outline"
-                        className={`${getEnvironmentBadgeColor(card.environment)} text-[9px] px-0.5 py-0`}
-                      >
-                        {card.environment}
-                      </Badge>
-                      {card.points && (
-                        <div className="absolute top-1 left-1 bg-yellow-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
-                          {card.points}
-                        </div>
-                      )}
+                      <span className="bg-gray-800 px-1 rounded">{card.environment}</span>
+                      <span className="bg-yellow-600 px-1 rounded">{card.points} pts</span>
                     </div>
                   ) : (
-                    <div className="text-center text-white line-clamp-1">
-                      <span className="text-[9px]">Impact</span>
-                    </div>
+                    <div className="text-gray-300 truncate">{card.effect}</div>
                   )}
                 </div>
-              </CardContent>
+              </div>
             </Card>
 
             {/* Enlarged card preview on hover */}
@@ -320,7 +295,7 @@ export function PlayerHand({
                 style={{ display: disabled ? "none" : "block" }}
               >
                 <Card
-                  className={`h-[200px] w-[140px] border-2 ${
+                  className={`h-[280px] w-[180px] border-2 ${
                     card.type === "animal" ? getEnvironmentColor(card.environment) : "border-purple-600 bg-purple-900"
                   } p-1 shadow-xl relative overflow-hidden`}
                 >
@@ -329,21 +304,21 @@ export function PlayerHand({
                   <div className="absolute inset-0 border border-white/10 rounded-sm pointer-events-none"></div>
 
                   <CardContent className="flex h-full flex-col items-center justify-between p-1">
-                    <div className="w-full text-center text-xs font-medium text-white">{card.name}</div>
+                    <div className="w-full text-center text-sm font-medium text-white">{card.name}</div>
 
-                    <div className="relative h-[110px] w-full">{getCardArt(card)}</div>
+                    <div className="relative h-[160px] w-full">{getCardArt(card)}</div>
 
                     <div className="w-full">
                       {card.type === "animal" ? (
                         <div className="flex items-center justify-between">
                           <Badge
                             variant="outline"
-                            className={`${getEnvironmentBadgeColor(card.environment)} text-[9px]`}
+                            className={`${getEnvironmentBadgeColor(card.environment)} text-[10px]`}
                           >
                             {card.environment}
                           </Badge>
                           {card.points && (
-                            <div className="absolute top-1 left-1 bg-yellow-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+                            <div className="absolute top-2 left-2 bg-yellow-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold">
                               {card.points}
                             </div>
                           )}
@@ -351,7 +326,7 @@ export function PlayerHand({
                       ) : (
                         <div className="w-full">
                           <div className="text-center text-white">
-                            <span className="text-[9px]">Impact</span>
+                            <span className="text-[10px]">Impact</span>
                           </div>
                           {getCardEffectPreview(card)}
                         </div>

@@ -102,13 +102,7 @@ export default function Rules() {
               <li>
                 <strong>Veterinarian:</strong> Play an animal card from the discard pile
               </li>
-              <li>
-                <strong>Drought:</strong> Each player sends animals to the bottom of the deck until they have 2 on the
-                field
-              </li>
-              <li>
-                <strong>Flood:</strong> Each player sends 2 animals from their field to the bottom of the deck
-              </li>
+              {/* Removed Drought and Flood examples */}
               <li>And many more...</li>
             </ul>
 
