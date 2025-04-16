@@ -76,6 +76,17 @@ export function PlayerHand({
     }
   }, [newCardIds])
 
+  // Add window resize listener for responsive card spacing
+  useEffect(() => {
+    const handleResize = () => {
+      // Force a re-render when window size changes
+      setHoveredCardIndex(null)
+    }
+
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
+
   // Handle mouse enter/leave for card zoom effect
   const handleMouseEnter = (index: number) => {
     if (!disabled) {
@@ -229,7 +240,7 @@ export function PlayerHand({
   }
 
   return (
-    <div ref={containerRef} className="flex justify-center overflow-visible p-1 min-h-[170px]">
+    <div ref={containerRef} className="flex justify-center overflow-visible p-1 min-h-[150px] sm:min-h-[170px]">
       {cards.map((card, index) => {
         const isHovered = hoveredCardIndex === index
         const isPlaying = card.id === playingCardId
@@ -256,12 +267,13 @@ export function PlayerHand({
             onTouchEnd={handleTouchEnd}
             data-card-id={card.id}
             style={{
-              marginLeft: index > 0 ? "-15px" : "0", // Make cards overlap
+              marginLeft:
+                index > 0 ? (typeof window !== "undefined" && window.innerWidth < 640 ? "-30px" : "-15px") : "0", // Make cards overlap more on mobile
               zIndex: isHovered ? 10 : index, // Reverse stacking order so rightmost cards are on top
             }}
           >
             <Card
-              className={`relative h-[140px] w-[90px] transform transition-transform ${
+              className={`relative h-[140px] w-[90px] sm:h-[140px] sm:w-[90px] h-[120px] w-[80px] transform transition-transform ${
                 card.type === "animal"
                   ? card.environment === "terrestrial"
                     ? "bg-red-900/60"
