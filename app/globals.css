@@ -156,3 +156,20 @@ body {
 .text-gray-900 {
   color: white !important;
 }
+
+/* Add these styles at the end of the file */
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+.card-back-pattern {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255, 0, 0, 0.1),
+    rgba(255, 0, 0, 0.1) 10px,
+    rgba(0, 0, 0, 0.1) 10px,
+    rgba(0, 0, 0, 0.1) 20px
+  );
+}

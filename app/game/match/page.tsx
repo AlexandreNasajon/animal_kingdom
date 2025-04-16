@@ -34,10 +34,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { DiscardPileGallery } from "@/components/discard-pile-gallery"
 
-// Update the AI card play animation to improve the flipping effect
+// Let's completely revise the AI card animation approach to make sure it falls onto the AI field.
 
-// First add the updated animation keyframes to the confetti animation
+// 1. First, update the confettiAnimation with a much simpler animation approach:
+
 const confettiAnimation = `
 @keyframes confetti {
   0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
@@ -48,15 +50,31 @@ const confettiAnimation = `
 }
 
 @keyframes ai-card-play {
-  0% { transform: translateY(-60px) scale(0.9) rotateY(180deg); opacity: 0.2; }
-  30% { transform: translateY(-10px) scale(1.1) rotateY(120deg); opacity: 0.8; }
-  60% { transform: translateY(10px) scale(1.1) rotateY(60deg); opacity: 1; }
-  100% { transform: translateY(0) scale(1) rotateY(0deg); opacity: 1; }
+  0% { transform: translateY(0) translateX(0) rotateY(180deg) scale(1); opacity: 0.9; }
+  50% { transform: translateY(0) translateX(0) rotateY(90deg) scale(1); opacity: 1; }
+  100% { transform: translateY(0) translateX(0) rotateY(0deg) scale(1); opacity: 1; }
 }
 .animate-ai-card-play {
-  animation: ai-card-play 0.7s ease-in-out forwards;
+  animation: ai-card-play 1.5s ease-in-out forwards;
   transform-style: preserve-3d;
   perspective: 1000px;
+  transform-origin: center;
+  backface-visibility: hidden;
+}
+
+@keyframes fall-to-field {
+  0% { top: 30%; left: 50%; transform: translate(-50%, -50%) scale(1.5); opacity: 1; }
+  100% { top: 15%; left: 50%; transform: translate(-50%, -50%) scale(0.4); opacity: 1; }
+}
+.ai-card-animation {
+  position: fixed;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 50;
+}
+.fall-to-field {
+  animation: fall-to-field 1s ease-in-out forwards;
 }
 `
 
@@ -115,6 +133,8 @@ export default function GameMatch() {
   // Add new state for AI card play animation
   const [aiPlayedCard, setAiPlayedCard] = useState<GameCard | null>(null)
   const [showAiCardAnimation, setShowAiCardAnimation] = useState(false)
+  const [aiCardAnimationPhase, setAiCardAnimationPhase] = useState<"flip" | "toField" | "done">("flip")
+  const [aiCardFieldPosition, setAiCardFieldPosition] = useState({ top: 0, left: 0 })
 
   // Add new animation states for discard/return to deck
   const [discardingCardId, setDiscardingCardId] = useState<number | null>(null)
@@ -152,9 +172,14 @@ export default function GameMatch() {
 
   // Add a ref to track the game board element for particle effects
   const gameBoardRef = useRef<HTMLDivElement>(null)
+  const opponentFieldRef = useRef<HTMLDivElement>(null)
 
   // Add a ref to store the last played card for cancellation
   const lastPlayedCardRef = useRef<GameCard | null>(null)
+
+  // Add a new state to track when the discard gallery should be shown
+  // Add this with the other state declarations near the top of the component
+  const [showDiscardGallery, setShowDiscardGallery] = useState(false)
 
   // First, add this effect to update the message whenever gameState changes
   useEffect(() => {
@@ -306,6 +331,7 @@ export default function GameMatch() {
 
             // Show the AI card play animation
             setAiPlayedCard(newCard)
+            setAiCardAnimationPhase("flip")
             setShowAiCardAnimation(true)
 
             // Log AI's action
@@ -313,9 +339,16 @@ export default function GameMatch() {
               console.log(afterAIMove.message)
             }
 
-            // After a short delay, hide the animation and show the card appearing on the field
-            await new Promise((resolve) => setTimeout(resolve, 700))
+            // Wait for the flip animation to complete
+            await new Promise((resolve) => setTimeout(resolve, 1500))
 
+            // Set animation phase to move card to field position
+            setAiCardAnimationPhase("toField")
+
+            // Wait for card to fall to field
+            await new Promise((resolve) => setTimeout(resolve, 1000))
+
+            // Hide the animation overlay and show the card on the field
             setShowAiCardAnimation(false)
             setAiPlayingCardId(null)
             setNewOpponentFieldCardId(newCard.id)
@@ -1317,7 +1350,7 @@ export default function GameMatch() {
         </div>
 
         {/* Opponent field */}
-        <div className="mb-1">
+        <div className="mb-1" ref={opponentFieldRef}>
           <GameBoard
             cards={gameState.opponentField}
             isOpponent={true}
@@ -1382,7 +1415,10 @@ export default function GameMatch() {
           <div className="flex items-center justify-between gap-1">
             {/* Discard pile on the left */}
             <div className="w-[70px] flex-shrink-0">
-              <Card className="h-[90px] w-[65px] border-2 border-green-700 bg-green-900 shadow-md relative overflow-hidden">
+              <Card
+                className={`h-[90px] w-[65px] border-2 border-green-700 bg-green-900 shadow-md relative overflow-hidden cursor-pointer hover:scale-105 transition-transform`}
+                onClick={() => setShowDiscardGallery(true)}
+              >
                 {/* Card frame decoration */}
                 <div className="absolute inset-0 border-4 border-transparent bg-gradient-to-br from-green-800/20 to-black/30 pointer-events-none"></div>
                 <div className="absolute inset-0 border border-green-400/10 rounded-sm pointer-events-none"></div>
@@ -1455,9 +1491,7 @@ export default function GameMatch() {
 
       {/* Player hand */}
       <div className="mt-1 px-2 pb-1">
-        <div className="mb-0 flex items-center justify-between">
-          <span className="text-[8px]">Your Hand ({gameState.playerHand.length})</span>
-        </div>
+        <div className="mb-0"></div>
         <div className="flex items-center justify-center">
           <PlayerHand
             cards={gameState.playerHand}
@@ -1549,38 +1583,74 @@ export default function GameMatch() {
       />
       {/* AI card play animation overlay */}
       {showAiCardAnimation && aiPlayedCard && (
-        <div className="pointer-events-none fixed inset-0 z-30 overflow-hidden flex items-center justify-center">
-          <div className="relative animate-ai-card-play">
-            <Card
-              className={`h-[240px] w-[160px] border-4 ${
-                aiPlayedCard.type === "animal"
-                  ? aiPlayedCard.environment === "terrestrial"
-                    ? "border-red-600 bg-red-900"
-                    : aiPlayedCard.environment === "aquatic"
-                      ? "border-blue-600 bg-blue-900"
-                      : "border-green-600 bg-green-900"
-                  : "border-purple-600 bg-purple-900"
-              } shadow-xl`}
-            >
-              <div className="absolute inset-0 border-8 border-transparent bg-gradient-to-br from-white/10 to-black/20"></div>
-              <div className="absolute inset-0 flex flex-col items-center justify-between p-2">
-                <div className="text-center text-sm font-bold">{aiPlayedCard.name}</div>
-                <div className="relative h-[140px] w-full flex items-center justify-center">
-                  {/* Render the actual card art */}
-                  {getCardArt(aiPlayedCard)}
-                </div>
-                <div className="w-full text-center text-xs">
-                  {aiPlayedCard.type === "animal" ? (
-                    <div className="flex items-center justify-between">
-                      <span className="bg-gray-800 px-1 rounded text-[10px]">{aiPlayedCard.environment}</span>
-                      <span className="bg-yellow-600 px-1 rounded text-[10px]">{aiPlayedCard.points} pts</span>
+        <div className="pointer-events-none fixed inset-0 z-30 overflow-hidden">
+          <div className={`ai-card-animation ${aiCardAnimationPhase === "toField" ? "fall-to-field" : ""}`}>
+            {/* Card container with 3D flip animation */}
+            <div className="relative">
+              {/* Card back */}
+              <div
+                className="absolute inset-0 backface-hidden"
+                style={{
+                  backfaceVisibility: "hidden",
+                  transform: aiCardAnimationPhase === "flip" ? "rotateY(180deg)" : "rotateY(180deg)",
+                  transition: "transform 1.5s ease-in-out",
+                  opacity: aiCardAnimationPhase === "flip" ? 1 : 0,
+                }}
+              >
+                <Card className="h-[240px] w-[160px] border-4 border-red-700 bg-red-900 shadow-xl">
+                  <div className="absolute inset-0 border-8 border-transparent bg-gradient-to-br from-red-800/20 to-black/30"></div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="card-back-pattern"></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="h-16 w-16 rounded-full border-4 border-red-400 flex items-center justify-center">
+                        <span className="text-xl font-bold text-red-400">AI</span>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="text-[10px] text-gray-300">{aiPlayedCard.effect}</div>
-                  )}
-                </div>
+                  </div>
+                </Card>
               </div>
-            </Card>
+
+              {/* Card front */}
+              <div
+                className="backface-hidden"
+                style={{
+                  backfaceVisibility: "hidden",
+                  transform: aiCardAnimationPhase === "flip" ? "rotateY(0deg)" : "rotateY(0deg)",
+                  transition: "transform 1.5s ease-in-out",
+                }}
+              >
+                <Card
+                  className={`h-[240px] w-[160px] border-4 ${
+                    aiPlayedCard.type === "animal"
+                      ? aiPlayedCard.environment === "terrestrial"
+                        ? "border-red-600 bg-red-900"
+                        : aiPlayedCard.environment === "aquatic"
+                          ? "border-blue-600 bg-blue-900"
+                          : "border-green-600 bg-green-900"
+                      : "border-purple-600 bg-purple-900"
+                  } shadow-xl`}
+                >
+                  <div className="absolute inset-0 border-8 border-transparent bg-gradient-to-br from-white/10 to-black/20"></div>
+                  <div className="absolute inset-0 flex flex-col items-center justify-between p-2">
+                    <div className="text-center text-sm font-bold">{aiPlayedCard.name}</div>
+                    <div className="relative h-[140px] w-full flex items-center justify-center">
+                      {getCardArt(aiPlayedCard)}
+                    </div>
+                    <div className="w-full text-center text-xs">
+                      {aiPlayedCard.type === "animal" ? (
+                        <div className="flex items-center justify-between">
+                          <span className="bg-gray-800 px-1 rounded text-[10px]">{aiPlayedCard.environment}</span>
+                          <span className="bg-yellow-600 px-1 rounded text-[10px]">{aiPlayedCard.points} pts</span>
+                        </div>
+                      ) : (
+                        <div className="text-[10px] text-gray-300">{aiPlayedCard.effect}</div>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            </div>
+
             <div className="absolute top-full mt-2 text-center w-full">
               <div className="bg-red-900/80 text-white text-sm px-2 py-1 rounded-md">AI plays {aiPlayedCard.name}</div>
             </div>
@@ -1669,6 +1739,12 @@ export default function GameMatch() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {/* Discard Pile Gallery */}
+      <DiscardPileGallery
+        open={showDiscardGallery}
+        onClose={() => setShowDiscardGallery(false)}
+        cards={gameState.sharedDiscard}
+      />
     </div>
   )
 }
