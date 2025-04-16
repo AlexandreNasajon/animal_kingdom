@@ -28,37 +28,38 @@ export function OpponentHand({ cardCount, isThinking, playingCardId }: OpponentH
   }, [playingCardId])
 
   return (
-    <div className="flex justify-center overflow-visible p-1 min-h-[70px]">
-      {Array.from({ length: cardCount }).map((_, index) => (
-        <div
-          key={index}
-          className="relative"
-          style={{
-            marginLeft: index > 0 ? "-15px" : "0", // Make cards overlap more
-            zIndex: cardCount - index,
-          }}
-        >
-          <Card
-            className={`h-[60px] w-[45px] cursor-not-allowed border border-red-700 bg-red-900 shadow-md
-              ${animatedIndex === index ? "animate-ai-play-from-hand" : ""} 
-              ${isThinking && index === 0 ? "animate-ai-thinking-card" : ""}
-              relative overflow-hidden`}
+    <div className="flex items-center justify-center p-1 pb-0">
+      <div className="flex justify-center">
+        {Array.from({ length: cardCount }).map((_, index) => (
+          <div
+            key={index}
+            className={`relative transform transition-all ${index === playingCardId ? "animate-play-card" : ""}`}
+            style={{
+              marginLeft:
+                index > 0 ? (typeof window !== "undefined" && window.innerWidth < 640 ? "-40px" : "-25px") : "0",
+              zIndex: index,
+            }}
           >
-            {/* Card frame decoration */}
-            <div className="absolute inset-0 border-4 border-transparent bg-gradient-to-br from-red-800/20 to-black/30 pointer-events-none"></div>
-            <div className="absolute inset-0 border border-red-400/10 rounded-sm pointer-events-none"></div>
-
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="card-back-pattern"></div>
+            <Card className="h-[70px] w-[50px] sm:h-[80px] sm:w-[55px] border-2 border-red-700 bg-red-900 shadow-md relative overflow-hidden">
+              <div className="absolute inset-0 border-4 border-transparent bg-gradient-to-br from-red-800/20 to-black/30 pointer-events-none"></div>
+              <div className="absolute inset-0 border border-red-400/10 rounded-sm pointer-events-none"></div>
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="h-6 w-6 rounded-full border-2 border-red-400 flex items-center justify-center">
-                  <span className="text-[8px] font-bold text-red-400">AI</span>
+                <div className="card-back-pattern"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="h-6 w-6 rounded-full border-2 border-red-400 flex items-center justify-center">
+                    <span className="text-xs font-bold text-red-400">AI</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </div>
+        ))}
+      </div>
+      {isThinking && (
+        <div className="absolute right-2 top-2 flex items-center justify-center">
+          <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-t-2 border-red-500"></div>
         </div>
-      ))}
+      )}
     </div>
   )
 }

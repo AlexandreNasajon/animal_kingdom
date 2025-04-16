@@ -17,11 +17,11 @@ export function SharedDeckDisplay({ deckCount, discardPile, onDrawCards, canDraw
   const [showDiscardGallery, setShowDiscardGallery] = useState(false)
 
   return (
-    <div className="flex items-center justify-between gap-4 w-full">
+    <div className="flex items-center justify-between gap-2 sm:gap-4 w-full">
       {/* Discard pile on the left */}
       <div className="relative">
         <Card
-          className={`h-[90px] w-[70px] ${
+          className={`h-[80px] w-[60px] sm:h-[90px] sm:w-[70px] ${
             discardPile.length > 0 ? "cursor-pointer" : "cursor-not-allowed"
           } border-2 border-green-700 bg-green-900/60 shadow-md relative overflow-hidden`}
           onClick={() => discardPile.length > 0 && setShowDiscardGallery(true)}
@@ -46,7 +46,7 @@ export function SharedDeckDisplay({ deckCount, discardPile, onDrawCards, canDraw
       {/* Deck on the right - now clickable */}
       <div className="relative">
         <Card
-          className={`h-[90px] w-[70px] ${
+          className={`h-[80px] w-[60px] sm:h-[90px] sm:w-[70px] ${
             canDraw ? "cursor-pointer hover:scale-105 transition-transform" : "cursor-not-allowed opacity-70"
           } border-2 border-green-700 bg-green-900 shadow-md relative overflow-hidden`}
           onClick={canDraw ? onDrawCards : undefined}
@@ -65,7 +65,7 @@ export function SharedDeckDisplay({ deckCount, discardPile, onDrawCards, canDraw
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="card-back-pattern"></div>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <Layers className="h-6 w-6 text-green-400 mb-1" />
+              <Layers className="h-5 w-5 sm:h-6 sm:w-6 text-green-400 mb-1" />
               <div className="text-sm font-bold text-green-400">{deckCount}</div>
             </div>
           </div>

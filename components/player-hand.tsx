@@ -272,7 +272,7 @@ export function PlayerHand({
 
   // In the return statement, update the card div's className and onClick
   return (
-    <div ref={containerRef} className="flex justify-center overflow-visible p-1 pt-4 min-h-[140px] sm:min-h-[160px]">
+    <div ref={containerRef} className="flex justify-center overflow-visible p-1 pt-2 min-h-[110px] sm:min-h-[130px]">
       {cards.map((card, index) => {
         const isHovered = hoveredCardIndex === index
         const isActive = activeCardIndex === index
@@ -302,14 +302,14 @@ export function PlayerHand({
             data-card-id={card.id}
             style={{
               marginLeft:
-                index > 0 ? (typeof window !== "undefined" && window.innerWidth < 640 ? "-30px" : "-15px") : "0", // Make cards overlap more on mobile
+                index > 0 ? (typeof window !== "undefined" && window.innerWidth < 640 ? "-35px" : "-20px") : "0", // Make cards overlap more on mobile
               zIndex: isActive ? 10 : index, // Active card gets highest z-index
               pointerEvents: isActive || !cards.some((_c, i) => activeCardIndex === i) ? "auto" : "none", // Only allow interaction with active card
               boxShadow: isActive ? "0 0 10px rgba(255, 255, 255, 0.5)" : "none", // Add subtle glow to active card
             }}
           >
             <Card
-              className={`relative h-[140px] w-[90px] sm:h-[140px] sm:w-[90px] h-[120px] w-[80px] transform transition-transform ${
+              className={`relative h-[120px] w-[80px] sm:h-[130px] sm:w-[85px] transform transition-transform ${
                 card.type === "animal"
                   ? card.environment === "terrestrial"
                     ? "bg-red-900"
@@ -319,19 +319,26 @@ export function PlayerHand({
                   : "bg-purple-900"
               } ${isDragging ? "scale-105" : isActive ? "scale-105" : ""} border-0 shadow-md`}
             >
+              {/* Points indicator for animal cards */}
+              {card.type === "animal" && card.points && (
+                <div className="absolute top-1 left-1 bg-yellow-600 text-white rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-xs font-bold z-10 shadow-md border border-yellow-500">
+                  {card.points}
+                </div>
+              )}
               {/* Add a subtle highlight for the active card */}
               {isActive && (
                 <div className="absolute inset-0 border-2 border-white/30 rounded-md pointer-events-none z-10"></div>
               )}
               <div className="absolute inset-0 border-2 border-transparent bg-gradient-to-br from-white/10 to-black/20 pointer-events-none"></div>
               <div className="absolute inset-0 flex flex-col items-center justify-between overflow-hidden p-1">
-                <div className="w-full text-center text-[12px] font-bold truncate">{card.name}</div>
-                <div className="relative h-[90px] w-full flex items-center justify-center">{getCardArt(card)}</div>
-                <div className="w-full text-center text-[10px]">
+                <div className="w-full text-center text-[10px] sm:text-[12px] font-bold truncate">{card.name}</div>
+                <div className="relative h-[70px] sm:h-[80px] w-full flex items-center justify-center">
+                  {getCardArt(card)}
+                </div>
+                <div className="w-full text-center text-[8px] sm:text-[10px]">
                   {card.type === "animal" ? (
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-center">
                       <span className="bg-gray-800 px-1 rounded">{card.environment}</span>
-                      <span className="bg-yellow-600 px-1 rounded">{card.points} pts</span>
                     </div>
                   ) : (
                     <div className="text-gray-300 truncate">{card.effect}</div>
@@ -340,8 +347,8 @@ export function PlayerHand({
               </div>
             </Card>
 
-            {/* Enlarged card preview on hover */}
-            {isHovered && (
+            {/* Enlarged card preview on hover - only show on desktop */}
+            {isHovered && typeof window !== "undefined" && window.innerWidth >= 640 && (
               <div
                 className="absolute left-1/2 bottom-full mb-2 transform -translate-x-1/2 z-50 pointer-events-none"
                 style={{ display: disabled ? "none" : "block" }}

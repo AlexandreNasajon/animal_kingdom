@@ -251,7 +251,7 @@ export function GameBoard({
   return (
     <>
       <div
-        className={`flex ${isOpponent ? "min-h-[120px] max-w-[95%] mx-auto" : "min-h-[130px]"} items-center justify-center gap-2 rounded-lg border ${
+        className={`flex ${isOpponent ? "min-h-[100px] sm:min-h-[120px] max-w-[95%] mx-auto" : "min-h-[110px] sm:min-h-[130px]"} items-center justify-center gap-1 sm:gap-2 rounded-lg border ${
           isWinning
             ? `${isOpponent ? "border-yellow-500" : "border-yellow-500"} bg-yellow-900 shadow-inner shadow-yellow-500/30`
             : `${isOpponent ? "border-red-700" : "border-blue-700"} bg-green-950`
@@ -303,7 +303,7 @@ export function GameBoard({
 
             return (
               <div
-                className={`relative cursor-pointer transition-all h-[100px] w-[65px] transform`}
+                className={`relative cursor-pointer transition-all h-[85px] w-[55px] sm:h-[100px] sm:w-[65px] transform`}
                 key={card.id}
                 data-card-id={card.id}
                 onDragOver={isOpponent ? undefined : handleDragOver}
@@ -324,9 +324,13 @@ export function GameBoard({
                 >
                   <div className="absolute inset-0 border-[1px] border-transparent bg-gradient-to-br from-white/10 to-black/20"></div>
                   <div className="absolute inset-0 flex flex-col items-center justify-between overflow-hidden p-1">
-                    <div className="w-full text-center text-[9px] font-bold line-clamp-1">{card.name}</div>
-                    <div className="relative h-[60px] w-full flex items-center justify-center">{getCardArt(card)}</div>
-                    <div className="w-full text-center text-[8px]">
+                    <div className="w-full text-center text-[8px] sm:text-[9px] font-bold line-clamp-1">
+                      {card.name}
+                    </div>
+                    <div className="relative h-[50px] sm:h-[60px] w-full flex items-center justify-center">
+                      {getCardArt(card)}
+                    </div>
+                    <div className="w-full text-center text-[7px] sm:text-[8px]">
                       {card.type === "animal" ? (
                         <div className="flex items-center justify-between">
                           <span className="bg-gray-800 px-1 rounded truncate">{card.environment}</span>
