@@ -1414,7 +1414,7 @@ export default function GameMatch() {
         </div>
 
         {/* Player field */}
-        <div className="mt-0">
+        <div className="mt-0 mb-4">
           <div className="flex items-center justify-between gap-1">
             {/* Discard pile on the left */}
             <div className="w-[70px] flex-shrink-0">
@@ -1492,7 +1492,7 @@ export default function GameMatch() {
         </div>
 
         {/* Player hand */}
-        <div className="px-2 pb-1">
+        <div className="px-2 pb-0">
           <div className="flex items-center justify-center">
             <PlayerHand
               cards={gameState.playerHand}
