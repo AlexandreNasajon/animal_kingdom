@@ -3,16 +3,19 @@
 import Link from "next/link"
 import "@/app/menu-styles.css"
 import { Play, Book, Images, Award } from "lucide-react"
+import { MenuBackgroundAnimation } from "@/components/menu-background-animation"
 
 export default function HomePage() {
   return (
     <div className="bioquest-bg">
-      <div className="mb-16 text-center">
+      <MenuBackgroundAnimation />
+
+      <div className="mb-16 text-center relative z-10">
         <h1 className="embossed-title text-6xl mb-2">BioQuest</h1>
         <h2 className="embossed-title text-4xl">Card Game</h2>
       </div>
 
-      <div className="flex flex-col items-center gap-8 w-full max-w-md px-4">
+      <div className="flex flex-col items-center gap-8 w-full max-w-md px-4 relative z-10">
         <Link href="/game/match" className="w-full">
           <button className="menu-button primary-button w-full flex items-center justify-center gap-2">
             <Play className="h-5 w-5" />
@@ -44,7 +47,7 @@ export default function HomePage() {
         </Link>
       </div>
 
-      <div className="mt-16 text-center text-sm text-green-200 opacity-70">
+      <div className="mt-16 text-center text-sm text-green-200 opacity-70 relative z-10">
         <p>© 2025 NasajonGames</p>
       </div>
     </div>

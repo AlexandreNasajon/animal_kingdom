@@ -251,7 +251,7 @@ export function GameBoard({
   return (
     <>
       <div
-        className={`flex min-h-[100px] items-center justify-center gap-2 rounded-lg border ${
+        className={`flex ${isOpponent ? "min-h-[120px] max-w-[95%] mx-auto" : "min-h-[130px]"} items-center justify-center gap-2 rounded-lg border ${
           isWinning
             ? `${isOpponent ? "border-yellow-500" : "border-yellow-500"} bg-yellow-900 shadow-inner shadow-yellow-500/30`
             : `${isOpponent ? "border-red-700" : "border-blue-700"} bg-green-950`

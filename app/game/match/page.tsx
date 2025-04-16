@@ -1317,22 +1317,22 @@ export default function GameMatch() {
       <style jsx global>
         {confettiAnimation}
       </style>
-      <div className="mb-0 flex items-center justify-between p-2">
+      <div className="flex items-center justify-between p-1">
         <Button
           variant="outline"
           size="sm"
           onClick={handleBackToMenu}
-          className="flex h-6 items-center gap-1 px-2 py-0 text-[10px] text-green-300"
+          className="flex h-5 items-center gap-1 px-2 py-0 text-[9px] text-green-300"
         >
           <ArrowLeft className="h-3 w-3" /> Back
         </Button>
-        <div className="text-center text-sm font-bold text-green-300">Bioquest</div>
+        <div className="text-center text-xs font-bold text-green-300">Bioquest</div>
         <div className="flex gap-1">
           <Button
             variant="outline"
             size="sm"
             onClick={handleRestartGame}
-            className="flex h-6 items-center gap-1 px-2 py-0 text-[10px] text-green-300"
+            className="flex h-5 items-center gap-1 px-2 py-0 text-[9px] text-green-300"
           >
             <RefreshCw className="h-3 w-3" /> New
           </Button>
@@ -1364,18 +1364,18 @@ export default function GameMatch() {
         {/* Score display and game log between fields - NO EXTRA SPACE */}
         <div className="flex flex-col">
           {/* Score display and game log in one compact area */}
-          <div className="bg-black/30 rounded-md p-1">
+          <div className="bg-black/30 rounded-md p-1 mb-0">
             {/* Score display */}
-            <div className="flex justify-center items-center gap-4 mb-1">
+            <div className="flex justify-center items-center gap-4 mb-0">
               <div className="flex items-center gap-1">
                 <div className="h-2 w-2 rounded-full bg-red-700"></div>
-                <span className="text-[10px] flex items-center gap-1">
+                <span className="text-[9px] flex items-center gap-1">
                   AI {isAIThinking && <span className="text-yellow-300">(Thinking...)</span>}
                 </span>
                 <span
                   className={`rounded-md ${
                     gameState.opponentPoints >= 7 ? "animate-pulse bg-yellow-600" : "bg-green-700"
-                  } px-1 py-0 text-sm font-bold flex items-center gap-1`}
+                  } px-1 py-0 text-xs font-bold flex items-center gap-1`}
                 >
                   {gameState.opponentPoints}
                   {gameState.opponentPoints >= 7 && (
@@ -1390,7 +1390,7 @@ export default function GameMatch() {
                 <span
                   className={`rounded-md ${
                     gameState.playerPoints >= 7 ? "animate-pulse bg-yellow-600" : "bg-green-700"
-                  } px-1 py-0 text-sm font-bold flex items-center gap-1`}
+                  } px-1 py-0 text-xs font-bold flex items-center gap-1`}
                 >
                   {gameState.playerPoints}
                   {gameState.playerPoints >= 7 && (
@@ -1399,14 +1399,14 @@ export default function GameMatch() {
                     </span>
                   )}
                 </span>
-                <span className="text-[10px]">You</span>
+                <span className="text-[9px]">You</span>
                 <div className="h-2 w-2 rounded-full bg-blue-700"></div>
               </div>
             </div>
 
             {/* Game Log */}
             <div className="w-full">
-              <div className="text-xs text-center overflow-hidden text-white">
+              <div className="text-[9px] text-center overflow-hidden text-white">
                 {lastGameMessage || "Game started. Your turn."}
               </div>
             </div>
@@ -1414,12 +1414,12 @@ export default function GameMatch() {
         </div>
 
         {/* Player field */}
-        <div className="mt-0 mb-4">
+        <div className="mt-0 mb-6">
           <div className="flex items-center justify-between gap-1">
             {/* Discard pile on the left */}
             <div className="w-[70px] flex-shrink-0">
               <Card
-                className={`h-[90px] w-[65px] border-2 border-green-700 bg-green-900 shadow-md relative overflow-hidden cursor-pointer hover:scale-105 transition-transform`}
+                className={`h-[100px] w-[65px] border-2 border-green-700 bg-green-900 shadow-md relative overflow-hidden cursor-pointer hover:scale-105 transition-transform`}
                 onClick={() => setShowDiscardGallery(true)}
               >
                 {/* Card frame decoration */}
@@ -1429,11 +1429,11 @@ export default function GameMatch() {
                 <div className="absolute inset-0 flex items-center justify-center">
                   {gameState.sharedDiscard.length > 0 ? (
                     <div className="text-center">
-                      <div className="text-sm font-bold text-green-400">{gameState.sharedDiscard.length}</div>
-                      <div className="text-[10px] text-green-400">Discard</div>
+                      <div className="text-xs font-bold text-green-400">{gameState.sharedDiscard.length}</div>
+                      <div className="text-[8px] text-green-400">Discard</div>
                     </div>
                   ) : (
-                    <div className="text-[10px] text-green-400 text-center">Empty</div>
+                    <div className="text-[8px] text-green-400 text-center">Empty</div>
                   )}
                 </div>
               </Card>
@@ -1455,7 +1455,7 @@ export default function GameMatch() {
             {/* Deck on the right */}
             <div className="w-[70px] flex-shrink-0">
               <Card
-                className={`h-[90px] w-[65px] ${
+                className={`h-[100px] w-[65px] ${
                   gameState.currentTurn === "player" && gameState.gameStatus === "playing" && !gameState.pendingEffect
                     ? "cursor-pointer hover:scale-105 transition-transform"
                     : "cursor-not-allowed opacity-70"
@@ -1474,7 +1474,7 @@ export default function GameMatch() {
                 {gameState.currentTurn === "player" &&
                   gameState.gameStatus === "playing" &&
                   !gameState.pendingEffect && (
-                    <div className="absolute top-0 left-0 right-0 bg-green-700/80 text-[9px] text-center py-0.5 text-white font-bold">
+                    <div className="absolute top-0 left-0 right-0 bg-green-700/80 text-[8px] text-center py-0.5 text-white font-bold">
                       Draw 2
                     </div>
                   )}
@@ -1482,8 +1482,8 @@ export default function GameMatch() {
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="card-back-pattern"></div>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <Layers className="h-6 w-6 text-green-400 mb-1" />
-                    <div className="text-sm font-bold text-green-400">{gameState.sharedDeck.length}</div>
+                    <Layers className="h-5 w-5 text-green-400 mb-0" />
+                    <div className="text-xs font-bold text-green-400">{gameState.sharedDeck.length}</div>
                   </div>
                 </div>
               </Card>
@@ -1492,7 +1492,7 @@ export default function GameMatch() {
         </div>
 
         {/* Player hand */}
-        <div className="px-2 pb-0 mt-[-10px]">
+        <div className="px-2 pb-0 mt-[-15px]">
           <div className="flex items-center justify-center">
             <PlayerHand
               cards={gameState.playerHand}
@@ -1599,13 +1599,13 @@ export default function GameMatch() {
                   opacity: aiCardAnimationPhase === "flip" ? 1 : 0,
                 }}
               >
-                <Card className="h-[240px] w-[160px] border-4 border-red-700 bg-red-900 shadow-xl">
+                <Card className="h-[200px] w-[140px] border-4 border-red-700 bg-red-900 shadow-xl">
                   <div className="absolute inset-0 border-8 border-transparent bg-gradient-to-br from-red-800/20 to-black/30"></div>
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="card-back-pattern"></div>
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="h-16 w-16 rounded-full border-4 border-red-400 flex items-center justify-center">
-                        <span className="text-xl font-bold text-red-400">AI</span>
+                      <div className="h-14 w-14 rounded-full border-4 border-red-400 flex items-center justify-center">
+                        <span className="text-lg font-bold text-red-400">AI</span>
                       </div>
                     </div>
                   </div>
@@ -1622,7 +1622,7 @@ export default function GameMatch() {
                 }}
               >
                 <Card
-                  className={`h-[240px] w-[160px] border-4 ${
+                  className={`h-[200px] w-[140px] border-4 ${
                     aiPlayedCard.type === "animal"
                       ? aiPlayedCard.environment === "terrestrial"
                         ? "border-red-600 bg-red-900"
@@ -1634,18 +1634,18 @@ export default function GameMatch() {
                 >
                   <div className="absolute inset-0 border-8 border-transparent bg-gradient-to-br from-white/10 to-black/20"></div>
                   <div className="absolute inset-0 flex flex-col items-center justify-between p-2">
-                    <div className="text-center text-sm font-bold">{aiPlayedCard.name}</div>
-                    <div className="relative h-[140px] w-full flex items-center justify-center">
+                    <div className="text-center text-xs font-bold">{aiPlayedCard.name}</div>
+                    <div className="relative h-[120px] w-full flex items-center justify-center">
                       {getCardArt(aiPlayedCard)}
                     </div>
-                    <div className="w-full text-center text-xs">
+                    <div className="w-full text-center text-[10px]">
                       {aiPlayedCard.type === "animal" ? (
                         <div className="flex items-center justify-between">
-                          <span className="bg-gray-800 px-1 rounded text-[10px]">{aiPlayedCard.environment}</span>
-                          <span className="bg-yellow-600 px-1 rounded text-[10px]">{aiPlayedCard.points} pts</span>
+                          <span className="bg-gray-800 px-1 rounded text-[9px]">{aiPlayedCard.environment}</span>
+                          <span className="bg-yellow-600 px-1 rounded text-[9px]">{aiPlayedCard.points} pts</span>
                         </div>
                       ) : (
-                        <div className="text-[10px] text-gray-300">{aiPlayedCard.effect}</div>
+                        <div className="text-[9px] text-gray-300">{aiPlayedCard.effect}</div>
                       )}
                     </div>
                   </div>
@@ -1654,7 +1654,7 @@ export default function GameMatch() {
             </div>
 
             <div className="absolute top-full mt-2 text-center w-full">
-              <div className="bg-red-900/80 text-white text-sm px-2 py-1 rounded-md">AI plays {aiPlayedCard.name}</div>
+              <div className="bg-red-900/80 text-white text-xs px-2 py-1 rounded-md">AI plays {aiPlayedCard.name}</div>
             </div>
           </div>
         </div>
@@ -1663,17 +1663,19 @@ export default function GameMatch() {
       {aiDrawingCards && (
         <div className="pointer-events-none fixed inset-0 z-20 overflow-hidden">
           <div className="absolute right-1/4 top-1/4 flex items-center justify-center">
-            <div className="relative h-20 w-20 rounded-full bg-red-500/20 animate-pulse"></div>
+            <div className="relative h-16 w-16 rounded-full bg-red-500/20 animate-pulse"></div>
             {Array.from({ length: aiDrawnCardCount }).map((_, i) => (
               <div
                 key={i}
-                className="absolute h-16 w-12 rounded-md border-2 border-red-600 bg-green-800 shadow-lg animate-ai-draw"
+                className="absolute h-14 w-10 rounded-md border-2 border-red-600 bg-green-800 shadow-lg animate-ai-draw"
                 style={{
                   animationDelay: `${i * 0.3}s`,
                   boxShadow: "0 0 10px rgba(255, 0, 0, 0.5)",
                 }}
               >
-                <div className="absolute inset-0 flex items-center justify-center text-xs text-white font-bold">AI</div>
+                <div className="absolute inset-0 flex items-center justify-center text-[9px] text-white font-bold">
+                  AI
+                </div>
               </div>
             ))}
           </div>
@@ -1685,7 +1687,7 @@ export default function GameMatch() {
             {aiDiscardedCardIds.map((_, i) => (
               <div
                 key={i}
-                className="absolute h-16 w-12 rounded-md border border-red-600 bg-red-800 shadow-md animate-discard"
+                className="absolute h-14 w-10 rounded-md border border-red-600 bg-red-800 shadow-md animate-discard"
                 style={{
                   animationDelay: `${i * 0.3}s`,
                 }}
@@ -1699,8 +1701,8 @@ export default function GameMatch() {
         <div className="pointer-events-none fixed inset-0 z-10 overflow-hidden">
           <div className="absolute inset-0 flex items-center justify-center">
             {gameState.playerPoints >= 7 && (
-              <div className="animate-bounce rounded-full bg-yellow-500/20 p-6 text-center">
-                <Crown className="h-8 w-8 text-yellow-400" />
+              <div className="animate-bounce rounded-full bg-yellow-500/20 p-4 text-center">
+                <Crown className="h-6 w-6 text-yellow-400" />
               </div>
             )}
           </div>
@@ -1708,7 +1710,7 @@ export default function GameMatch() {
             {Array.from({ length: 8 }).map((_, i) => (
               <div
                 key={i}
-                className="animate-confetti absolute h-3 w-3 rounded-full bg-yellow-400"
+                className="animate-confetti absolute h-2 w-2 rounded-full bg-yellow-400"
                 style={{
                   left: `${Math.random() * 100}%`,
                   animationDelay: `${Math.random() * 5}s`,

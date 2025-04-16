@@ -1,64 +1,78 @@
+/* Base styles for the background */
 .bioquest-bg {
-  background-color: #2e6930;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-}
-
-.embossed-title {
-  color: #c8f5c8;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4), 0 2px 2px rgba(0, 0, 0, 0.3), 0 4px 4px rgba(0, 0, 0, 0.2);
-  font-family: sans-serif;
-  letter-spacing: 1px;
-}
-
-.menu-button {
-  border-radius: 20px;
-  font-family: sans-serif;
-  font-weight: 500;
-  letter-spacing: 1px;
-  color: #c8f5c8;
-  background-color: #2a5e2a;
-  border: none;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.2) inset, 0 4px 8px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, #1a472a 0%, #2d5a3a 100%);
   position: relative;
-  transition: all 0.2s ease;
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 2rem;
+}
+
+/* 3D Button Styles */
+.menu-button {
+  border-radius: 8px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  transition: all 0.2s ease;
+  position: relative;
+  text-shadow: 0px 1px 1px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 6px 0 #0a3517, 0 8px 10px rgba(0, 0, 0, 0.4);
+  transform: translateY(0);
 }
 
 .menu-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.2) inset, 0 6px 10px rgba(0, 0, 0, 0.3);
-  background-color: #346834;
+  box-shadow: 0 8px 0 #0a3517, 0 10px 15px rgba(0, 0, 0, 0.4);
 }
 
 .menu-button:active {
-  transform: translateY(1px);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.2) inset, 0 2px 4px rgba(0, 0, 0, 0.3);
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 #0a3517, 0 4px 5px rgba(0, 0, 0, 0.4);
 }
 
 .primary-button {
-  height: 100px;
-  font-size: 2.5rem;
+  background: linear-gradient(to bottom, #4caf50 0%, #388e3c 100%);
+  padding: 16px 24px;
+  font-size: 1.25rem;
+  border: 2px solid #2e7d32;
 }
 
 .secondary-button {
-  height: 90px;
-  font-size: 1.5rem;
+  background: linear-gradient(to bottom, #388e3c 0%, #2e7d32 100%);
+  padding: 14px 20px;
+  font-size: 1.1rem;
+  border: 2px solid #1b5e20;
 }
 
 .small-button {
-  height: 70px;
-  font-size: 1.5rem;
+  background: linear-gradient(to bottom, #2e7d32 0%, #1b5e20 100%);
+  padding: 12px 16px;
+  font-size: 1rem;
+  border: 2px solid #0a3517;
 }
 
-.leaf-icon {
-  position: absolute;
-  opacity: 0.2;
-  color: #c8f5c8;
+/* Embossed title styles */
+.embossed-title {
+  color: #4caf50;
+  text-shadow: 0 2px 0 #388e3c, 0 4px 6px rgba(0, 0, 0, 0.4);
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+/* Animation for the title */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.embossed-title {
+  animation: float 6s ease-in-out infinite;
 }

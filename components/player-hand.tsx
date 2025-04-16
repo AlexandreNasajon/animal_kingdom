@@ -272,7 +272,7 @@ export function PlayerHand({
 
   // In the return statement, update the card div's className and onClick
   return (
-    <div ref={containerRef} className="flex justify-center overflow-visible p-1 min-h-[140px] sm:min-h-[160px]">
+    <div ref={containerRef} className="flex justify-center overflow-visible p-1 pt-4 min-h-[140px] sm:min-h-[160px]">
       {cards.map((card, index) => {
         const isHovered = hoveredCardIndex === index
         const isActive = activeCardIndex === index
