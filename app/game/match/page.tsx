@@ -1310,14 +1310,16 @@ export default function GameMatch() {
   // Update the main layout to be more compact and remove the game log
   return (
     <div
-      className="flex flex-col bg-gradient-to-b from-green-800 to-green-950 p-0 text-white w-full min-h-screen"
+      className="flex flex-col bg-gradient-to-b from-green-800 to-green-950 p-0 text-white w-full h-screen overflow-hidden"
       ref={gameBoardRef}
     >
       <AnimationStyles />
       <style jsx global>
         {confettiAnimation}
       </style>
-      <div className="flex items-center justify-between p-1">
+
+      {/* Header */}
+      <div className="flex items-center justify-between p-1 h-8">
         <Button
           variant="outline"
           size="sm"
@@ -1338,8 +1340,9 @@ export default function GameMatch() {
           </Button>
         </div>
       </div>
-      {/* Game board */}
-      <div className="flex flex-col px-2 overflow-hidden">
+
+      {/* Main game content - use flex-1 to take remaining space */}
+      <div className="flex flex-col px-2 flex-1 overflow-hidden">
         {/* AI Hand (face down) */}
         <div className="mb-0">
           <OpponentHand
@@ -1414,8 +1417,8 @@ export default function GameMatch() {
         </div>
 
         {/* Player field */}
-        <div className="mt-0 mb-6">
-          <div className="flex items-center justify-between gap-1">
+        <div className="mt-0 flex-1">
+          <div className="flex items-center justify-between gap-1 h-full">
             {/* Discard pile on the left */}
             <div className="w-[70px] flex-shrink-0">
               <Card
@@ -1490,22 +1493,20 @@ export default function GameMatch() {
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Player hand */}
-        <div className="px-2 pb-0 mt-[-15px]">
-          <div className="flex items-center justify-center">
-            <PlayerHand
-              cards={gameState.playerHand}
-              onSelectCard={handleSelectCard}
-              onPlayCard={handleCardDrop}
-              disabled={
-                gameState.currentTurn !== "player" || gameState.gameStatus !== "playing" || !!gameState.pendingEffect
-              }
-              newCardIds={newCardIds}
-              playingCardId={playingCardId}
-            />
-          </div>
-        </div>
+      {/* Player hand - fixed at bottom of screen */}
+      <div className="w-full px-2 pb-1 pt-0 bg-green-950/80 border-t border-green-800">
+        <PlayerHand
+          cards={gameState.playerHand}
+          onSelectCard={handleSelectCard}
+          onPlayCard={handleCardDrop}
+          disabled={
+            gameState.currentTurn !== "player" || gameState.gameStatus !== "playing" || !!gameState.pendingEffect
+          }
+          newCardIds={newCardIds}
+          playingCardId={playingCardId}
+        />
       </div>
 
       {/* Card Detail Modal */}

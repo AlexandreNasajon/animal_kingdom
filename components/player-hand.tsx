@@ -272,7 +272,7 @@ export function PlayerHand({
 
   // In the return statement, update the card div's className and onClick
   return (
-    <div ref={containerRef} className="flex justify-center overflow-visible p-1 pt-2 min-h-[110px] sm:min-h-[130px]">
+    <div ref={containerRef} className="flex justify-center overflow-visible p-0 min-h-[100px] sm:min-h-[110px]">
       {cards.map((card, index) => {
         const isHovered = hoveredCardIndex === index
         const isActive = activeCardIndex === index
@@ -302,14 +302,14 @@ export function PlayerHand({
             data-card-id={card.id}
             style={{
               marginLeft:
-                index > 0 ? (typeof window !== "undefined" && window.innerWidth < 640 ? "-35px" : "-20px") : "0", // Make cards overlap more on mobile
+                index > 0 ? (typeof window !== "undefined" && window.innerWidth < 640 ? "-40px" : "-25px") : "0", // Make cards overlap more on mobile
               zIndex: isActive ? 10 : index, // Active card gets highest z-index
               pointerEvents: isActive || !cards.some((_c, i) => activeCardIndex === i) ? "auto" : "none", // Only allow interaction with active card
               boxShadow: isActive ? "0 0 10px rgba(255, 255, 255, 0.5)" : "none", // Add subtle glow to active card
             }}
           >
             <Card
-              className={`relative h-[120px] w-[80px] sm:h-[130px] sm:w-[85px] transform transition-transform ${
+              className={`relative h-[110px] w-[75px] sm:h-[120px] sm:w-[80px] transform transition-transform ${
                 card.type === "animal"
                   ? card.environment === "terrestrial"
                     ? "bg-red-900"
@@ -332,7 +332,7 @@ export function PlayerHand({
               <div className="absolute inset-0 border-2 border-transparent bg-gradient-to-br from-white/10 to-black/20 pointer-events-none"></div>
               <div className="absolute inset-0 flex flex-col items-center justify-between overflow-hidden p-1">
                 <div className="w-full text-center text-[10px] sm:text-[12px] font-bold truncate">{card.name}</div>
-                <div className="relative h-[70px] sm:h-[80px] w-full flex items-center justify-center">
+                <div className="relative h-[60px] sm:h-[70px] w-full flex items-center justify-center">
                   {getCardArt(card)}
                 </div>
                 <div className="w-full text-center text-[8px] sm:text-[10px]">
