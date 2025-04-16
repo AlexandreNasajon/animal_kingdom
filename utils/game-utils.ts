@@ -760,6 +760,215 @@ export function playImpactCard(state: GameState, cardIndex: number, forPlayer: b
           message: `AI played Flood. Each player sent up to 2 animals to the bottom of the deck.`,
         }
 
+      case "Limit":
+        // AI uses Limit when player has 7+ points
+        if (state.playerPoints >= 7 && state.playerField.length > 0) {
+          // Find the highest value animal in player's field
+          const targetIndex = state.playerField
+            .map((c, i) => ({ card: c, index: i }))
+            .sort((a, b) => (b.card.points || 0) - (a.card.points || 0))[0].index
+
+          const targetCard = state.playerField[targetIndex]
+          const newPlayerField = [...state.playerField]
+          newPlayerField.splice(targetIndex, 1)
+          return {
+            ...newState,
+            playerField: newPlayerField,
+            playerPoints: state.playerPoints - (targetCard.points || 0),
+            sharedDiscard: [...newState.sharedDiscard, targetCard],
+            message: `AI played Limit and destroyed your ${targetCard.name}.`,
+          }
+        } else {
+          return {
+            ...newState,
+            message: "AI played Limit, but it can only be used when you have 7 or more points.",
+          }
+        }
+
+      case "Confuse":
+        // Check if there are at least 2 animals on the field
+        if (state.opponentField.length > 0 && state.playerField.length > 0) {
+          // Find the highest value animal in AI's field
+          const aiTargetIndex = state.opponentField
+            .map((c, i) => ({ card: c, index: i }))
+            .sort((a, b) => (a.card.points || 0) - (b.card.points || 0))[0].index
+
+          // Find the highest value animal in player's field
+          const playerTargetIndex = state.playerField
+            .map((c, i) => ({ card: c, index: i }))
+            .sort((a, b) => (b.card.points || 0) - (a.card.points || 0))[0].index
+
+          const aiCard = state.opponentField[aiTargetIndex]
+          const playerCard = state.playerField[playerTargetIndex]
+
+          // Remove cards from their original fields
+          const newOpponentField = [...state.opponentField]
+          const newPlayerField = [...state.playerField]
+          newOpponentField.splice(aiTargetIndex, 1)
+          newPlayerField.splice(playerTargetIndex, 1)
+
+          // Add cards to their new fields
+          newPlayerField.push(aiCard)
+          newOpponentField.push(playerCard)
+
+          // Update points
+          const aiPointsChange = playerCard.points - aiCard.points
+          const playerPointsChange = aiCard.points - playerCard.points
+
+          return {
+            ...newState,
+            opponentField: newOpponentField,
+            playerField: newPlayerField,
+            opponentPoints: state.opponentPoints + aiPointsChange,
+            playerPoints: state.playerPoints + playerPointsChange,
+            message: `AI played Confuse and exchanged ${aiCard.name} for your ${playerCard.name}.`,
+          }
+        } else {
+          return {
+            ...newState,
+            message: "AI played Confuse, but there aren't enough animals on the field.",
+          }
+        }
+
+      case "Domesticate":
+        // Check if there are animals worth 2 points on player's field
+        if (state.playerField.some((c) => c.points === 2)) {
+          // Find a 2-point animal in player's field
+          const targetIndex = state.playerField.findIndex((c) => c.points === 2)
+          const targetCard = state.playerField[targetIndex]
+          const newPlayerField = [...state.playerField]
+          newPlayerField.splice(targetIndex, 1)
+
+          return {
+            ...newState,
+            opponentField: [...state.opponentField, targetCard],
+            playerField: newPlayerField,
+            opponentPoints: state.opponentPoints + (targetCard.points || 0),
+            playerPoints: state.playerPoints - (targetCard.points || 0),
+            message: `AI played Domesticate and gained control of your ${targetCard.name}.`,
+          }
+        } else {
+          return {
+            ...newState,
+            message: "AI played Domesticate, but there are no 2-point animals to target.",
+          }
+        }
+
+      case "Release":
+        // Play up to 2 animals from AI's hand
+        const animalCards = state.opponentHand.filter((c) => c.type === "animal")
+        if (animalCards.length > 0) {
+          const newHand = [...state.opponentHand]
+          const newField = [...state.opponentField]
+          let pointsGained = 0
+          let animalsPlayed = 0
+          const playedNames = []
+
+          // Play up to 2 animals, prioritizing highest point values
+          const sortedAnimals = animalCards
+            .map((card, idx) => ({
+              card,
+              idx: state.opponentHand.findIndex((c) => c.id === card.id),
+            }))
+            .sort((a, b) => (b.card.points || 0) - (a.card.points || 0))
+            .slice(0, 2)
+
+          for (const { card, idx } of sortedAnimals) {
+            // Remove from hand (adjusting index for previous removals)
+            const adjustedIdx = newHand.findIndex((c) => c.id === card.id)
+            if (adjustedIdx !== -1) {
+              newHand.splice(adjustedIdx, 1)
+              newField.push(card)
+              pointsGained += card.points || 0
+              animalsPlayed++
+              playedNames.push(card.name)
+            }
+          }
+
+          return {
+            ...newState,
+            opponentHand: newHand,
+            opponentField: newField,
+            opponentPoints: state.opponentPoints + pointsGained,
+            message: `AI played Release and played ${animalsPlayed} animals: ${playedNames.join(", ")}.`,
+          }
+        } else {
+          return {
+            ...newState,
+            message: "AI played Release, but has no animal cards in hand.",
+          }
+        }
+
+      case "Prey":
+        // Choose 1 animal on AI's field. Send all animals of same environment with fewer points to the bottom
+        if (state.opponentField.length > 0) {
+          // Find the highest point animal in AI's field
+          const targetCard = [...state.opponentField].sort((a, b) => (b.points || 0) - (a.points || 0))[0]
+          const targetEnvironment = targetCard.environment
+          const targetPoints = targetCard.points || 0
+
+          if (!targetEnvironment) return newState
+
+          // Find all animals of the same environment with fewer points
+          const playerCardsToRemove = state.playerField.filter((card) => {
+            if (targetEnvironment === "amphibian") {
+              return (
+                (card.environment === "terrestrial" ||
+                  card.environment === "aquatic" ||
+                  card.environment === "amphibian") &&
+                (card.points || 0) < targetPoints
+              )
+            }
+            return (
+              (card.environment === targetEnvironment || card.environment === "amphibian") &&
+              (card.points || 0) < targetPoints
+            )
+          })
+
+          const opponentCardsToRemove = state.opponentField.filter((card) => {
+            if (targetEnvironment === "amphibian") {
+              return (
+                (card.environment === "terrestrial" ||
+                  card.environment === "aquatic" ||
+                  card.environment === "amphibian") &&
+                (card.points || 0) < targetPoints &&
+                card !== targetCard
+              )
+            }
+            return (
+              (card.environment === targetEnvironment || card.environment === "amphibian") &&
+              (card.points || 0) < targetPoints &&
+              card !== targetCard
+            )
+          })
+
+          // Create new fields without the removed cards
+          const newPlayerField = state.playerField.filter((card) => !playerCardsToRemove.includes(card))
+          const newOpponentField = state.opponentField.filter((card) => !opponentCardsToRemove.includes(card))
+
+          // Calculate point changes
+          const playerPointsChange = playerCardsToRemove.reduce((sum, card) => sum - (card.points || 0), 0)
+          const opponentPointsChange = opponentCardsToRemove.reduce((sum, card) => sum - (card.points || 0), 0)
+
+          // Combine all cards to send to bottom
+          const cardsToBottom = [...playerCardsToRemove, ...opponentCardsToRemove]
+
+          return {
+            ...newState,
+            playerField: newPlayerField,
+            opponentField: newOpponentField,
+            playerPoints: state.playerPoints + playerPointsChange,
+            opponentPoints: state.opponentPoints + opponentPointsChange,
+            sharedDeck: [...state.sharedDeck, ...cardsToBottom],
+            message: `AI played Prey. All ${targetEnvironment} animals with fewer points than ${targetCard.name} were sent to the bottom of the deck.`,
+          }
+        } else {
+          return {
+            ...newState,
+            message: "AI played Prey, but has no animals on their field.",
+          }
+        }
+
       // Implement other AI card effects with improved strategy
       default:
         return newState
@@ -1343,49 +1552,7 @@ export function checkGameOver(state: GameState): GameState {
 
 // AI decision making - improved with better strategy
 export function makeAIDecision(state: GameState): GameState {
-  // DEFENSIVE STRATEGY: If player is close to winning (6+ points), prioritize removing their animals
-  if (state.playerPoints >= 6) {
-    // Check for impact cards that can remove player's animals
-    const hunterIndex = state.opponentHand.findIndex(
-      (card) =>
-        card.name === "Hunter" &&
-        state.playerField.some((field) => field.environment === "terrestrial" || field.environment === "amphibian"),
-    )
-
-    if (hunterIndex !== -1) {
-      return playImpactCard(state, hunterIndex, false)
-    }
-
-    const fisherIndex = state.opponentHand.findIndex(
-      (card) =>
-        card.name === "Fisher" &&
-        state.playerField.some((field) => field.environment === "aquatic" || field.environment === "amphibian"),
-    )
-
-    if (fisherIndex !== -1) {
-      return playImpactCard(state, fisherIndex, false)
-    }
-
-    // Try to use Scare to send a high-value animal back to the deck
-    const scareIndex = state.opponentHand.findIndex((card) => card.name === "Scare")
-    if (scareIndex !== -1 && state.playerField.some((card) => (card.points || 0) >= 2)) {
-      return playImpactCard(state, scareIndex, false)
-    }
-
-    // Try to use Earthquake if player has high-value animals
-    const earthquakeIndex = state.opponentHand.findIndex((card) => card.name === "Earthquake")
-    if (earthquakeIndex !== -1 && state.playerField.some((card) => (card.points || 0) >= 3)) {
-      return playImpactCard(state, earthquakeIndex, false)
-    }
-
-    // Try to use any impact card that might help
-    const anyImpactIndex = state.opponentHand.findIndex((card) => card.type === "impact")
-    if (anyImpactIndex !== -1) {
-      return playImpactCard(state, anyImpactIndex, false)
-    }
-  }
-
-  // WINNING STRATEGY: If AI can win by playing an animal card
+  // WINNING STRATEGY: If AI can win by playing an animal card, do it immediately
   const winningAnimalIndex = state.opponentHand.findIndex(
     (card) => card.type === "animal" && (card.points || 0) + state.opponentPoints >= 7,
   )
@@ -1395,28 +1562,204 @@ export function makeAIDecision(state: GameState): GameState {
     return playAnimalCard(state, winningAnimalIndex, false)
   }
 
-  // BUILDING STRATEGY: Play high-value animals to build points
-  // Check if there's a high-value animal card to play (3+ points)
+  // DEFENSIVE STRATEGY: If player is close to winning (6+ points), prioritize removing their animals
+  if (state.playerPoints >= 6) {
+    // Check for impact cards that can remove player's animals
+    // Priority order: Limit > Hunter/Fisher > Scare > Earthquake/Storm > Flood/Drought
+
+    // 1. Limit - best when player has 7+ points
+    if (state.playerPoints >= 7) {
+      const limitIndex = state.opponentHand.findIndex((card) => card.name === "Limit" && state.playerField.length > 0)
+      if (limitIndex !== -1) {
+        return playImpactCard(state, limitIndex, false)
+      }
+    }
+
+    // 2. Hunter/Fisher - target specific environments
+    const highValueTerrestrial = state.playerField.some(
+      (card) => (card.environment === "terrestrial" || card.environment === "amphibian") && (card.points || 0) >= 2,
+    )
+
+    if (highValueTerrestrial) {
+      const hunterIndex = state.opponentHand.findIndex((card) => card.name === "Hunter")
+      if (hunterIndex !== -1) {
+        return playImpactCard(state, hunterIndex, false)
+      }
+    }
+
+    const highValueAquatic = state.playerField.some(
+      (card) => (card.environment === "aquatic" || card.environment === "amphibian") && (card.points || 0) >= 2,
+    )
+
+    if (highValueAquatic) {
+      const fisherIndex = state.opponentHand.findIndex((card) => card.name === "Fisher")
+      if (fisherIndex !== -1) {
+        return playImpactCard(state, fisherIndex, false)
+      }
+    }
+
+    // 3. Scare - send a high-value animal back to the deck
+    if (state.playerField.some((card) => (card.points || 0) >= 2)) {
+      const scareIndex = state.opponentHand.findIndex((card) => card.name === "Scare")
+      if (scareIndex !== -1) {
+        return playImpactCard(state, scareIndex, false)
+      }
+    }
+
+    // 4. Earthquake/Storm - mass removal based on point values
+    if (state.playerField.some((card) => (card.points || 0) >= 3)) {
+      const earthquakeIndex = state.opponentHand.findIndex((card) => card.name === "Earthquake")
+      if (earthquakeIndex !== -1) {
+        return playImpactCard(state, earthquakeIndex, false)
+      }
+    }
+
+    if (state.playerField.some((card) => (card.points || 0) <= 2)) {
+      const stormIndex = state.opponentHand.findIndex((card) => card.name === "Storm")
+      if (stormIndex !== -1) {
+        return playImpactCard(state, stormIndex, false)
+      }
+    }
+
+    // 5. Flood/Drought - mass removal
+    if (state.playerField.length >= 2) {
+      const floodIndex = state.opponentHand.findIndex((card) => card.name === "Flood")
+      if (floodIndex !== -1) {
+        return playImpactCard(state, floodIndex, false)
+      }
+
+      const droughtIndex = state.opponentHand.findIndex((card) => card.name === "Drought")
+      if (droughtIndex !== -1) {
+        return playImpactCard(state, droughtIndex, false)
+      }
+    }
+
+    // 6. Cage - exchange a low-value animal for a high-value one
+    if (state.opponentField.length > 0 && state.playerField.length > 0) {
+      const cageIndex = state.opponentHand.findIndex((card) => card.name === "Cage")
+      if (cageIndex !== -1) {
+        return playImpactCard(state, cageIndex, false)
+      }
+    }
+
+    // 7. Confuse - exchange a low-value animal for a high-value one
+    if (state.opponentField.length > 0 && state.playerField.length > 0) {
+      const confuseIndex = state.opponentHand.findIndex((card) => card.name === "Confuse")
+      if (confuseIndex !== -1) {
+        return playImpactCard(state, confuseIndex, false)
+      }
+    }
+
+    // 8. Domesticate - steal a 2-point animal
+    if (state.playerField.some((card) => card.points === 2)) {
+      const domesticateIndex = state.opponentHand.findIndex((card) => card.name === "Domesticate")
+      if (domesticateIndex !== -1) {
+        return playImpactCard(state, domesticateIndex, false)
+      }
+    }
+  }
+
+  // BUILDING STRATEGY: If AI is close to winning (5+ points), focus on adding more points
+  if (state.opponentPoints >= 5) {
+    // 1. Play high-value animals
+    const highValueAnimalIndex = state.opponentHand.findIndex(
+      (card) => card.type === "animal" && (card.points || 0) >= 2,
+    )
+    if (highValueAnimalIndex !== -1) {
+      return playAnimalCard(state, highValueAnimalIndex, false)
+    }
+
+    // 2. Use Release to play multiple animals
+    const releaseIndex = state.opponentHand.findIndex(
+      (card) => card.name === "Release" && state.opponentHand.filter((c) => c.type === "animal").length > 0,
+    )
+    if (releaseIndex !== -1) {
+      return playImpactCard(state, releaseIndex, false)
+    }
+
+    // 3. Use Veterinarian to recover a high-value animal
+    const highValueInDiscard = state.sharedDiscard.some((card) => card.type === "animal" && (card.points || 0) >= 2)
+    if (highValueInDiscard) {
+      const veterinarianIndex = state.opponentHand.findIndex((card) => card.name === "Veterinarian")
+      if (veterinarianIndex !== -1) {
+        return playImpactCard(state, veterinarianIndex, false)
+      }
+    }
+  }
+
+  // OPPORTUNISTIC STRATEGY: Use special cards for advantage
+
+  // 1. Trap - steal an animal when player has high-value ones
+  if (state.playerField.some((card) => (card.points || 0) >= 2)) {
+    const trapIndex = state.opponentHand.findIndex((card) => card.name === "Trap")
+    if (trapIndex !== -1) {
+      return playImpactCard(state, trapIndex, false)
+    }
+  }
+
+  // 2. Prey - remove lower-value animals of the same environment
+  if (
+    state.opponentField.length > 0 &&
+    (state.playerField.some((p) => p.environment === state.opponentField[0].environment) ||
+      state.playerField.some((p) => p.environment === "amphibian") ||
+      state.opponentField.some((o) => o.environment === "amphibian"))
+  ) {
+    const preyIndex = state.opponentHand.findIndex((card) => card.name === "Prey")
+    if (preyIndex !== -1) {
+      return playImpactCard(state, preyIndex, false)
+    }
+  }
+
+  // 3. Compete - remove animals with the same point value
+  const competingPointValues = state.opponentHand
+    .filter((c) => c.type === "animal")
+    .map((c) => c.points)
+    .filter((points) => state.playerField.some((p) => p.points === points))
+
+  if (competingPointValues.length > 0) {
+    const competeIndex = state.opponentHand.findIndex((card) => card.name === "Compete")
+    if (competeIndex !== -1) {
+      return playImpactCard(state, competeIndex, false)
+    }
+  }
+
+  // 4. Flourish - draw cards when hand is low
+  if (state.opponentHand.length <= 2) {
+    const flourishIndex = state.opponentHand.findIndex((card) => card.name === "Flourish")
+    if (flourishIndex !== -1) {
+      return playImpactCard(state, flourishIndex, false)
+    }
+  }
+
+  // STANDARD PLAY STRATEGY
+
+  // 1. Play high-value animals (3+ points)
   const highValueAnimalIndex = state.opponentHand.findIndex((card) => card.type === "animal" && (card.points || 0) >= 3)
   if (highValueAnimalIndex !== -1) {
     return playAnimalCard(state, highValueAnimalIndex, false)
   }
 
-  // OPPORTUNISTIC STRATEGY: Use Veterinarian if there's a good animal in discard
-  const veterinarianIndex = state.opponentHand.findIndex((card) => card.name === "Veterinarian")
-  if (
-    veterinarianIndex !== -1 &&
-    state.sharedDiscard.some((card) => card.type === "animal" && (card.points || 0) >= 2)
-  ) {
-    return playImpactCard(state, veterinarianIndex, false)
-  }
-
-  // TACTICAL STRATEGY: Play medium-value animals (2 points)
+  // 2. Play medium-value animals (2 points)
   const mediumValueAnimalIndex = state.opponentHand.findIndex(
     (card) => card.type === "animal" && (card.points || 0) === 2,
   )
   if (mediumValueAnimalIndex !== -1) {
     return playAnimalCard(state, mediumValueAnimalIndex, false)
+  }
+
+  // 3. Use Veterinarian if there's a good animal in discard
+  const veterinarianIndex = state.opponentHand.findIndex((card) => card.name === "Veterinarian")
+  if (
+    veterinarianIndex !== -1 &&
+    state.sharedDiscard.some((card) => card.type === "animal" && (card.points || 0) >= 1)
+  ) {
+    return playImpactCard(state, veterinarianIndex, false)
+  }
+
+  // 4. Play any animal card
+  const anyAnimalIndex = state.opponentHand.findIndex((card) => card.type === "animal")
+  if (anyAnimalIndex !== -1) {
+    return playAnimalCard(state, anyAnimalIndex, false)
   }
 
   // CARD ADVANTAGE STRATEGY: If AI has few cards, try to draw
@@ -1473,13 +1816,7 @@ export function makeAIDecision(state: GameState): GameState {
     return drawCards(state, 2, false)
   }
 
-  // FALLBACK STRATEGY: Play any animal card
-  const anyAnimalIndex = state.opponentHand.findIndex((card) => card.type === "animal")
-  if (anyAnimalIndex !== -1) {
-    return playAnimalCard(state, anyAnimalIndex, false)
-  }
-
-  // If no animal cards, play an impact card
+  // If no good moves, play any impact card
   const anyImpactIndex = state.opponentHand.findIndex((card) => card.type === "impact")
   if (anyImpactIndex !== -1) {
     return playImpactCard(state, anyImpactIndex, false)

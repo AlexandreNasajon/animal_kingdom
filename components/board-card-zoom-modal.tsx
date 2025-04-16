@@ -52,7 +52,12 @@ export function BoardCardZoomModal({ open, onClose, card, isOpponentCard = false
         <DialogHeader>
           <DialogTitle className="text-base flex justify-between items-center">
             <span>{card.name}</span>
-            <Button onClick={onClose} variant="ghost" size="sm" className="h-6 w-6 p-0 rounded-full hover:bg-red-900">
+            <Button
+              onClick={onClose}
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0 rounded-full hover:bg-red-900 text-black bg-green-600 text-white hover:bg-green-700"
+            >
               <X className="h-4 w-4" />
             </Button>
           </DialogTitle>
@@ -60,7 +65,7 @@ export function BoardCardZoomModal({ open, onClose, card, isOpponentCard = false
 
         <div className="flex flex-col items-center space-y-3">
           <Card
-            className={`w-[200px] h-[320px] border-2 ${
+            className={`w-[180px] h-[280px] border-2 ${
               card.type === "animal" ? getEnvironmentColor(card.environment) : "border-purple-600 bg-purple-900"
             } p-1 shadow-md transition-all animate-flip relative overflow-hidden ${
               isOpponentCard ? "border-red-500" : "border-blue-500"
@@ -80,7 +85,11 @@ export function BoardCardZoomModal({ open, onClose, card, isOpponentCard = false
                   <Badge variant="outline" className={`${getEnvironmentBadgeColor(card.environment)} text-xs`}>
                     {card.environment}
                   </Badge>
-                  <Badge className="bg-yellow-600 text-xs">{card.points} pts</Badge>
+                  {card.points && (
+                    <div className="absolute top-2 left-2 bg-yellow-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold">
+                      {card.points}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="mt-auto w-full">
@@ -105,8 +114,8 @@ export function BoardCardZoomModal({ open, onClose, card, isOpponentCard = false
               </div>
             ) : (
               <div>
-                <p className="text-sm text-purple-200">Effect:</p>
-                <p className="mt-1 text-sm text-white">{card.effect}</p>
+                <p className="text-sm text-purple-200">Impact Card</p>
+                {/* Removed duplicate effect text */}
               </div>
             )}
           </div>

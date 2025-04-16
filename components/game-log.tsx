@@ -30,7 +30,7 @@ export function GameLog({ logs }: GameLogProps) {
                 <div
                   key={index}
                   className={`rounded px-1 py-0.25 text-[8px] ${
-                    log.startsWith("AI") ? "bg-red-900 text-red-200" : "bg-green-900 text-green-200"
+                    log.startsWith("AI") ? "bg-red-900 text-white" : "bg-green-900 text-green-200"
                   }`}
                 >
                   {log}

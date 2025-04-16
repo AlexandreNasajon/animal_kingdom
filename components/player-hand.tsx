@@ -58,6 +58,9 @@ export function PlayerHand({
   const [hoveredCardIndex, setHoveredCardIndex] = useState<number | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null)
+  const [touchStartPos, setTouchStartPos] = useState<{ x: number; y: number } | null>(null)
+  const [touchedCardIndex, setTouchedCardIndex] = useState<number | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
 
   // Set up animation for new cards
   useEffect(() => {
@@ -125,6 +128,81 @@ export function PlayerHand({
     })
   }
 
+  // Touch handlers for mobile drag and drop
+  const handleTouchStart = (e: React.TouchEvent, index: number) => {
+    if (disabled) return
+
+    const touch = e.touches[0]
+    setTouchStartPos({ x: touch.clientX, y: touch.clientY })
+    setTouchedCardIndex(index)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (disabled || touchStartPos === null || touchedCardIndex === null) return
+
+    const touch = e.touches[0]
+    const deltaX = touch.clientX - touchStartPos.x
+    const deltaY = touch.clientY - touchStartPos.y
+
+    // If the user has moved their finger more than 10px, consider it a drag
+    if (!isDragging && (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10)) {
+      setIsDragging(true)
+    }
+
+    if (isDragging) {
+      // Prevent scrolling when dragging
+      e.preventDefault()
+
+      // Update the card's position
+      const cardElement = e.currentTarget as HTMLElement
+      cardElement.style.transform = `translate(${deltaX}px, ${deltaY}px)`
+      cardElement.style.zIndex = "100"
+      cardElement.style.opacity = "0.8"
+    }
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (disabled || touchedCardIndex === null) return
+
+    const cardElement = e.currentTarget as HTMLElement
+
+    // Reset the card's position
+    cardElement.style.transform = ""
+    cardElement.style.zIndex = ""
+    cardElement.style.opacity = ""
+
+    if (isDragging) {
+      // Check if the card was dropped on the game board
+      const touch = e.changedTouches[0]
+      const dropElement = document.elementFromPoint(touch.clientX, touch.clientY)
+
+      if (dropElement) {
+        // Find the closest parent with data-zone attribute
+        let target = dropElement
+        while (target && !target.getAttribute("data-zone")) {
+          target = target.parentElement as HTMLElement
+        }
+
+        // If dropped on the field, play the card
+        if (
+          target &&
+          target.getAttribute("data-zone") === "field" &&
+          target.getAttribute("data-player") !== "opponent"
+        ) {
+          onPlayCard(touchedCardIndex)
+        }
+      }
+    } else {
+      // If not dragging, treat it as a tap/click
+      onSelectCard(touchedCardIndex)
+    }
+
+    // Reset touch state
+    setTouchStartPos(null)
+    setTouchedCardIndex(null)
+    setIsDragging(false)
+  }
+
   return (
     <div ref={containerRef} className="flex justify-center overflow-visible p-1 min-h-[130px]">
       {cards.map((card, index) => {
@@ -144,7 +222,7 @@ export function PlayerHand({
             onMouseLeave={handleMouseLeave}
             style={{
               marginLeft: index > 0 ? "-15px" : "0", // Make cards overlap
-              zIndex: isHovered ? 10 : cards.length - index,
+              zIndex: isHovered ? 10 : index, // Reverse stacking order so rightmost cards are on top
             }}
           >
             <Card
@@ -153,11 +231,14 @@ export function PlayerHand({
               } p-0.5 shadow-md ${disabled ? "opacity-70" : ""} 
                 ${isAnimating ? "animate-draw" : ""} 
                 ${isPlaying ? animationClass : ""}
-                relative overflow-hidden`}
+                relative overflow-hidden transition-all duration-300 ease-in-out`}
               onClick={() => !disabled && onSelectCard(index)}
               draggable={!disabled}
               onDragStart={(e) => handleDragStart(e, index)}
               onDragEnd={handleDragEnd}
+              onTouchStart={(e) => handleTouchStart(e, index)}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
               style={{
                 animationDelay: `${animatedCardIds.indexOf(card.id) * 0.15}s`,
                 zIndex: isHovered ? 10 : 1,
@@ -181,7 +262,11 @@ export function PlayerHand({
                       >
                         {card.environment}
                       </Badge>
-                      <Badge className="bg-yellow-600 text-[9px] px-0.5 py-0">{card.points} pts</Badge>
+                      {card.points && (
+                        <div className="absolute top-1 left-1 bg-yellow-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                          {card.points}
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="text-center text-[9px] text-gray-300 line-clamp-1">{card.effect}</div>
@@ -219,7 +304,11 @@ export function PlayerHand({
                           >
                             {card.environment}
                           </Badge>
-                          <Badge className="bg-yellow-600 text-[9px]">{card.points} pts</Badge>
+                          {card.points && (
+                            <div className="absolute top-1 left-1 bg-yellow-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+                              {card.points}
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <div className="text-center text-[9px] text-gray-300">{card.effect}</div>

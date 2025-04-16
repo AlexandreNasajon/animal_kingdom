@@ -81,7 +81,11 @@ export function CardDetailModal({ open, onClose, card, onPlay, disabled }: CardD
                   <Badge variant="outline" className={`${getEnvironmentBadgeColor(card.environment)} text-xs`}>
                     {card.environment}
                   </Badge>
-                  <Badge className="bg-yellow-600 text-xs">{card.points} pts</Badge>
+                  {card.points && (
+                    <div className="absolute top-2 left-2 bg-yellow-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold">
+                      {card.points}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="mt-auto w-full">
@@ -102,12 +106,14 @@ export function CardDetailModal({ open, onClose, card, onPlay, disabled }: CardD
                     ? "This animal can live in both terrestrial and aquatic environments."
                     : `This is a ${card.environment} animal.`}
                 </p>
-                <p className="mt-0.5 text-xs text-yellow-200">Worth {card.points} points when played on your field.</p>
+                <p className="mt-0.5 text-xs text-yellow-200">
+                  Worth {card.points} point{card.points !== 1 ? "s" : ""} when played on your field.
+                </p>
               </div>
             ) : (
               <div>
-                <p className="text-xs text-purple-200">Effect:</p>
-                <p className="mt-0.5 text-xs text-white">{card.effect}</p>
+                <p className="text-xs text-purple-200">Impact Card</p>
+                {/* Removed duplicate effect text here */}
               </div>
             )}
           </div>

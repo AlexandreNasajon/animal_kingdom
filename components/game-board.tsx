@@ -132,7 +132,7 @@ export function GameBoard({
       // Clear animation class after animation completes
       const timer = setTimeout(() => {
         setAnimatedCardId(null)
-      }, 1200) // Increased for longer animation
+      }, 1800) // Increased from 1200 to 1800 for longer animation
 
       return () => clearTimeout(timer)
     }
@@ -160,22 +160,22 @@ export function GameBoard({
 
     // Handle discarding animation
     if (discardingCardId) {
-      animateCardMovement(discardingCardId, "animate-field-to-discard", 1000)
+      animateCardMovement(discardingCardId, "animate-field-to-discard", 1500) // Increased from 1000 to 1500
     }
 
     // Handle returning to deck animation
     if (returningToDeckCardId) {
-      animateCardMovement(returningToDeckCardId, "animate-field-to-deck", 1000)
+      animateCardMovement(returningToDeckCardId, "animate-field-to-deck", 1500) // Increased from 1000 to 1500
     }
 
     // Handle exchange animation
     if (exchangingCardId) {
-      animateCardMovement(exchangingCardId, "animate-exchange", 1000)
+      animateCardMovement(exchangingCardId, "animate-exchange", 1500) // Increased from 1000 to 1500
     }
 
     // Handle targeting animation
     if (targetingCardId) {
-      animateCardMovement(targetingCardId, "animate-being-targeted", 1000)
+      animateCardMovement(targetingCardId, "animate-being-targeted", 1500) // Increased from 1000 to 1500
     }
   }, [discardingCardId, returningToDeckCardId, exchangingCardId, targetingCardId])
 
@@ -317,6 +317,11 @@ export function GameBoard({
                       </div>
                     </div>
                   </CardContent>
+                  {card.points && (
+                    <div className="absolute top-1 left-1 bg-yellow-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                      {card.points}
+                    </div>
+                  )}
                 </Card>
 
                 {/* Enlarged card preview on hover */}
@@ -347,7 +352,11 @@ export function GameBoard({
                               >
                                 {card.environment}
                               </Badge>
-                              <Badge className="bg-yellow-600 text-[9px]">{card.points} pts</Badge>
+                              {card.points && (
+                                <div className="absolute top-1 left-1 bg-yellow-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+                                  {card.points}
+                                </div>
+                              )}
                             </div>
                           ) : (
                             <div className="text-center text-[9px] text-gray-300">{card.effect}</div>

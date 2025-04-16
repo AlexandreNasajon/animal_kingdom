@@ -13,6 +13,7 @@ import { CardSelectionModal } from "@/components/card-selection-modal"
 import { TargetSelectionModal } from "@/components/target-selection-modal"
 import { CardDetailModal } from "@/components/card-detail-modal"
 import { AnimationStyles } from "@/components/animation-styles"
+import { getCardArt } from "@/components/card-art/card-art-mapper"
 import {
   initializeGame,
   drawCards,
@@ -192,7 +193,7 @@ export default function GameMatch() {
             setTimeout(() => {
               setAiDrawingCards(false)
               setGameState(endAITurn(afterDraw))
-            }, 1000)
+            }, 500)
           }, 800)
         }, 1200)
 
@@ -215,7 +216,7 @@ export default function GameMatch() {
         setTimeout(() => {
           setAiDrawingCards(false)
           setGameState(endAITurn(afterAIMove))
-        }, 1800) // Increased from 1500 to 1800 for longer animation
+        }, 600) // Reduced for faster animation
 
         return
       }
@@ -250,8 +251,8 @@ export default function GameMatch() {
           setTimeout(() => {
             setNewOpponentFieldCardId(null)
             setGameState(endAITurn(afterAIMove))
-          }, 1800) // Increased from 1500 to 1800 for longer animation
-        }, 1500) // Increased from 1000 to 1500 to better see the card animation
+          }, 600) // Reduced for faster animation
+        }, 500) // Reduced for faster animation
 
         return
       }
@@ -315,7 +316,7 @@ export default function GameMatch() {
         // End AI turn
         setGameState(endAITurn(afterAIMove))
       }
-    }, 1500)
+    }, 500)
 
     return () => clearTimeout(aiTimer)
   }, [gameState])
@@ -627,12 +628,12 @@ export default function GameMatch() {
       // End player's turn
       setGameState(endPlayerTurn(newState))
 
-      // Clear animation states after a delay
+      // Clear animation states after a delay - INCREASED FROM 800 to 1500
       setTimeout(() => {
         setNewPlayerFieldCardId(null)
         setPlayingCardId(null)
-      }, 800)
-    }, 300)
+      }, 1500)
+    }, 500) // Increased from 300 to 500
   }
 
   // Handle card drop from drag and drop
@@ -676,12 +677,12 @@ export default function GameMatch() {
       // End player's turn
       setGameState(endPlayerTurn(newState))
 
-      // Clear animation states after a delay
+      // Clear animation states after a delay - INCREASED FROM 800 to 1500
       setTimeout(() => {
         setNewPlayerFieldCardId(null)
         setPlayingCardId(null)
-      }, 800)
-    }, 300)
+      }, 1500)
+    }, 500) // Increased from 300 to 500
   }
 
   // Handle discard selection
@@ -879,19 +880,19 @@ export default function GameMatch() {
 
   // Update the main layout to be more compact and remove the game log
   return (
-    <div className="flex min-h-[85vh] flex-col bg-gradient-to-b from-green-800 to-green-950 p-0 text-white max-w-sm mx-auto">
+    <div className="flex min-h-screen flex-col bg-gradient-to-b from-green-800 to-green-950 p-0 text-white max-w-md mx-auto">
       <AnimationStyles />
       <style jsx global>
         {confettiAnimation}
       </style>
-      <div className="mb-0 flex items-center justify-between">
+      <div className="mb-0 flex items-center justify-between p-2">
         <Button
           variant="outline"
           size="sm"
           onClick={handleBackToMenu}
-          className="flex h-5 items-center gap-1 px-1 py-0 text-[9px] text-green-300"
+          className="flex h-6 items-center gap-1 px-2 py-0 text-[10px] text-green-300"
         >
-          <ArrowLeft className="h-2 w-2" /> Back
+          <ArrowLeft className="h-3 w-3" /> Back
         </Button>
         <div className="text-center text-sm font-bold text-green-300">Bioquest</div>
         <div className="flex gap-1">
@@ -899,22 +900,22 @@ export default function GameMatch() {
             variant="outline"
             size="sm"
             onClick={handleRestartGame}
-            className="flex h-5 items-center gap-1 px-1 py-0 text-[9px] text-green-300"
+            className="flex h-6 items-center gap-1 px-2 py-0 text-[10px] text-green-300"
           >
-            <RefreshCw className="h-2 w-2" /> New
+            <RefreshCw className="h-3 w-3" /> New
           </Button>
         </div>
       </div>
 
       {/* Game board */}
-      <div className="flex flex-1 flex-col">
+      <div className="flex flex-1 flex-col px-2">
         {/* Opponent area */}
-        <div className="mb-0">
-          <div className="mb-0 flex items-center justify-between">
+        <div className="mb-1">
+          <div className="mb-1 flex items-center justify-between">
             <div className="flex items-center gap-1">
               <div className={`h-2 w-2 rounded-full bg-red-700 ${isAIThinking ? "animate-ai-thinking" : ""}`}></div>
-              <span className="text-[8px] flex items-center gap-1">
-                AI {isAIThinking && <Brain className="h-2 w-2 animate-pulse" />}
+              <span className="text-[10px] flex items-center gap-1">
+                AI {isAIThinking && <Brain className="h-3 w-3 animate-pulse" />}
                 {aiDrawingCards && <span className="text-yellow-300">(Drawing...)</span>}
                 {aiDiscardingCards && <span className="text-yellow-300">(Discarding...)</span>}
               </span>
@@ -934,14 +935,14 @@ export default function GameMatch() {
                   </span>
                 )}
               </div>
-              <span className="rounded-md bg-red-700/80 px-1 py-0 text-[8px]">
+              <span className="rounded-md bg-red-700/80 px-1 py-0 text-[10px]">
                 Cards: {gameState.opponentHand.length}
               </span>
             </div>
           </div>
 
           {/* AI Hand (face down) */}
-          <div className="mb-0">
+          <div className="mb-1">
             <OpponentHand
               cardCount={gameState.opponentHand.length}
               isThinking={isAIThinking}
@@ -960,14 +961,14 @@ export default function GameMatch() {
         </div>
 
         {/* Center area with current action message */}
-        <div className="my-1 flex justify-center">
-          <Card className="border border-green-700 bg-green-900/60 px-2 py-1 w-full max-w-xs">
+        <div className="my-2 flex justify-center">
+          <Card className="border border-green-700 bg-green-900/60 px-2 py-1 w-full">
             <span className="text-xs text-center block">{currentAction}</span>
           </Card>
         </div>
 
         {/* Shared deck display with draw button overlay and last action */}
-        <div className="my-1 flex justify-center items-center gap-2">
+        <div className="my-2 flex justify-center items-center">
           <SharedDeckDisplay
             deckCount={gameState.sharedDeck.length}
             discardPile={gameState.sharedDiscard}
@@ -990,10 +991,10 @@ export default function GameMatch() {
             returningToDeckCardId={returningToDeckCardId}
             onCardDrop={handleCardDrop}
           />
-          <div className="mt-0 flex items-center justify-between">
+          <div className="mt-1 flex items-center justify-between">
             <div className="flex items-center gap-1">
               <div className="h-2 w-2 rounded-full bg-blue-700"></div>
-              <span className="text-[8px]">You</span>
+              <span className="text-[10px]">You</span>
             </div>
             <div className="flex items-center gap-1">
               <span
@@ -1014,9 +1015,9 @@ export default function GameMatch() {
       </div>
 
       {/* Player hand */}
-      <div className="mt-0">
+      <div className="mt-1 px-2 pb-2">
         <div className="mb-0 flex items-center justify-between">
-          <span className="text-[8px]">Your Hand ({gameState.playerHand.length})</span>
+          <span className="text-[10px]">Your Hand ({gameState.playerHand.length})</span>
         </div>
         <PlayerHand
           cards={gameState.playerHand}
@@ -1126,7 +1127,8 @@ export default function GameMatch() {
               <div className="absolute inset-0 flex flex-col items-center justify-between p-2">
                 <div className="text-center text-sm font-bold">{aiPlayedCard.name}</div>
                 <div className="relative h-[140px] w-full flex items-center justify-center">
-                  {/* Card art would be rendered here */}
+                  {/* Render the actual card art */}
+                  {getCardArt(aiPlayedCard)}
                 </div>
                 <div className="w-full text-center text-xs">
                   {aiPlayedCard.type === "animal" ? (
@@ -1231,11 +1233,6 @@ export default function GameMatch() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Copyright footer */}
-      <div className="mt-1 text-center text-[8px] text-green-500">
-        © 2025 NasajonGames. Bioquest designed and developed by Alexandre Nasajon.
-      </div>
     </div>
   )
 }

@@ -124,7 +124,12 @@ export function DiscardPileGallery({ open, onClose, cards }: DiscardPileGalleryP
               )}
             </div>
 
-            <Button onClick={() => setSelectedCard(null)} variant="outline" size="sm" className="mt-2">
+            <Button
+              onClick={() => setSelectedCard(null)}
+              variant="outline"
+              size="sm"
+              className="mt-2 bg-green-600 text-white hover:bg-green-700"
+            >
               Back to Gallery
             </Button>
           </div>
@@ -180,7 +185,11 @@ export function DiscardPileGallery({ open, onClose, cards }: DiscardPileGalleryP
             </div>
 
             <DialogFooter>
-              <Button onClick={onClose} size="sm" className="bg-green-700 hover:bg-green-600">
+              <Button
+                onClick={onClose}
+                size="sm"
+                className="bg-green-700 hover:bg-green-600 bg-green-600 text-white hover:bg-green-700"
+              >
                 Close Gallery
               </Button>
             </DialogFooter>
