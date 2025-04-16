@@ -1341,7 +1341,7 @@ export default function GameMatch() {
       {/* Game board */}
       <div className="flex flex-1 flex-col px-2 max-h-[calc(100vh-120px)] overflow-hidden">
         {/* AI Hand (face down) */}
-        <div className="mb-1">
+        <div className="mb-0">
           <OpponentHand
             cardCount={gameState.opponentHand.length}
             isThinking={isAIThinking}
@@ -1350,7 +1350,7 @@ export default function GameMatch() {
         </div>
 
         {/* Opponent field */}
-        <div className="mb-1" ref={opponentFieldRef}>
+        <div className="mb-0" ref={opponentFieldRef}>
           <GameBoard
             cards={gameState.opponentField}
             isOpponent={true}
@@ -1361,53 +1361,69 @@ export default function GameMatch() {
           />
         </div>
 
-        {/* Score display and game log between fields */}
-        <div className="my-1 flex flex-col gap-1">
-          {/* Score display */}
-          <div className="flex justify-center items-center gap-4">
-            <div className="flex items-center gap-1">
-              <div className="h-2 w-2 rounded-full bg-red-700"></div>
-              <span className="text-[10px] flex items-center gap-1">
-                AI {isAIThinking && <span className="text-yellow-300">(Thinking...)</span>}
-              </span>
-              <span
-                className={`rounded-md ${
-                  gameState.opponentPoints >= 7 ? "animate-pulse bg-yellow-600" : "bg-green-700"
-                } px-1 py-0 text-sm font-bold flex items-center gap-1`}
-              >
-                {gameState.opponentPoints}
-                {gameState.opponentPoints >= 7 && (
-                  <span className="flex items-center text-yellow-400">
-                    <Crown className="h-3 w-3" />
-                  </span>
-                )}
-              </span>
+        {/* Score display and game log between fields - NO EXTRA SPACE */}
+        <div className="flex flex-col">
+          {/* Score display and game log in one compact area */}
+          <div className="bg-black/30 rounded-md p-1">
+            {/* Score display */}
+            <div className="flex justify-center items-center gap-4 mb-1">
+              <div className="flex items-center gap-1">
+                <div className="h-2 w-2 rounded-full bg-red-700"></div>
+                <span className="text-[10px] flex items-center gap-1">
+                  AI {isAIThinking && <span className="text-yellow-300">(Thinking...)</span>}
+                </span>
+                <span
+                  className={`rounded-md ${
+                    gameState.opponentPoints >= 7 ? "animate-pulse bg-yellow-600" : "bg-green-700"
+                  } px-1 py-0 text-sm font-bold flex items-center gap-1`}
+                >
+                  {gameState.opponentPoints}
+                  {gameState.opponentPoints >= 7 && (
+                    <span className="flex items-center text-yellow-400">
+                      <Crown className="h-3 w-3" />
+                    </span>
+                  )}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <span
+                  className={`rounded-md ${
+                    gameState.playerPoints >= 7 ? "animate-pulse bg-yellow-600" : "bg-green-700"
+                  } px-1 py-0 text-sm font-bold flex items-center gap-1`}
+                >
+                  {gameState.playerPoints}
+                  {gameState.playerPoints >= 7 && (
+                    <span className="flex items-center text-yellow-400">
+                      <Crown className="h-3 w-3" />
+                    </span>
+                  )}
+                </span>
+                <span className="text-[10px]">You</span>
+                <div className="h-2 w-2 rounded-full bg-blue-700"></div>
+              </div>
             </div>
 
-            <div className="flex items-center gap-1">
-              <span
-                className={`rounded-md ${
-                  gameState.playerPoints >= 7 ? "animate-pulse bg-yellow-600" : "bg-green-700"
-                } px-1 py-0 text-sm font-bold flex items-center gap-1`}
-              >
-                {gameState.playerPoints}
-                {gameState.playerPoints >= 7 && (
-                  <span className="flex items-center text-yellow-400">
-                    <Crown className="h-3 w-3" />
-                  </span>
-                )}
-              </span>
-              <span className="text-[10px]">You</span>
-              <div className="h-2 w-2 rounded-full bg-blue-700"></div>
+            {/* Game Log */}
+            <div className="w-full">
+              <div className="text-xs text-center overflow-hidden text-white">
+                {lastGameMessage || "Game started. Your turn."}
+              </div>
             </div>
           </div>
+        </div>
 
-          {/* Game Log */}
-          <div className="w-full">
-            <div className="bg-black/30 rounded-md p-1 text-xs text-center overflow-hidden text-white">
-              {lastGameMessage || "Game started. Your turn."}
-            </div>
-          </div>
+        {/* Player field */}
+        <div className="mt-0">
+          <GameBoard
+            cards={gameState.playerField}
+            isOpponent={false}
+            points={gameState.playerPoints}
+            newCardId={newPlayerFieldCardId}
+            discardingCardId={discardingCardId}
+            returningToDeckCardId={returningToDeckCardId}
+            onCardDrop={handleCardDrop}
+          />
         </div>
 
         {/* Player area with deck and discard on sides */}
@@ -1434,19 +1450,6 @@ export default function GameMatch() {
                   )}
                 </div>
               </Card>
-            </div>
-
-            {/* Player field in the middle */}
-            <div className="flex-1">
-              <GameBoard
-                cards={gameState.playerField}
-                isOpponent={false}
-                points={gameState.playerPoints}
-                newCardId={newPlayerFieldCardId}
-                discardingCardId={discardingCardId}
-                returningToDeckCardId={returningToDeckCardId}
-                onCardDrop={handleCardDrop}
-              />
             </div>
 
             {/* Deck on the right */}
