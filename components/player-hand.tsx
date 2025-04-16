@@ -36,13 +36,13 @@ const getEnvironmentColor = (environment?: string) => {
 const getEnvironmentBadgeColor = (environment?: string) => {
   switch (environment) {
     case "terrestrial":
-      return "bg-red-900 text-red-200"
+      return "bg-red-900 text-white"
     case "aquatic":
-      return "bg-blue-900 text-blue-200"
+      return "bg-blue-900 text-white"
     case "amphibian":
-      return "bg-green-900 text-green-200"
+      return "bg-green-900 text-white"
     default:
-      return "bg-gray-900 text-gray-200"
+      return "bg-gray-900 text-white"
   }
 }
 
@@ -189,7 +189,19 @@ export function PlayerHand({
           target.getAttribute("data-zone") === "field" &&
           target.getAttribute("data-player") !== "opponent"
         ) {
-          onPlayCard(touchedCardIndex)
+          // Check if any animations are currently running
+          const anyCardAnimating = Array.from(document.querySelectorAll(".card-draggable")).some((card) => {
+            return (
+              card instanceof HTMLElement &&
+              (card.classList.contains("animate-draw") ||
+                card.classList.contains("animate-play") ||
+                card.classList.contains("animate-hand-to-field"))
+            )
+          })
+
+          if (!anyCardAnimating) {
+            onPlayCard(touchedCardIndex)
+          }
         }
       }
     } else {
@@ -201,6 +213,19 @@ export function PlayerHand({
     setTouchStartPos(null)
     setTouchedCardIndex(null)
     setIsDragging(false)
+  }
+
+  // Special handling for Prey card in hover preview
+  const getCardEffectPreview = (card: GameCard) => {
+    if (card.name === "Prey") {
+      return (
+        <div className="mt-1 text-[7px] text-center px-1 leading-tight text-white">
+          Choose 1 animal. Send all same-environment animals with fewer points to bottom
+        </div>
+      )
+    }
+
+    return <div className="mt-1 text-[8px] text-center px-1 text-white">{card.effect}</div>
   }
 
   return (
@@ -232,7 +257,18 @@ export function PlayerHand({
                 ${isAnimating ? "animate-draw" : ""} 
                 ${isPlaying ? animationClass : ""}
                 relative overflow-hidden transition-all duration-300 ease-in-out`}
-              onClick={() => !disabled && onSelectCard(index)}
+              onClick={(e) => {
+                if (!disabled) {
+                  // Add flip animation class
+                  const cardElement = e.currentTarget
+                  cardElement.classList.add("animate-flip")
+
+                  // Call the select card function after a small delay
+                  setTimeout(() => {
+                    onSelectCard(index)
+                  }, 100)
+                }
+              }}
               draggable={!disabled}
               onDragStart={(e) => handleDragStart(e, index)}
               onDragEnd={handleDragEnd}
@@ -249,7 +285,7 @@ export function PlayerHand({
               <div className="absolute inset-0 border border-white/10 rounded-sm pointer-events-none"></div>
 
               <CardContent className="flex h-full flex-col items-center justify-between p-0.5">
-                <div className="w-full text-center text-[11px] font-medium">{card.name}</div>
+                <div className="w-full text-center text-[11px] font-medium text-white">{card.name}</div>
 
                 <div className="relative h-[55px] w-full overflow-hidden">{getCardArt(card)}</div>
 
@@ -269,7 +305,9 @@ export function PlayerHand({
                       )}
                     </div>
                   ) : (
-                    <div className="text-center text-[9px] text-gray-300 line-clamp-1">{card.effect}</div>
+                    <div className="text-center text-white line-clamp-1">
+                      <span className="text-[9px]">Impact</span>
+                    </div>
                   )}
                 </div>
               </CardContent>
@@ -291,7 +329,7 @@ export function PlayerHand({
                   <div className="absolute inset-0 border border-white/10 rounded-sm pointer-events-none"></div>
 
                   <CardContent className="flex h-full flex-col items-center justify-between p-1">
-                    <div className="w-full text-center text-xs font-medium">{card.name}</div>
+                    <div className="w-full text-center text-xs font-medium text-white">{card.name}</div>
 
                     <div className="relative h-[110px] w-full">{getCardArt(card)}</div>
 
@@ -311,7 +349,12 @@ export function PlayerHand({
                           )}
                         </div>
                       ) : (
-                        <div className="text-center text-[9px] text-gray-300">{card.effect}</div>
+                        <div className="w-full">
+                          <div className="text-center text-white">
+                            <span className="text-[9px]">Impact</span>
+                          </div>
+                          {getCardEffectPreview(card)}
+                        </div>
                       )}
                     </div>
                   </CardContent>

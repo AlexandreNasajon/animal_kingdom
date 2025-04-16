@@ -57,16 +57,18 @@ export default function DeckGallery() {
               {filteredCards.map((card) => (
                 <div key={card.id} className="relative">
                   <div className="group relative h-[240px] w-[160px] cursor-pointer overflow-hidden rounded-lg border-2 border-green-600 bg-green-800 p-2 transition-all hover:scale-105 hover:border-green-400 hover:shadow-lg">
+                    {card.points > 0 && (
+                      <div className="absolute left-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-yellow-500 text-xs font-bold text-black">
+                        {card.points}
+                      </div>
+                    )}
                     <div className="mb-1 text-center text-sm font-bold truncate">{card.name}</div>
                     <div className="h-[120px] w-full overflow-hidden rounded bg-green-700/50">{getCardArt(card)}</div>
                     <div className="mt-2 text-xs space-y-1">
                       <div className="font-semibold text-green-300">
-                        Type: {card.type === "animal" ? card.environment || "Animal" : "Impact"}
+                        {card.type === "animal" ? card.environment || "Animal" : "Impact"}
                       </div>
-                      {card.points > 0 && <div>Points: {card.points}</div>}
-                      {card.effect && (
-                        <div className="line-clamp-3 text-[10px] text-green-100">Effect: {card.effect}</div>
-                      )}
+                      {card.effect && <div className="line-clamp-3 text-[10px] text-green-100">{card.effect}</div>}
                     </div>
                   </div>
                 </div>

@@ -6,95 +6,19 @@ export function AnimationStyles() {
       /* Card animations */
       @keyframes draw {
         0% {
-          transform: translateY(-100px) rotate(-5deg);
+          transform: translateY(-20px) scale(0.9);
           opacity: 0;
         }
         100% {
-          transform: translateY(0) rotate(0);
+          transform: translateY(0) scale(1);
           opacity: 1;
-        }
-      }
-
-      @keyframes play {
-        0% {
-          transform: scale(1);
-        }
-        50% {
-          transform: scale(1.1) rotate(5deg);
-        }
-        100% {
-          transform: scale(1) rotate(0);
-        }
-      }
-
-      @keyframes play-terrestrial {
-        0% {
-          transform: scale(1);
-          box-shadow: 0 0 0 rgba(239, 68, 68, 0);
-        }
-        50% {
-          transform: scale(1.1) rotate(5deg);
-          box-shadow: 0 0 15px rgba(239, 68, 68, 0.7);
-        }
-        100% {
-          transform: scale(1) rotate(0);
-          box-shadow: 0 0 0 rgba(239, 68, 68, 0);
-        }
-      }
-
-      @keyframes play-aquatic {
-        0% {
-          transform: scale(1);
-          box-shadow: 0 0 0 rgba(59, 130, 246, 0);
-        }
-        50% {
-          transform: scale(1.1) rotate(-5deg);
-          box-shadow: 0 0 15px rgba(59, 130, 246, 0.7);
-        }
-        100% {
-          transform: scale(1) rotate(0);
-          box-shadow: 0 0 0 rgba(59, 130, 246, 0);
-        }
-      }
-
-      @keyframes play-amphibian {
-        0% {
-          transform: scale(1);
-          box-shadow: 0 0 0 rgba(34, 197, 94, 0);
-        }
-        50% {
-          transform: scale(1.1) rotate(3deg);
-          box-shadow: 0 0 15px rgba(34, 197, 94, 0.7);
-        }
-        100% {
-          transform: scale(1) rotate(0);
-          box-shadow: 0 0 0 rgba(34, 197, 94, 0);
-        }
-      }
-
-      @keyframes play-impact {
-        0% {
-          transform: scale(1);
-          box-shadow: 0 0 0 rgba(168, 85, 247, 0);
-        }
-        50% {
-          transform: scale(1.1) rotate(-3deg);
-          box-shadow: 0 0 15px rgba(168, 85, 247, 0.7);
-        }
-        100% {
-          transform: scale(1) rotate(0);
-          box-shadow: 0 0 0 rgba(168, 85, 247, 0);
         }
       }
 
       @keyframes hand-to-field {
         0% {
-          transform: translateY(0) scale(1);
-          opacity: 1;
-        }
-        50% {
-          transform: translateY(-50px) scale(1.2);
-          opacity: 1;
+          transform: translateY(-20px) scale(0.9);
+          opacity: 0.8;
         }
         100% {
           transform: translateY(0) scale(1);
@@ -104,105 +28,81 @@ export function AnimationStyles() {
 
       @keyframes field-to-discard {
         0% {
-          transform: translateY(0) scale(1);
+          transform: scale(1);
           opacity: 1;
         }
+        50% {
+          transform: translateY(25px) rotate(10deg) scale(0.9);
+          opacity: 0.7;
+        }
         100% {
-          transform: translateY(50px) scale(0.8);
+          transform: translateY(50px) rotate(25deg) scale(0.7);
           opacity: 0;
         }
       }
 
       @keyframes field-to-deck {
         0% {
-          transform: translateY(0) scale(1);
+          transform: scale(1);
           opacity: 1;
         }
+        50% {
+          transform: translateY(-25px) scale(0.9);
+          opacity: 0.7;
+        }
         100% {
-          transform: translateY(-50px) scale(0.8);
+          transform: translateY(-50px) scale(0.7);
           opacity: 0;
         }
       }
 
       @keyframes exchange {
         0% {
-          transform: translateX(0) scale(1);
+          transform: translateX(0);
           opacity: 1;
         }
-        50% {
-          transform: translateX(20px) scale(1.1);
-          opacity: 0.7;
+        25% {
+          transform: translateX(15px) scale(0.95);
+          opacity: 0.8;
+        }
+        75% {
+          transform: translateX(-15px) scale(0.95);
+          opacity: 0.8;
         }
         100% {
-          transform: translateX(0) scale(1);
+          transform: translateX(0);
           opacity: 1;
         }
       }
 
       @keyframes being-targeted {
         0% {
-          box-shadow: 0 0 0 0 rgba(255, 255, 0, 0.7);
+          box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7);
+          transform: scale(1);
         }
-        70% {
-          box-shadow: 0 0 0 10px rgba(255, 255, 0, 0);
+        50% {
+          box-shadow: 0 0 10px 5px rgba(255, 215, 0, 0.5);
+          transform: scale(1.05);
         }
         100% {
-          box-shadow: 0 0 0 0 rgba(255, 255, 0, 0);
+          box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
+          transform: scale(1);
         }
       }
 
       @keyframes flip {
         0% {
-          transform: rotateY(90deg);
-          opacity: 0;
+          transform: rotateY(0deg);
+        }
+        50% {
+          transform: rotateY(180deg);
         }
         100% {
-          transform: rotateY(0);
-          opacity: 1;
+          transform: rotateY(360deg);
         }
       }
 
-      @keyframes ai-card-play {
-        0% {
-          transform: scale(0.8);
-          opacity: 0;
-        }
-        20% {
-          transform: scale(1.2);
-          opacity: 1;
-        }
-        80% {
-          transform: scale(1.2);
-          opacity: 1;
-        }
-        100% {
-          transform: scale(0.8);
-          opacity: 0;
-        }
-      }
-
-      @keyframes ai-draw {
-        0% {
-          transform: translate(0, -50px) scale(0.8);
-          opacity: 0;
-        }
-        100% {
-          transform: translate(0, 0) scale(1);
-          opacity: 1;
-        }
-      }
-
-      @keyframes discard {
-        0% {
-          transform: translate(0, 0) rotate(0deg);
-          opacity: 1;
-        }
-        100% {
-          transform: translate(100px, 100px) rotate(45deg);
-          opacity: 0;
-        }
-      }
-
+      /* AI animations */
       @keyframes ai-thinking {
         0% {
           opacity: 0.3;
@@ -215,19 +115,55 @@ export function AnimationStyles() {
         }
       }
 
-      @keyframes flash {
+      @keyframes ai-draw {
         0% {
+          transform: translateX(50px) translateY(-30px) scale(0.7);
           opacity: 0;
         }
-        50% {
+        100% {
+          transform: translateX(0) translateY(0) scale(1);
           opacity: 1;
         }
+      }
+
+      @keyframes discard {
+        0% {
+          transform: translateX(0) scale(1);
+          opacity: 1;
+        }
+        50% {
+          transform: translateX(-25px) translateY(15px) rotate(10deg) scale(0.85);
+          opacity: 0.7;
+        }
         100% {
+          transform: translateX(-50px) translateY(30px) rotate(25deg) scale(0.7);
           opacity: 0;
         }
       }
 
-      /* Idle animations for cards on the field */
+      @keyframes ai-card-play {
+        0% {
+          transform: translateY(-20px) scale(0.8);
+          opacity: 0;
+        }
+        10% {
+          transform: translateY(0) scale(1.05);
+          opacity: 1;
+        }
+        20% {
+          transform: scale(1);
+        }
+        80% {
+          transform: scale(1);
+          opacity: 1;
+        }
+        100% {
+          transform: scale(0.8);
+          opacity: 0;
+        }
+      }
+
+      /* Environment animations */
       @keyframes breathe {
         0% {
           transform: scale(1);
@@ -269,75 +205,43 @@ export function AnimationStyles() {
 
       @keyframes sway {
         0% {
-          transform: translateX(0);
+          transform: skewX(0deg);
         }
-        50% {
-          transform: translateX(2px);
+        25% {
+          transform: skewX(1deg);
+        }
+        75% {
+          transform: skewX(-1deg);
         }
         100% {
-          transform: translateX(0);
+          transform: skewX(0deg);
         }
       }
 
-      /* Environment-specific animations */
-      @keyframes terrestrial {
-        0% {
-          box-shadow: inset 0 0 5px rgba(255, 100, 100, 0.3);
-        }
-        50% {
-          box-shadow: inset 0 0 10px rgba(255, 100, 100, 0.5);
-        }
-        100% {
-          box-shadow: inset 0 0 5px rgba(255, 100, 100, 0.3);
-        }
-      }
-
-      @keyframes aquatic {
-        0% {
-          box-shadow: inset 0 0 5px rgba(100, 100, 255, 0.3);
-        }
-        50% {
-          box-shadow: inset 0 0 10px rgba(100, 100, 255, 0.5);
-        }
-        100% {
-          box-shadow: inset 0 0 5px rgba(100, 100, 255, 0.3);
-        }
-      }
-
-      @keyframes amphibian {
-        0% {
-          box-shadow: inset 0 0 5px rgba(100, 255, 100, 0.3);
-        }
-        50% {
-          box-shadow: inset 0 0 10px rgba(100, 255, 100, 0.5);
-        }
-        100% {
-          box-shadow: inset 0 0 5px rgba(100, 255, 100, 0.3);
-        }
-      }
-
-      /* Impact card animations */
       @keyframes pulse-slow {
         0% {
-          box-shadow: 0 0 0 0 rgba(128, 0, 128, 0.4);
+          opacity: 0.8;
+          transform: scale(1);
         }
-        70% {
-          box-shadow: 0 0 0 5px rgba(128, 0, 128, 0);
+        50% {
+          opacity: 1;
+          transform: scale(1.03);
         }
         100% {
-          box-shadow: 0 0 0 0 rgba(128, 0, 128, 0);
+          opacity: 0.8;
+          transform: scale(1);
         }
       }
 
       @keyframes glow {
         0% {
-          filter: brightness(1);
+          box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
         }
         50% {
-          filter: brightness(1.2);
+          box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
         }
         100% {
-          filter: brightness(1);
+          box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
         }
       }
 
@@ -350,101 +254,169 @@ export function AnimationStyles() {
         }
       }
 
-      /* Apply animations */
+      @keyframes flash {
+        0% {
+          opacity: 0.5;
+        }
+        50% {
+          opacity: 0;
+        }
+        100% {
+          opacity: 0.5;
+        }
+      }
+
+      @keyframes victory {
+        0% {
+          transform: scale(1);
+          box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7);
+        }
+        50% {
+          transform: scale(1.1);
+          box-shadow: 0 0 20px 10px rgba(255, 215, 0, 0.5);
+        }
+        100% {
+          transform: scale(1);
+          box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7);
+        }
+      }
+
+      /* Environment-specific animations */
+      @keyframes terrestrial-idle {
+        0% {
+          box-shadow: inset 0 0 5px rgba(255, 100, 100, 0.2);
+        }
+        50% {
+          box-shadow: inset 0 0 10px rgba(255, 100, 100, 0.4);
+        }
+        100% {
+          box-shadow: inset 0 0 5px rgba(255, 100, 100, 0.2);
+        }
+      }
+
+      @keyframes aquatic-idle {
+        0% {
+          box-shadow: inset 0 0 5px rgba(100, 100, 255, 0.2);
+        }
+        50% {
+          box-shadow: inset 0 0 10px rgba(100, 100, 255, 0.4);
+        }
+        100% {
+          box-shadow: inset 0 0 5px rgba(100, 100, 255, 0.2);
+        }
+      }
+
+      @keyframes amphibian-idle {
+        0% {
+          box-shadow: inset 0 0 5px rgba(100, 255, 100, 0.2);
+        }
+        50% {
+          box-shadow: inset 0 0 10px rgba(100, 255, 100, 0.4);
+        }
+        100% {
+          box-shadow: inset 0 0 5px rgba(100, 255, 100, 0.2);
+        }
+      }
+
+      /* Animation classes */
       .animate-draw {
-        animation: draw 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-      }
-
-      .animate-play {
-        animation: play 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-      }
-
-      .animate-play-terrestrial {
-        animation: play-terrestrial 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-      }
-
-      .animate-play-aquatic {
-        animation: play-aquatic 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-      }
-
-      .animate-play-amphibian {
-        animation: play-amphibian 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-      }
-
-      .animate-play-impact {
-        animation: play-impact 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        animation: draw 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
       }
 
       .animate-hand-to-field {
-        animation: hand-to-field 1.5s ease-in-out; /* Increased from 1s to 1.5s */
+        animation: hand-to-field 0.6s ease-in forwards;
+        z-index: 10;
       }
 
       .animate-field-to-discard {
-        animation: field-to-discard 1.5s ease-in-out; /* Increased from 1s to 1.5s */
+        animation: field-to-discard 0.8s ease-in forwards;
+        z-index: 10;
       }
 
       .animate-field-to-deck {
-        animation: field-to-deck 1.5s ease-in-out; /* Increased from 1s to 1.5s */
+        animation: field-to-deck 0.8s ease-in forwards;
+        z-index: 10;
       }
 
       .animate-exchange {
-        animation: exchange 1.5s ease-in-out; /* Increased from 1s to 1.5s */
+        animation: exchange 0.8s ease-in-out forwards;
+        z-index: 10;
       }
 
       .animate-being-targeted {
-        animation: being-targeted 1.5s ease-in-out infinite; /* Increased from 1s to 1.5s */
+        animation: being-targeted 1.2s ease-in-out infinite;
       }
 
       .animate-flip {
-        animation: flip 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-      }
-
-      .animate-ai-card-play {
-        animation: ai-card-play 2s ease-in-out forwards; /* Increased from 1.5s to 2s */
-      }
-
-      .animate-ai-draw {
-        animation: ai-draw 1.5s ease-in-out forwards; /* Increased from 1s to 1.5s */
-      }
-
-      .animate-discard {
-        animation: discard 1.5s ease-in-out forwards; /* Increased from 1s to 1.5s */
+        animation: flip 0.8s ease-in-out forwards;
+        transform-style: preserve-3d;
+        backface-visibility: hidden;
       }
 
       .animate-ai-thinking {
-        animation: ai-thinking 1.5s ease-in-out infinite; /* Increased from 1s to 1.5s */
+        animation: ai-thinking 1.5s ease-in-out infinite;
       }
 
-      .animate-flash {
-        animation: flash 1.5s ease-in-out infinite; /* Increased from 1s to 1.5s */
+      .animate-ai-draw {
+        animation: ai-draw 0.5s ease-out forwards;
       }
 
+      .animate-discard {
+        animation: discard 0.7s ease-in forwards;
+      }
+
+      .animate-ai-card-play {
+        animation: ai-card-play 1.5s ease-in-out forwards;
+      }
+
+      /* Environment animation classes */
       .animate-breathe {
         animation: breathe 4s ease-in-out infinite;
       }
 
       .animate-wiggle {
-        animation: wiggle 5s ease-in-out infinite;
+        animation: wiggle 3s ease-in-out infinite;
       }
 
       .animate-bounce-slow {
-        animation: bounce-slow 3s ease-in-out infinite;
+        animation: bounce-slow 2s ease-in-out infinite;
       }
 
       .animate-sway {
-        animation: sway 4s ease-in-out infinite;
+        animation: sway 3s ease-in-out infinite;
       }
 
       .animate-pulse-slow {
-        animation: pulse-slow 3s infinite;
+        animation: pulse-slow 3s ease-in-out infinite;
       }
 
       .animate-glow {
-        animation: glow 4s ease-in-out infinite;
+        animation: glow 3s ease-in-out infinite;
       }
 
       .animate-rotate-slow {
         animation: rotate-slow 20s linear infinite;
+      }
+
+      .animate-flash {
+        animation: flash 0.5s ease-in-out infinite;
+      }
+
+      .animate-victory {
+        animation: victory 2s ease-in-out infinite;
+      }
+
+      /* Environment-specific animations */
+      .animate-terrestrial {
+        animation: terrestrial-idle 4s ease-in-out infinite;
+      }
+
+      .animate-aquatic {
+        animation: aquatic-idle 4s ease-in-out infinite;
+      }
+
+      .animate-amphibian {
+        animation: amphibian-idle 4s ease-in-out infinite;
       }
 
       /* Card zoom effect */
@@ -453,25 +425,139 @@ export function AnimationStyles() {
       }
 
       .card-zoom {
-        transition: transform 0.3s ease-in-out;
+        transition: transform 0.2s ease-in-out;
       }
 
       .card-zoom:hover {
-        transform: translateY(-5px) scale(1.05);
+        transform: scale(1.05);
+        z-index: 20;
+      }
+
+      /* Play animations for different card types */
+      .animate-play-terrestrial {
+        animation: hand-to-field 0.6s ease-in forwards, terrestrial-idle 4s ease-in-out infinite 0.6s;
         z-index: 10;
       }
 
-      /* Card back pattern */
-      .card-back-pattern {
+      .animate-play-aquatic {
+        animation: hand-to-field 0.6s ease-in forwards, aquatic-idle 4s ease-in-out infinite 0.6s;
+        z-index: 10;
+      }
+
+      .animate-play-amphibian {
+        animation: hand-to-field 0.6s ease-in forwards, amphibian-idle 4s ease-in-out infinite 0.6s;
+        z-index: 10;
+      }
+
+      .animate-play-impact {
+        animation: hand-to-field 0.6s ease-in forwards, pulse-slow 3s ease-in-out infinite 0.6s;
+        z-index: 10;
+      }
+
+      /* Particle animations for card effects */
+      @keyframes particle-float {
+        0% {
+          transform: translateY(0) translateX(0);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(-20px) translateX(var(--x-offset, 0));
+          opacity: 0;
+        }
+      }
+
+      .particle {
         position: absolute;
-        inset: 0;
-        background-image: repeating-linear-gradient(
-          45deg,
-          rgba(0, 100, 0, 0.2) 0px,
-          rgba(0, 100, 0, 0.2) 2px,
-          transparent 2px,
-          transparent 4px
-        );
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        animation: particle-float 1s ease-out forwards;
+      }
+
+      /* Confetti animation for victory */
+      @keyframes confetti-fall {
+        0% {
+          transform: translateY(-10vh) rotate(0deg);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(100vh) rotate(360deg);
+          opacity: 0;
+        }
+      }
+
+      .confetti {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        animation: confetti-fall 3s ease-in-out infinite;
+      }
+
+      /* Impact card animations */
+      @keyframes impact-play {
+        0% {
+          transform: scale(0.1) rotate(0deg);
+          opacity: 0;
+        }
+        50% {
+          transform: scale(1.5) rotate(180deg);
+          opacity: 1;
+        }
+        100% {
+          transform: scale(1) rotate(360deg);
+          opacity: 1;
+        }
+      }
+
+      @keyframes impact-pulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.7);
+        }
+        70% {
+          box-shadow: 0 0 0 15px rgba(147, 51, 234, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(147, 51, 234, 0);
+        }
+      }
+
+      @keyframes impact-wave {
+        0% {
+          transform: scale(1);
+          opacity: 1;
+        }
+        100% {
+          transform: scale(2);
+          opacity: 0;
+        }
+      }
+
+      .animate-impact-play {
+        animation: impact-play 0.8s ease-out forwards;
+        transform-origin: center;
+        perspective: 1000px;
+        backface-visibility: hidden;
+      }
+
+      .animate-impact-pulse {
+        animation: impact-pulse 1.5s infinite;
+      }
+
+      .animate-impact-wave {
+        position: relative;
+      }
+
+      .animate-impact-wave::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border-radius: 0.5rem;
+        background: rgba(147, 51, 234, 0.3);
+        animation: impact-wave 1.5s ease-out infinite;
+        z-index: -1;
       }
     `}</style>
   )

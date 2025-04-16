@@ -33,30 +33,38 @@ const getEnvironmentColor = (environment?: string) => {
 const getEnvironmentBadgeColor = (environment?: string) => {
   switch (environment) {
     case "terrestrial":
-      return "bg-red-900 text-red-200"
+      return "bg-red-900 text-white"
     case "aquatic":
-      return "bg-blue-900 text-blue-200"
+      return "bg-blue-900 text-white"
     case "amphibian":
-      return "bg-green-900 text-green-200"
+      return "bg-green-900 text-white"
     default:
-      return "bg-gray-900 text-gray-200"
+      return "bg-gray-900 text-white"
   }
 }
 
 export function BoardCardZoomModal({ open, onClose, card, isOpponentCard = false }: BoardCardZoomModalProps) {
   if (!card) return null
 
+  // Adjust font size for longer effect text
+  const getEffectFontSize = (effect?: string) => {
+    if (!effect) return "text-xs"
+    if (effect.length > 60) return "text-[10px]"
+    if (effect.length > 40) return "text-[11px]"
+    return "text-xs"
+  }
+
   return (
     <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="border-2 border-green-700 bg-green-900 p-2 text-white">
         <DialogHeader>
-          <DialogTitle className="text-base flex justify-between items-center">
+          <DialogTitle className="text-base flex justify-between items-center text-white">
             <span>{card.name}</span>
             <Button
               onClick={onClose}
               variant="ghost"
               size="sm"
-              className="h-6 w-6 p-0 rounded-full hover:bg-red-900 text-black bg-green-600 text-white hover:bg-green-700"
+              className="h-6 w-6 p-0 rounded-full hover:bg-red-900 text-white bg-green-600 hover:bg-green-700"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -76,7 +84,7 @@ export function BoardCardZoomModal({ open, onClose, card, isOpponentCard = false
             <div className="absolute inset-0 border border-white/10 rounded-sm pointer-events-none"></div>
 
             <CardContent className="flex h-full flex-col items-center space-y-2 p-1">
-              <div className="text-center text-lg font-bold">{card.name}</div>
+              <div className="text-center text-lg font-bold text-white">{card.name}</div>
 
               <div className="relative h-[180px] w-full flex items-center justify-center">{getCardArt(card)}</div>
 
@@ -93,10 +101,12 @@ export function BoardCardZoomModal({ open, onClose, card, isOpponentCard = false
                 </div>
               ) : (
                 <div className="mt-auto w-full">
-                  <Badge variant="outline" className="bg-purple-900 text-purple-200 text-xs w-full justify-center">
-                    Impact Card
+                  <Badge variant="outline" className="bg-purple-900 text-white text-xs w-full justify-center">
+                    Impact
                   </Badge>
-                  <div className="mt-2 text-xs text-center line-clamp-3">{card.effect}</div>
+                  <div className="mt-2 text-[9px] text-center px-1 max-h-[40px] overflow-y-auto scrollbar-thin scrollbar-thumb-purple-700 scrollbar-track-purple-900 text-white">
+                    {card.effect}
+                  </div>
                 </div>
               )}
             </CardContent>
@@ -105,17 +115,15 @@ export function BoardCardZoomModal({ open, onClose, card, isOpponentCard = false
           <div className="text-center">
             {card.type === "animal" ? (
               <div>
-                <p className="text-sm text-green-200">
+                <p className="text-sm text-white">
                   {card.environment === "amphibian"
                     ? "This animal can live in both terrestrial and aquatic environments."
                     : `This is a ${card.environment} animal.`}
                 </p>
-                <p className="mt-1 text-sm text-yellow-200">Worth {card.points} points when played on your field.</p>
               </div>
             ) : (
               <div>
-                <p className="text-sm text-purple-200">Impact Card</p>
-                {/* Removed duplicate effect text */}
+                <p className={`${getEffectFontSize(card.effect)} text-white`}>{card.effect}</p>
               </div>
             )}
           </div>

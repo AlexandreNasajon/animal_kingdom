@@ -404,7 +404,7 @@ export const GAME_DECK: GameCard[] = [
     id: 44,
     type: "impact",
     name: "Epidemic",
-    effect: "Send 1 animal to the bottom along with all animals of same environment with more points",
+    effect: "Send 1 animal to the bottom along with all animals of same environment",
     imageUrl: "/placeholder.svg?height=120&width=80",
   },
 
@@ -417,12 +417,12 @@ export const GAME_DECK: GameCard[] = [
     imageUrl: "/placeholder.svg?height=120&width=80",
   },
 
-  // 1x Prey
+  // 1x Prey - SHORTENED TEXT
   {
     id: 46,
     type: "impact",
     name: "Prey",
-    effect: "Choose 1 animal on your field. Send all animals of same environment with fewer points to the bottom",
+    effect: "Choose 1 animal. Send all same-environment animals with fewer points to bottom",
     imageUrl: "/placeholder.svg?height=120&width=80",
   },
 

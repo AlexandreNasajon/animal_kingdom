@@ -1263,7 +1263,7 @@ export function resolveEffect(state: GameState, targetIndex: number | number[]):
       break
 
     case "epidemic":
-      // Send 1 animal to the bottom along with all animals of same environment with more points
+      // Send 1 animal to the bottom along with all animals of same environment
       if (forPlayer) {
         // Fixed: For epidemic, we're only selecting from player's field
         const targetCard = state.playerField[targetIndex as number]
@@ -1272,7 +1272,7 @@ export function resolveEffect(state: GameState, targetIndex: number | number[]):
         const targetEnvironment = targetCard.environment
         if (!targetEnvironment) return state
 
-        // Find all animals of the same environment with more points
+        // Find all animals of the same environment
         // Modified to handle amphibians properly
         const playerCardsToRemove = state.playerField.filter((card) => {
           // If target is amphibian, it affects both terrestrial and aquatic
@@ -1281,33 +1281,22 @@ export function resolveEffect(state: GameState, targetIndex: number | number[]):
               (card.environment === "terrestrial" ||
                 card.environment === "aquatic" ||
                 card.environment === "amphibian") &&
-              (card.points || 0) > (targetCard.points || 0) &&
               card !== targetCard
             )
           }
           // If target is terrestrial or aquatic, it also affects amphibians
-          return (
-            (card.environment === targetEnvironment || card.environment === "amphibian") &&
-            (card.points || 0) > (targetCard.points || 0) &&
-            card !== targetCard
-          )
+          return (card.environment === targetEnvironment || card.environment === "amphibian") && card !== targetCard
         })
 
         const opponentCardsToRemove = state.opponentField.filter((card) => {
           // If target is amphibian, it affects both terrestrial and aquatic
           if (targetEnvironment === "amphibian") {
             return (
-              (card.environment === "terrestrial" ||
-                card.environment === "aquatic" ||
-                card.environment === "amphibian") &&
-              (card.points || 0) > (targetCard.points || 0)
+              card.environment === "terrestrial" || card.environment === "aquatic" || card.environment === "amphibian"
             )
           }
           // If target is terrestrial or aquatic, it also affects amphibians
-          return (
-            (card.environment === targetEnvironment || card.environment === "amphibian") &&
-            (card.points || 0) > (targetCard.points || 0)
-          )
+          return card.environment === targetEnvironment || card.environment === "amphibian"
         })
 
         // Also remove the target card
@@ -1334,7 +1323,7 @@ export function resolveEffect(state: GameState, targetIndex: number | number[]):
           opponentPoints: state.opponentPoints + opponentPointsChange,
           sharedDeck: [...state.sharedDeck, ...cardsToBottom],
           pendingEffect: null,
-          message: `You played Epidemic. ${targetCard.name} and all ${targetEnvironment} animals with more points were sent to the bottom of the deck.`,
+          message: `You played Epidemic. ${targetCard.name} and all ${targetEnvironment} animals were sent to the bottom of the deck.`,
         }
       }
       break

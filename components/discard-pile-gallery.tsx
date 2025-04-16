@@ -40,14 +40,22 @@ const getEnvironmentColor = (environment?: string) => {
 const getEnvironmentBadgeColor = (environment?: string) => {
   switch (environment) {
     case "terrestrial":
-      return "bg-red-900 text-red-200"
+      return "bg-red-900 text-white"
     case "aquatic":
-      return "bg-blue-900 text-blue-200"
+      return "bg-blue-900 text-white"
     case "amphibian":
-      return "bg-green-900 text-green-200"
+      return "bg-green-900 text-white"
     default:
-      return "bg-gray-900 text-gray-200"
+      return "bg-gray-900 text-white"
   }
+}
+
+// Helper function to get font size based on text length
+const getEffectFontSize = (effect?: string) => {
+  if (!effect) return "text-xs"
+  if (effect.length > 60) return "text-[10px]"
+  if (effect.length > 40) return "text-[11px]"
+  return "text-xs"
 }
 
 export function DiscardPileGallery({ open, onClose, cards }: DiscardPileGalleryProps) {
@@ -57,8 +65,8 @@ export function DiscardPileGallery({ open, onClose, cards }: DiscardPileGalleryP
     <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-h-[80vh] max-w-md overflow-y-auto border-2 border-green-700 bg-green-900 p-2 text-white">
         <DialogHeader>
-          <DialogTitle className="text-base">Discard Pile ({cards.length} cards)</DialogTitle>
-          <DialogDescription className="text-green-200 text-xs">
+          <DialogTitle className="text-base text-white">Discard Pile ({cards.length} cards)</DialogTitle>
+          <DialogDescription className="text-white text-xs">
             View all cards in the discard pile. Click on a card to see details.
           </DialogDescription>
         </DialogHeader>
@@ -70,7 +78,7 @@ export function DiscardPileGallery({ open, onClose, cards }: DiscardPileGalleryP
               onClick={() => setSelectedCard(null)}
               variant="ghost"
               size="sm"
-              className="absolute right-0 top-0 p-1 h-6 w-6 rounded-full bg-red-900 hover:bg-red-800"
+              className="absolute right-0 top-0 p-1 h-6 w-6 rounded-full bg-red-900 hover:bg-red-800 text-white"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -93,33 +101,34 @@ export function DiscardPileGallery({ open, onClose, cards }: DiscardPileGalleryP
                     >
                       {selectedCard.environment}
                     </Badge>
-                    <Badge className="bg-yellow-600 text-xs">{selectedCard.points} pts</Badge>
+                    <Badge className="bg-yellow-600 text-xs text-white">{selectedCard.points} pts</Badge>
                   </div>
                 ) : (
-                  <Badge variant="outline" className="bg-purple-900 text-purple-200 text-xs">
-                    Impact Card
+                  <Badge variant="outline" className="bg-purple-900 text-white text-xs">
+                    Impact
                   </Badge>
                 )}
               </CardContent>
             </Card>
 
             <div className="text-center">
-              <h3 className="font-bold text-sm">{selectedCard.name}</h3>
+              <h3 className="font-bold text-sm text-white">{selectedCard.name}</h3>
               {selectedCard.type === "animal" ? (
                 <div>
-                  <p className="text-xs text-green-200">
+                  <p className="text-xs text-white">
                     {selectedCard.environment === "amphibian"
                       ? "This animal can live in both terrestrial and aquatic environments."
                       : `This is a ${selectedCard.environment} animal.`}
                   </p>
-                  <p className="mt-0.5 text-xs text-yellow-200">
+                  <p className="mt-0.5 text-xs text-white">
                     Worth {selectedCard.points} points when played on your field.
                   </p>
                 </div>
               ) : (
                 <div>
-                  <p className="text-xs text-purple-200">Effect:</p>
-                  <p className="mt-0.5 text-xs text-white">{selectedCard.effect}</p>
+                  <p className={`mt-0.5 ${getEffectFontSize(selectedCard.effect)} text-white break-words`}>
+                    {selectedCard.effect}
+                  </p>
                 </div>
               )}
             </div>
@@ -137,7 +146,7 @@ export function DiscardPileGallery({ open, onClose, cards }: DiscardPileGalleryP
           <>
             <div className="grid grid-cols-3 gap-1 py-1 sm:grid-cols-4">
               {cards.length === 0 ? (
-                <div className="col-span-full py-4 text-center text-sm text-gray-400">The discard pile is empty.</div>
+                <div className="col-span-full py-4 text-center text-sm text-white">The discard pile is empty.</div>
               ) : (
                 cards.map((card, index) => (
                   <div
@@ -153,7 +162,7 @@ export function DiscardPileGallery({ open, onClose, cards }: DiscardPileGalleryP
                       } p-0.5 shadow-md transition-all hover:ring-2 hover:ring-green-400`}
                     >
                       <CardContent className="flex h-full flex-col items-center justify-between p-0.5">
-                        <div className="w-full text-center text-[8px] font-medium">{card.name}</div>
+                        <div className="w-full text-center text-[8px] font-medium text-white">{card.name}</div>
 
                         <div className="relative h-[40px] w-full">{getCardArt(card)}</div>
 
@@ -166,10 +175,12 @@ export function DiscardPileGallery({ open, onClose, cards }: DiscardPileGalleryP
                               >
                                 {card.environment}
                               </Badge>
-                              <Badge className="bg-yellow-600 text-[6px] px-0.5 py-0">{card.points} pts</Badge>
+                              <Badge className="bg-yellow-600 text-[6px] px-0.5 py-0 text-white">
+                                {card.points} pts
+                              </Badge>
                             </div>
                           ) : (
-                            <div className="text-center text-[6px] text-gray-300 line-clamp-1">{card.effect}</div>
+                            <div className="text-center text-[6px] text-white line-clamp-1">Impact</div>
                           )}
                         </div>
                       </CardContent>

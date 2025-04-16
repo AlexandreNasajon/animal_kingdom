@@ -1,91 +1,72 @@
 import type { GameCard } from "@/types/game"
 
-// Helper function to get card animation class based on card type and environment
-export function getCardAnimation(card: GameCard): string {
-  if (!card.type) return ""
+// Helper function to get the appropriate animation class for a card
+export const getCardAnimation = (card: GameCard): string => {
+  // If it's an impact card, use the impact animation
+  if (card.type === "impact") {
+    return "animate-impact-play"
+  }
+
+  // For animal cards, use environment-specific animations
+  switch (card.environment) {
+    case "terrestrial":
+      return "animate-play-terrestrial"
+    case "aquatic":
+      return "animate-play-aquatic"
+    case "amphibian":
+      return "animate-play-amphibian"
+    default:
+      return "animate-hand-to-field"
+  }
+}
+
+// Helper function to create particle effects
+export const createParticles = (element: HTMLElement, count = 20, color = "rgba(255, 255, 255, 0.8)"): void => {
+  const rect = element.getBoundingClientRect()
+  const centerX = rect.left + rect.width / 2
+  const centerY = rect.top + rect.height / 2
+
+  for (let i = 0; i < count; i++) {
+    const particle = document.createElement("div")
+    particle.className = "particle"
+    particle.style.backgroundColor = color
+    particle.style.left = `${centerX}px`
+    particle.style.top = `${centerY}px`
+    particle.style.setProperty("--x-offset", `${(Math.random() - 0.5) * 30}px`)
+
+    document.body.appendChild(particle)
+
+    // Remove particle after animation completes
+    setTimeout(() => {
+      document.body.removeChild(particle)
+    }, 1000)
+  }
+}
+
+// Helper function to create environment-specific particles
+export const createEnvironmentParticles = (card: GameCard): void => {
+  if (!card || !card.type) return
+
+  const cardElements = document.querySelectorAll(`[data-card-id="${card.id}"]`)
+  if (!cardElements.length) return
+
+  const element = cardElements[0] as HTMLElement
 
   if (card.type === "animal") {
     switch (card.environment) {
       case "terrestrial":
-        return "animate-play-terrestrial"
+        createParticles(element, 15, "rgba(255, 100, 100, 0.8)")
+        break
       case "aquatic":
-        return "animate-play-aquatic"
+        createParticles(element, 15, "rgba(100, 100, 255, 0.8)")
+        break
       case "amphibian":
-        return "animate-play-amphibian"
+        createParticles(element, 15, "rgba(100, 255, 100, 0.8)")
+        break
       default:
-        return "animate-play-card"
+        createParticles(element, 15)
     }
-  } else {
-    // Impact cards
-    return "animate-play-impact"
+  } else if (card.type === "impact") {
+    createParticles(element, 25, "rgba(147, 51, 234, 0.8)")
   }
-}
-
-// Helper function to get zone transfer animation
-export function getZoneTransferAnimation(fromZone: string, toZone: string): string {
-  const animationMap: Record<string, Record<string, string>> = {
-    hand: {
-      field: "animate-hand-to-field",
-      discard: "animate-hand-to-discard",
-      deck: "animate-hand-to-deck",
-    },
-    field: {
-      hand: "animate-field-to-hand",
-      discard: "animate-field-to-discard",
-      deck: "animate-field-to-deck",
-    },
-    discard: {
-      hand: "animate-discard-to-hand",
-      field: "animate-discard-to-field",
-      deck: "animate-discard-to-deck",
-    },
-    deck: {
-      hand: "animate-deck-to-hand",
-      field: "animate-deck-to-field",
-      discard: "animate-deck-to-discard",
-    },
-  }
-
-  return animationMap[fromZone]?.[toZone] || "animate-zone-transfer"
-}
-
-// Helper function to get environment-specific animation
-export function getEnvironmentAnimation(environment?: string, id?: number): string {
-  // Base animations that cycle based on card ID
-  const baseAnimations = ["animate-breathe", "animate-wiggle", "animate-bounce-slow", "animate-sway"]
-  const baseAnimation = baseAnimations[(id || 0) % 4]
-
-  // Environment-specific animations
-  switch (environment) {
-    case "terrestrial":
-      return `${baseAnimation} animate-terrestrial`
-    case "aquatic":
-      return `${baseAnimation} animate-aquatic`
-    case "amphibian":
-      // Amphibians get a combined animation that includes both terrestrial and aquatic properties
-      return `${baseAnimation} animate-amphibian`
-    default:
-      return baseAnimation
-  }
-}
-
-// Helper function to get impact card animation
-export function getImpactAnimation(id?: number): string {
-  const animations = ["animate-pulse-slow", "animate-glow", "animate-rotate-slow"]
-  return animations[(id || 0) % 3]
-}
-
-// Helper function for exchange animations
-export function getExchangeAnimation(isSource: boolean): string {
-  return isSource ? "animate-exchange-out" : "animate-exchange-in"
-}
-
-// Helper function for targeting animations
-export function getTargetingAnimation(): string {
-  return "animate-being-targeted"
-}
-
-// Helper function to get victory animation
-export function getVictoryAnimation(): string {
-  return "animate-victory"
 }

@@ -39,13 +39,13 @@ const getEnvironmentColor = (environment?: string) => {
 const getEnvironmentBadgeColor = (environment?: string) => {
   switch (environment) {
     case "terrestrial":
-      return "bg-red-900 text-red-200"
+      return "bg-red-900 text-white"
     case "aquatic":
-      return "bg-blue-900 text-blue-200"
+      return "bg-blue-900 text-white"
     case "amphibian":
-      return "bg-green-900 text-green-200"
+      return "bg-green-900 text-white"
     default:
-      return "bg-gray-900 text-gray-200"
+      return "bg-gray-900 text-white"
   }
 }
 
@@ -123,6 +123,7 @@ export function GameBoard({
   const [showZoomModal, setShowZoomModal] = useState(false)
   const [dropHighlight, setDropHighlight] = useState(false)
   const cardRefs = useRef<Map<number, HTMLDivElement>>(new Map())
+  const [activeAnimations, setActiveAnimations] = useState<Set<number>>(new Set())
 
   // Set up animation for new card
   useEffect(() => {
@@ -138,6 +139,22 @@ export function GameBoard({
     }
   }, [newCardId])
 
+  const startAnimation = (cardId: number) => {
+    setActiveAnimations((prev) => {
+      const newSet = new Set(prev)
+      newSet.add(cardId)
+      return newSet
+    })
+  }
+
+  const endAnimation = (cardId: number) => {
+    setActiveAnimations((prev) => {
+      const newSet = new Set(prev)
+      newSet.delete(cardId)
+      return newSet
+    })
+  }
+
   // Handle card movement animations
   useEffect(() => {
     // Create a function to add and remove animation classes
@@ -145,6 +162,14 @@ export function GameBoard({
       if (cardId && cardRefs.current.has(cardId)) {
         const cardElement = cardRefs.current.get(cardId)
         if (cardElement) {
+          // Check if this card is already animating
+          if (activeAnimations.has(cardId)) {
+            return // Skip this animation if the card is already animating
+          }
+
+          // Start tracking this animation
+          startAnimation(cardId)
+
           // Add the animation class
           cardElement.classList.add(animationClass)
 
@@ -152,6 +177,7 @@ export function GameBoard({
           setTimeout(() => {
             if (cardElement) {
               cardElement.classList.remove(animationClass)
+              endAnimation(cardId)
             }
           }, duration)
         }
@@ -160,24 +186,24 @@ export function GameBoard({
 
     // Handle discarding animation
     if (discardingCardId) {
-      animateCardMovement(discardingCardId, "animate-field-to-discard", 1500) // Increased from 1000 to 1500
+      animateCardMovement(discardingCardId, "animate-field-to-discard", 1500)
     }
 
     // Handle returning to deck animation
     if (returningToDeckCardId) {
-      animateCardMovement(returningToDeckCardId, "animate-field-to-deck", 1500) // Increased from 1000 to 1500
+      animateCardMovement(returningToDeckCardId, "animate-field-to-deck", 1500)
     }
 
     // Handle exchange animation
     if (exchangingCardId) {
-      animateCardMovement(exchangingCardId, "animate-exchange", 1500) // Increased from 1000 to 1500
+      animateCardMovement(exchangingCardId, "animate-exchange", 1500)
     }
 
     // Handle targeting animation
     if (targetingCardId) {
-      animateCardMovement(targetingCardId, "animate-being-targeted", 1500) // Increased from 1000 to 1500
+      animateCardMovement(targetingCardId, "animate-being-targeted", 1500)
     }
-  }, [discardingCardId, returningToDeckCardId, exchangingCardId, targetingCardId])
+  }, [discardingCardId, returningToDeckCardId, exchangingCardId, targetingCardId, activeAnimations])
 
   const handleCardClick = (card: GameCard) => {
     setSelectedCard(card)
@@ -240,7 +266,7 @@ export function GameBoard({
         data-player={isOpponent ? "opponent" : "player"}
       >
         {cards.length === 0 ? (
-          <div className="flex w-full items-center justify-center p-1 text-xs text-green-500">
+          <div className="flex w-full items-center justify-center p-1 text-xs text-white">
             {isOpponent ? "Opponent's field is empty" : "Your field is empty"}
           </div>
         ) : (
@@ -311,7 +337,7 @@ export function GameBoard({
                       {/* Use card art based on name */}
                       {getCardArt(card)}
 
-                      <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-0.5 text-center text-[10px]">
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-0.5 text-center text-[10px] text-white">
                         {card.name}
                         {card.points && <span className="ml-1 font-bold text-yellow-400">({card.points})</span>}
                       </div>
@@ -339,29 +365,27 @@ export function GameBoard({
                       <div className="absolute inset-0 border border-white/10 rounded-sm pointer-events-none"></div>
 
                       <CardContent className="flex h-full flex-col items-center justify-between p-1">
-                        <div className="w-full text-center text-xs font-medium">{card.name}</div>
+                        <div className="w-full text-center text-xs font-medium text-white">{card.name}</div>
 
                         <div className="relative h-[100px] w-full">{getCardArt(card)}</div>
 
-                        <div className="w-full">
-                          {card.type === "animal" ? (
-                            <div className="flex items-center justify-between">
-                              <Badge
-                                variant="outline"
-                                className={`${getEnvironmentBadgeColor(card.environment)} text-[9px]`}
-                              >
-                                {card.environment}
-                              </Badge>
-                              {card.points && (
-                                <div className="absolute top-1 left-1 bg-yellow-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
-                                  {card.points}
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="text-center text-[9px] text-gray-300">{card.effect}</div>
-                          )}
-                        </div>
+                        {card.type === "animal" ? (
+                          <div className="flex items-center justify-between">
+                            <Badge
+                              variant="outline"
+                              className={`${getEnvironmentBadgeColor(card.environment)} text-[9px]`}
+                            >
+                              {card.environment}
+                            </Badge>
+                            {card.points && (
+                              <div className="absolute top-1 left-1 bg-yellow-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+                                {card.points}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-center text-[9px] text-white">{card.effect}</div>
+                        )}
                       </CardContent>
                     </Card>
                   </div>

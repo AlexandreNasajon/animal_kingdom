@@ -35,13 +35,13 @@ const getEnvironmentColor = (environment?: string) => {
 const getEnvironmentBadgeColor = (environment?: string) => {
   switch (environment) {
     case "terrestrial":
-      return "bg-red-900 text-red-200"
+      return "bg-red-900 text-white"
     case "aquatic":
-      return "bg-blue-900 text-blue-200"
+      return "bg-blue-900 text-white"
     case "amphibian":
-      return "bg-green-900 text-green-200"
+      return "bg-green-900 text-white"
     default:
-      return "bg-gray-900 text-gray-200"
+      return "bg-gray-900 text-white"
   }
 }
 
@@ -52,18 +52,40 @@ export function CardDetailModal({ open, onClose, card, onPlay, disabled }: CardD
 
   const handlePlay = () => {
     setIsPlaying(true)
+
+    // Add a class to trigger the flip animation
+    const cardElement = document.querySelector(".animate-flip")
+    if (cardElement) {
+      cardElement.classList.remove("animate-flip")
+      void cardElement.offsetWidth // Force reflow to restart animation
+      cardElement.classList.add("animate-flip")
+    }
+
     // Add a small delay to allow animation to play
     setTimeout(() => {
       onPlay()
       setIsPlaying(false)
-    }, 500)
+    }, 800)
+  }
+
+  // Special handling for Prey card
+  const getCardEffectDisplay = (card: GameCard) => {
+    if (card.name === "Prey") {
+      return (
+        <div className="mt-2 text-[8px] text-center px-1 leading-tight text-white">
+          Choose 1 animal. Send all same-environment animals with fewer points to bottom
+        </div>
+      )
+    }
+
+    return <div className="mt-2 text-[9px] text-center px-1 leading-tight text-white">{card.effect}</div>
   }
 
   return (
     <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="border-2 border-green-700 bg-green-900 p-2 text-white">
         <DialogHeader>
-          <DialogTitle className="text-base">{card.name}</DialogTitle>
+          <DialogTitle className="text-base text-white">{card.name}</DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col items-center space-y-2">
@@ -73,7 +95,7 @@ export function CardDetailModal({ open, onClose, card, onPlay, disabled }: CardD
             } p-1 shadow-md transition-all ${isPlaying ? "animate-play" : "animate-flip"}`}
           >
             <CardContent className="flex flex-col items-center space-y-4 p-1 h-full">
-              <div className="text-center font-bold">{card.name}</div>
+              <div className="text-center font-bold text-white">{card.name}</div>
               <div className="relative h-[160px] w-full flex items-center justify-center">{getCardArt(card)}</div>
 
               {card.type === "animal" ? (
@@ -89,10 +111,10 @@ export function CardDetailModal({ open, onClose, card, onPlay, disabled }: CardD
                 </div>
               ) : (
                 <div className="mt-auto w-full">
-                  <Badge variant="outline" className="bg-purple-900 text-purple-200 text-xs w-full justify-center">
-                    Impact Card
+                  <Badge variant="outline" className="bg-purple-900 text-white text-xs w-full justify-center">
+                    Impact
                   </Badge>
-                  <div className="mt-2 text-xs text-center line-clamp-3">{card.effect}</div>
+                  {getCardEffectDisplay(card)}
                 </div>
               )}
             </CardContent>
@@ -101,19 +123,15 @@ export function CardDetailModal({ open, onClose, card, onPlay, disabled }: CardD
           <div className="text-center">
             {card.type === "animal" ? (
               <div>
-                <p className="text-xs text-green-200">
+                <p className="text-xs text-white">
                   {card.environment === "amphibian"
                     ? "This animal can live in both terrestrial and aquatic environments."
                     : `This is a ${card.environment} animal.`}
                 </p>
-                <p className="mt-0.5 text-xs text-yellow-200">
-                  Worth {card.points} point{card.points !== 1 ? "s" : ""} when played on your field.
-                </p>
               </div>
             ) : (
               <div>
-                <p className="text-xs text-purple-200">Impact Card</p>
-                {/* Removed duplicate effect text here */}
+                <p className="text-xs text-white">{card.effect}</p>
               </div>
             )}
           </div>
@@ -123,7 +141,7 @@ export function CardDetailModal({ open, onClose, card, onPlay, disabled }: CardD
           <Button
             onClick={onClose}
             variant="outline"
-            className="flex items-center gap-1 border-red-700 text-red-400 hover:bg-red-900/30 hover:text-red-300"
+            className="flex items-center gap-1 border-red-700 text-white hover:bg-red-900/30 hover:text-white"
             size="sm"
           >
             <X className="h-3 w-3" /> Close
@@ -131,7 +149,7 @@ export function CardDetailModal({ open, onClose, card, onPlay, disabled }: CardD
           <Button
             onClick={handlePlay}
             disabled={disabled || isPlaying}
-            className="flex items-center gap-1 bg-green-700 hover:bg-green-600"
+            className="flex items-center gap-1 bg-green-700 hover:bg-green-600 text-white"
             size="sm"
           >
             <Play className="h-3 w-3" /> Play Card

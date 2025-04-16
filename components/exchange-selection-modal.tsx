@@ -65,17 +65,17 @@ export function ExchangeSelectionModal({
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+          <DialogTitle className="text-white">{title}</DialogTitle>
+          <DialogDescription className="text-white">{description}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           {/* Player's cards */}
           <div>
-            <h3 className="text-sm font-medium mb-2">Your Animals:</h3>
+            <h3 className="text-sm font-medium mb-2 text-white">Your Animals:</h3>
             <div className="flex flex-wrap gap-2 justify-center">
               {playerCards.length === 0 ? (
-                <div className="text-sm text-gray-400">No animals available</div>
+                <div className="text-sm text-white">No animals available</div>
               ) : (
                 playerCards.map((card, index) => (
                   <div key={card.id} className="relative">
@@ -92,24 +92,24 @@ export function ExchangeSelectionModal({
                       <div className="absolute inset-0 border border-white/10 rounded-sm pointer-events-none"></div>
 
                       <CardContent className="flex h-full flex-col items-center justify-between p-1">
-                        <div className="w-full text-center text-xs font-medium">{card.name}</div>
+                        <div className="w-full text-center text-xs font-medium text-white">{card.name}</div>
 
                         <div className="relative h-[70px] w-full">{getCardArt(card)}</div>
 
                         <div className="w-full">
                           {card.type === "animal" && (
                             <div className="flex items-center justify-between">
-                              <Badge variant="outline" className="text-[9px]">
+                              <Badge variant="outline" className="text-[9px] text-white">
                                 {card.environment}
                               </Badge>
-                              <Badge className="bg-yellow-600 text-[9px]">{card.points} pts</Badge>
+                              <Badge className="bg-yellow-600 text-[9px] text-white">{card.points}</Badge>
                             </div>
                           )}
                         </div>
                       </CardContent>
                     </Card>
                     {selectedPlayerCard === index && (
-                      <div className="absolute top-0 right-0 bg-yellow-500 text-black font-bold rounded-full w-6 h-6 flex items-center justify-center">
+                      <div className="absolute top-0 right-0 bg-yellow-500 text-white font-bold rounded-full w-6 h-6 flex items-center justify-center">
                         1
                       </div>
                     )}
@@ -121,10 +121,10 @@ export function ExchangeSelectionModal({
 
           {/* Opponent's cards */}
           <div>
-            <h3 className="text-sm font-medium mb-2">Opponent's Animals:</h3>
+            <h3 className="text-sm font-medium mb-2 text-white">Opponent's Animals:</h3>
             <div className="flex flex-wrap gap-2 justify-center">
               {opponentCards.length === 0 ? (
-                <div className="text-sm text-gray-400">No animals available</div>
+                <div className="text-sm text-white">No animals available</div>
               ) : (
                 opponentCards.map((card, index) => (
                   <div key={card.id} className="relative">
@@ -141,24 +141,24 @@ export function ExchangeSelectionModal({
                       <div className="absolute inset-0 border border-white/10 rounded-sm pointer-events-none"></div>
 
                       <CardContent className="flex h-full flex-col items-center justify-between p-1">
-                        <div className="w-full text-center text-xs font-medium">{card.name}</div>
+                        <div className="w-full text-center text-xs font-medium text-white">{card.name}</div>
 
                         <div className="relative h-[70px] w-full">{getCardArt(card)}</div>
 
                         <div className="w-full">
                           {card.type === "animal" && (
                             <div className="flex items-center justify-between">
-                              <Badge variant="outline" className="text-[9px]">
+                              <Badge variant="outline" className="text-[9px] text-white">
                                 {card.environment}
                               </Badge>
-                              <Badge className="bg-yellow-600 text-[9px]">{card.points} pts</Badge>
+                              <Badge className="bg-yellow-600 text-[9px] text-white">{card.points}</Badge>
                             </div>
                           )}
                         </div>
                       </CardContent>
                     </Card>
                     {selectedOpponentCard === index && (
-                      <div className="absolute top-0 right-0 bg-yellow-500 text-black font-bold rounded-full w-6 h-6 flex items-center justify-center">
+                      <div className="absolute top-0 right-0 bg-yellow-500 text-white font-bold rounded-full w-6 h-6 flex items-center justify-center">
                         2
                       </div>
                     )}
@@ -169,10 +169,14 @@ export function ExchangeSelectionModal({
           </div>
 
           <div className="flex justify-end space-x-2 pt-2">
-            <Button variant="outline" onClick={handleClose}>
+            <Button variant="outline" onClick={handleClose} className="text-white">
               Cancel
             </Button>
-            <Button onClick={handleConfirm} disabled={selectedPlayerCard === null || selectedOpponentCard === null}>
+            <Button
+              onClick={handleConfirm}
+              disabled={selectedPlayerCard === null || selectedOpponentCard === null}
+              className="text-white"
+            >
               Confirm
             </Button>
           </div>
