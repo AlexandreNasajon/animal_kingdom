@@ -1310,7 +1310,7 @@ export default function GameMatch() {
   // Update the main layout to be more compact and remove the game log
   return (
     <div
-      className="flex min-h-screen flex-col bg-gradient-to-b from-green-800 to-green-950 p-0 text-white w-full mx-auto"
+      className="flex flex-col bg-gradient-to-b from-green-800 to-green-950 p-0 text-white w-full mx-auto"
       ref={gameBoardRef}
     >
       <AnimationStyles />
@@ -1339,7 +1339,7 @@ export default function GameMatch() {
         </div>
       </div>
       {/* Game board */}
-      <div className="flex flex-1 flex-col px-2 max-h-[calc(100vh-100px)] overflow-hidden">
+      <div className="flex flex-col px-2 overflow-hidden">
         {/* AI Hand (face down) */}
         <div className="mb-0">
           <OpponentHand
@@ -1492,7 +1492,7 @@ export default function GameMatch() {
         </div>
 
         {/* Player hand */}
-        <div className="px-2 pb-0">
+        <div className="px-2 pb-0 mt-[-10px]">
           <div className="flex items-center justify-center">
             <PlayerHand
               cards={gameState.playerHand}
