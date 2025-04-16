@@ -656,25 +656,6 @@ export function playImpactCard(state: GameState, cardIndex: number, forPlayer: b
           }
         }
 
-      case "Trap":
-        // When AI plays Trap, player should choose which animal to give
-        // This already works correctly in the existing implementation
-        if (state.playerField.length > 0) {
-          return {
-            ...newState,
-            message: "AI played Trap. You must choose an animal to give.",
-            pendingEffect: {
-              type: "trap",
-              forPlayer: false,
-            },
-          }
-        } else {
-          return {
-            ...newState,
-            message: "AI played Trap, but you have no animals on your field.",
-          }
-        }
-
       case "Drought":
         // Each player sends animals to the bottom until they have 2
         const playerFieldCopy = [...state.playerField]
@@ -1391,12 +1372,6 @@ export function makeAIDecision(state: GameState): GameState {
       return playImpactCard(state, scareIndex, false)
     }
 
-    // Try to use Trap to steal a high-value animal
-    const trapIndex = state.opponentHand.findIndex((card) => card.name === "Trap")
-    if (trapIndex !== -1 && state.playerField.length > 0) {
-      return playImpactCard(state, trapIndex, false)
-    }
-
     // Try to use Earthquake if player has high-value animals
     const earthquakeIndex = state.opponentHand.findIndex((card) => card.name === "Earthquake")
     if (earthquakeIndex !== -1 && state.playerField.some((card) => (card.points || 0) >= 3)) {
@@ -1543,4 +1518,8 @@ export function endAITurn(state: GameState): GameState {
   newState = checkGameOver(newState)
 
   return newState
+}
+
+export const getAllCards = () => {
+  return GAME_DECK
 }

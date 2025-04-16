@@ -1,35 +1,116 @@
+"use client"
+
 export function EarthquakeArt() {
   return (
     <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="h-full w-full">
       <defs>
         <linearGradient id="earthquakeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#4B0082" />
-          <stop offset="100%" stopColor="#8A2BE2" />
+          <stop offset="0%" stopColor="#4B0082">
+            <animate attributeName="stop-color" values="#4B0082; #6A287E; #4B0082" dur="3s" repeatCount="indefinite" />
+          </stop>
+          <stop offset="100%" stopColor="#8A2BE2">
+            <animate attributeName="stop-color" values="#8A2BE2; #9370DB; #8A2BE2" dur="3s" repeatCount="indefinite" />
+          </stop>
         </linearGradient>
       </defs>
       <rect x="0" y="0" width="100" height="100" fill="url(#earthquakeGradient)" />
 
-      {/* Cracked earth */}
-      <path d="M10,50 L30,60 L50,40 L70,60 L90,50" fill="none" stroke="#8B4513" strokeWidth="3" />
-      <path d="M10,60 L30,70 L50,50 L70,70 L90,60" fill="none" stroke="#8B4513" strokeWidth="3" />
-      <path d="M10,70 L30,80 L50,60 L70,80 L90,70" fill="none" stroke="#8B4513" strokeWidth="3" />
+      {/* Shaking ground */}
+      <path d="M0,70 Q25,65 50,70 Q75,75 100,70 L100,100 L0,100 Z" fill="#8B4513" opacity="0.5">
+        <animate
+          attributeName="d"
+          values="M0,70 Q25,65 50,70 Q75,75 100,70 L100,100 L0,100 Z; 
+                 M0,75 Q25,65 50,75 Q75,65 100,75 L100,100 L0,100 Z; 
+                 M0,70 Q25,75 50,70 Q75,75 100,70 L100,100 L0,100 Z;
+                 M0,70 Q25,65 50,70 Q75,75 100,70 L100,100 L0,100 Z"
+          dur="0.5s"
+          repeatCount="indefinite"
+        />
+      </path>
 
-      {/* Fault lines */}
-      <path d="M30,40 L30,80" fill="none" stroke="#8B4513" strokeWidth="2" />
-      <path d="M50,30 L50,80" fill="none" stroke="#8B4513" strokeWidth="2" />
-      <path d="M70,40 L70,80" fill="none" stroke="#8B4513" strokeWidth="2" />
+      {/* Cracks in the ground */}
+      <path d="M20,70 L30,75 L40,65 L50,80 L60,70 L70,75 L80,65" fill="none" stroke="#000000" strokeWidth="2">
+        <animate
+          attributeName="d"
+          values="M20,70 L30,75 L40,65 L50,80 L60,70 L70,75 L80,65;
+                 M20,75 L30,65 L40,75 L50,65 L60,75 L70,65 L80,75;
+                 M20,70 L30,75 L40,65 L50,80 L60,70 L70,75 L80,65"
+          dur="0.5s"
+          repeatCount="indefinite"
+        />
+      </path>
 
-      {/* Shaking buildings */}
-      <rect x="20" y="20" width="10" height="20" fill="#A9A9A9" opacity="0.8" transform="rotate(5)" />
-      <rect x="40" y="15" width="10" height="25" fill="#A9A9A9" opacity="0.8" transform="rotate(-3)" />
-      <rect x="60" y="20" width="10" height="20" fill="#A9A9A9" opacity="0.8" transform="rotate(7)" />
-      <rect x="80" y="25" width="10" height="15" fill="#A9A9A9" opacity="0.8" transform="rotate(-5)" />
+      {/* Buildings/structures shaking */}
+      <g>
+        <animateTransform
+          attributeName="transform"
+          type="translate"
+          values="-2,0; 0,0; 2,0; 0,0; -2,0"
+          dur="0.2s"
+          repeatCount="indefinite"
+        />
+        <rect x="30" y="40" width="10" height="30" fill="#A9A9A9" />
+        <rect x="60" y="30" width="15" height="40" fill="#A9A9A9" />
+        <rect x="45" y="50" width="10" height="20" fill="#A9A9A9" />
+      </g>
 
-      {/* Shaking effect */}
-      <path d="M15,30 L25,25" fill="none" stroke="#ffffff" strokeWidth="1" opacity="0.5" />
-      <path d="M35,25 L45,20" fill="none" stroke="#ffffff" strokeWidth="1" opacity="0.5" />
-      <path d="M55,30 L65,25" fill="none" stroke="#ffffff" strokeWidth="1" opacity="0.5" />
-      <path d="M75,25 L85,30" fill="none" stroke="#ffffff" strokeWidth="1" opacity="0.5" />
+      {/* Animals falling/affected */}
+      <g>
+        <animateTransform
+          attributeName="transform"
+          type="translate"
+          values="0,0; 2,5; 4,10; 6,15"
+          dur="1s"
+          repeatCount="indefinite"
+        />
+        <animateTransform
+          attributeName="transform"
+          type="rotate"
+          values="0; 10; 0; -10; 0"
+          dur="0.5s"
+          repeatCount="indefinite"
+          additive="sum"
+        />
+        <path d="M30,30 C25,25 25,20 30,15 L40,15 C45,20 45,25 40,30 Z" fill="#A0522D" opacity="0.8" />
+        <circle cx="32" cy="20" r="2" fill="#000000" opacity="0.8" />
+      </g>
+
+      <g>
+        <animateTransform
+          attributeName="transform"
+          type="translate"
+          values="0,0; -2,5; -4,10; -6,15"
+          dur="1s"
+          repeatCount="indefinite"
+        />
+        <animateTransform
+          attributeName="transform"
+          type="rotate"
+          values="0; -10; 0; 10; 0"
+          dur="0.5s"
+          repeatCount="indefinite"
+          additive="sum"
+        />
+        <path d="M70,30 C65,25 65,20 70,15 L80,15 C85,20 85,25 80,30 Z" fill="#A0522D" opacity="0.8" />
+        <circle cx="72" cy="20" r="2" fill="#000000" opacity="0.8" />
+      </g>
+
+      {/* Dust clouds */}
+      <g>
+        <animate attributeName="opacity" values="0; 0.5; 0" dur="1s" repeatCount="indefinite" />
+        <circle cx="30" cy="70" r="5" fill="#A9A9A9" />
+        <circle cx="70" cy="70" r="5" fill="#A9A9A9" />
+        <circle cx="50" cy="75" r="5" fill="#A9A9A9" />
+      </g>
+
+      {/* Seismic waves */}
+      <g>
+        <animate attributeName="opacity" values="0.8; 0.2; 0.8" dur="1s" repeatCount="indefinite" />
+        <circle cx="50" cy="50" r="10" fill="none" stroke="#FF0000" strokeWidth="1" />
+        <circle cx="50" cy="50" r="20" fill="none" stroke="#FF0000" strokeWidth="1" />
+        <circle cx="50" cy="50" r="30" fill="none" stroke="#FF0000" strokeWidth="1" />
+        <circle cx="50" cy="50" r="40" fill="none" stroke="#FF0000" strokeWidth="1" />
+      </g>
     </svg>
   )
 }

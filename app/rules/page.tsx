@@ -22,8 +22,8 @@ export default function Rules() {
           <CardContent className="prose prose-invert max-w-none p-6 text-green-100">
             <h2>Overview</h2>
             <p>
-              Animal Kingdom is a strategic card game for two players. Players use animal cards to gain points and
-              impact cards to affect the game state.
+              Bioquest is a strategic card game for two players. Players use animal cards to gain points and impact
+              cards to affect the game state.
             </p>
 
             <h2>Objective</h2>

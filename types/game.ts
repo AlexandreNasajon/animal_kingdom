@@ -18,7 +18,8 @@ export const GAME_DECK: GameCard[] = [
     name: "Fish",
     points: 1,
     environment: "aquatic",
-    imageUrl: "https://lh3.googleusercontent.com/gg-dl/AA8i_VK-xc5GAd9OoiiSlfbjVO8oIvXwivXi5KWS8oLq0FIr2i8eDoBNB6hFLsFNKTugK10ECJxbv1bXwCBcMDCCOFYeQqJDKJkIxLTkYNaO_x0_sGa8efnowzPY3O8yW0x1f9sNN2-yf6juLyXndPbJE_NkqIdoWeYRFrFiVQtbzVvU_T6k4g=s1024",
+    imageUrl:
+      "https://lh3.googleusercontent.com/gg-dl/AA8i_VK-xc5GAd9OoiiSlfbjVO8oIvXwivXi5KWS8oLq0FIr2i8eDoBNB6hFLsFNKTugK10ECJxbv1bXwCBcMDCCOFYeQqJDKJkIxLTkYNaO_x0_sGa8efnowzPY3O8yW0x1f9sNN2-yf6juLyXndPbJE_NkqIdoWeYRFrFiVQtbzVvU_T6k4g=s1024",
   },
   {
     id: 2,
@@ -26,7 +27,8 @@ export const GAME_DECK: GameCard[] = [
     name: "Fish",
     points: 1,
     environment: "aquatic",
-    imageUrl: "https://lh3.googleusercontent.com/gg-dl/AA8i_VK-xc5GAd9OoiiSlfbjVO8oIvXwivXi5KWS8oLq0FIr2i8eDoBNB6hFLsFNKTugK10ECJxbv1bXwCBcMDCCOFYeQqJDKJkIxLTkYNaO_x0_sGa8efnowzPY3O8yW0x1f9sNN2-yf6juLyXndPbJE_NkqIdoWeYRFrFiVQtbzVvU_T6k4g=s1024",
+    imageUrl:
+      "https://lh3.googleusercontent.com/gg-dl/AA8i_VK-xc5GAd9OoiiSlfbjVO8oIvXwivXi5KWS8oLq0FIr2i8eDoBNB6hFLsFNKTugK10ECJxbv1bXwCBcMDCCOFYeQqJDKJkIxLTkYNaO_x0_sGa8efnowzPY3O8yW0x1f9sNN2-yf6juLyXndPbJE_NkqIdoWeYRFrFiVQtbzVvU_T6k4g=s1024",
   },
   {
     id: 3,
@@ -34,7 +36,8 @@ export const GAME_DECK: GameCard[] = [
     name: "Fish",
     points: 1,
     environment: "aquatic",
-    imageUrl: "https://lh3.googleusercontent.com/gg-dl/AA8i_VK-xc5GAd9OoiiSlfbjVO8oIvXwivXi5KWS8oLq0FIr2i8eDoBNB6hFLsFNKTugK10ECJxbv1bXwCBcMDCCOFYeQqJDKJkIxLTkYNaO_x0_sGa8efnowzPY3O8yW0x1f9sNN2-yf6juLyXndPbJE_NkqIdoWeYRFrFiVQtbzVvU_T6k4g=s1024",
+    imageUrl:
+      "https://lh3.googleusercontent.com/gg-dl/AA8i_VK-xc5GAd9OoiiSlfbjVO8oIvXwivXi5KWS8oLq0FIr2i8eDoBNB6hFLsFNKTugK10ECJxbv1bXwCBcMDCCOFYeQqJDKJkIxLTkYNaO_x0_sGa8efnowzPY3O8yW0x1f9sNN2-yf6juLyXndPbJE_NkqIdoWeYRFrFiVQtbzVvU_T6k4g=s1024",
   },
   {
     id: 4,
@@ -42,7 +45,8 @@ export const GAME_DECK: GameCard[] = [
     name: "Fish",
     points: 1,
     environment: "aquatic",
-    imageUrl: "https://lh3.googleusercontent.com/gg-dl/AA8i_VK-xc5GAd9OoiiSlfbjVO8oIvXwivXi5KWS8oLq0FIr2i8eDoBNB6hFLsFNKTugK10ECJxbv1bXwCBcMDCCOFYeQqJDKJkIxLTkYNaO_x0_sGa8efnowzPY3O8yW0x1f9sNN2-yf6juLyXndPbJE_NkqIdoWeYRFrFiVQtbzVvU_T6k4g=s1024",
+    imageUrl:
+      "https://lh3.googleusercontent.com/gg-dl/AA8i_VK-xc5GAd9OoiiSlfbjVO8oIvXwivXi5KWS8oLq0FIr2i8eDoBNB6hFLsFNKTugK10ECJxbv1bXwCBcMDCCOFYeQqJDKJkIxLTkYNaO_x0_sGa8efnowzPY3O8yW0x1f9sNN2-yf6juLyXndPbJE_NkqIdoWeYRFrFiVQtbzVvU_T6k4g=s1024",
   },
   {
     id: 5,
@@ -50,7 +54,8 @@ export const GAME_DECK: GameCard[] = [
     name: "Fish",
     points: 1,
     environment: "aquatic",
-    imageUrl: "https://lh3.googleusercontent.com/gg-dl/AA8i_VK-xc5GAd9OoiiSlfbjVO8oIvXwivXi5KWS8oLq0FIr2i8eDoBNB6hFLsFNKTugK10ECJxbv1bXwCBcMDCCOFYeQqJDKJkIxLTkYNaO_x0_sGa8efnowzPY3O8yW0x1f9sNN2-yf6juLyXndPbJE_NkqIdoWeYRFrFiVQtbzVvU_T6k4g=s1024",
+    imageUrl:
+      "https://lh3.googleusercontent.com/gg-dl/AA8i_VK-xc5GAd9OoiiSlfbjVO8oIvXwivXi5KWS8oLq0FIr2i8eDoBNB6hFLsFNKTugK10ECJxbv1bXwCBcMDCCOFYeQqJDKJkIxLTkYNaO_x0_sGa8efnowzPY3O8yW0x1f9sNN2-yf6juLyXndPbJE_NkqIdoWeYRFrFiVQtbzVvU_T6k4g=s1024",
   },
 
   // 4 aquatic animals worth 2 points
@@ -196,7 +201,8 @@ export const GAME_DECK: GameCard[] = [
     name: "Lion",
     points: 3,
     environment: "terrestrial",
-    imageUrl: "https://lh3.googleusercontent.com/gg-dl/AA8i_VLfVE6FnRRdp5mkHi9n98J8LULbVBEtfcgtyKST3Ez0Jm4JuLFqHAeQn1KsMsHfgFLjtiPprzCEywqQBfqokDxWl_rLMiZYP7p4hNMV-CSrfQZvpHZiWweU3-mNPABoUqmKeCLxQn4fvQTWzFu79HVwnxwIVQaSN5nwBRcsrXNM3S5DqA=s1024",
+    imageUrl:
+      "https://lh3.googleusercontent.com/gg-dl/AA8i_VLfVE6FnRRdp5mkHi9n98J8LULbVBEtfcgtyKST3Ez0Jm4JuLFqHAeQn1KsMsHfgFLjtiPprzCEywqQBfqokDxWl_rLMiZYP7p4hNMV-CSrfQZvpHZiWweU3-mNPABoUqmKeCLxQn4fvQTWzFu79HVwnxwIVQaSN5nwBRcsrXNM3S5DqA=s1024",
   },
   {
     id: 23,
@@ -204,7 +210,8 @@ export const GAME_DECK: GameCard[] = [
     name: "Lion",
     points: 3,
     environment: "terrestrial",
-    imageUrl: "https://lh3.googleusercontent.com/gg-dl/AA8i_VLfVE6FnRRdp5mkHi9n98J8LULbVBEtfcgtyKST3Ez0Jm4JuLFqHAeQn1KsMsHfgFLjtiPprzCEywqQBfqokDxWl_rLMiZYP7p4hNMV-CSrfQZvpHZiWweU3-mNPABoUqmKeCLxQn4fvQTWzFu79HVwnxwIVQaSN5nwBRcsrXNM3S5DqA=s1024",
+    imageUrl:
+      "https://lh3.googleusercontent.com/gg-dl/AA8i_VLfVE6FnRRdp5mkHi9n98J8LULbVBEtfcgtyKST3Ez0Jm4JuLFqHAeQn1KsMsHfgFLjtiPprzCEywqQBfqokDxWl_rLMiZYP7p4hNMV-CSrfQZvpHZiWweU3-mNPABoUqmKeCLxQn4fvQTWzFu79HVwnxwIVQaSN5nwBRcsrXNM3S5DqA=s1024",
   },
   {
     id: 24,
@@ -212,7 +219,8 @@ export const GAME_DECK: GameCard[] = [
     name: "Lion",
     points: 3,
     environment: "terrestrial",
-    imageUrl: "https://lh3.googleusercontent.com/gg-dl/AA8i_VLfVE6FnRRdp5mkHi9n98J8LULbVBEtfcgtyKST3Ez0Jm4JuLFqHAeQn1KsMsHfgFLjtiPprzCEywqQBfqokDxWl_rLMiZYP7p4hNMV-CSrfQZvpHZiWweU3-mNPABoUqmKeCLxQn4fvQTWzFu79HVwnxwIVQaSN5nwBRcsrXNM3S5DqA=s1024",
+    imageUrl:
+      "https://lh3.googleusercontent.com/gg-dl/AA8i_VLfVE6FnRRdp5mkHi9n98J8LULbVBEtfcgtyKST3Ez0Jm4JuLFqHAeQn1KsMsHfgFLjtiPprzCEywqQBfqokDxWl_rLMiZYP7p4hNMV-CSrfQZvpHZiWweU3-mNPABoUqmKeCLxQn4fvQTWzFu79HVwnxwIVQaSN5nwBRcsrXNM3S5DqA=s1024",
   },
 
   // 1 amphibian animal worth 4 points
@@ -225,8 +233,62 @@ export const GAME_DECK: GameCard[] = [
     imageUrl: "/placeholder.svg?height=120&width=80",
   },
 
+  // 3 amphibian animals worth 1 point (added 2 more Frogs)
+  {
+    id: 51,
+    type: "animal",
+    name: "Frog",
+    points: 1,
+    environment: "amphibian",
+    imageUrl: "/green-leaf-frog.png",
+  },
+  {
+    id: 54,
+    type: "animal",
+    name: "Frog",
+    points: 1,
+    environment: "amphibian",
+    imageUrl: "/green-leaf-frog.png",
+  },
+  {
+    id: 55,
+    type: "animal",
+    name: "Frog",
+    points: 1,
+    environment: "amphibian",
+    imageUrl: "/green-leaf-frog.png",
+  },
+
+  // 2 amphibian animals worth 2 points (added 1 more Crab)
+  {
+    id: 52,
+    type: "animal",
+    name: "Crab",
+    points: 2,
+    environment: "amphibian",
+    imageUrl: "/hermit-crab-shell.png",
+  },
+  {
+    id: 56,
+    type: "animal",
+    name: "Crab",
+    points: 2,
+    environment: "amphibian",
+    imageUrl: "/hermit-crab-shell.png",
+  },
+
+  // 1 amphibian animal worth 3 points
+  {
+    id: 53,
+    type: "animal",
+    name: "Otter",
+    points: 3,
+    environment: "amphibian",
+    imageUrl: "/playful-otter-river.png",
+  },
+
   // 25 Impact Cards
-  // 3x Hunter
+  // 4x Hunter (added 1 more)
   {
     id: 26,
     type: "impact",
@@ -248,8 +310,15 @@ export const GAME_DECK: GameCard[] = [
     effect: "Destroy 1 terrestrial animal on the field",
     imageUrl: "/placeholder.svg?height=120&width=80",
   },
+  {
+    id: 57,
+    type: "impact",
+    name: "Hunter",
+    effect: "Destroy 1 terrestrial animal on the field",
+    imageUrl: "/placeholder.svg?height=120&width=80",
+  },
 
-  // 3x Fisher
+  // 4x Fisher (added 1 more)
   {
     id: 29,
     type: "impact",
@@ -271,6 +340,13 @@ export const GAME_DECK: GameCard[] = [
     effect: "Destroy 1 aquatic animal on the field",
     imageUrl: "/placeholder.svg?height=120&width=80",
   },
+  {
+    id: 58,
+    type: "impact",
+    name: "Fisher",
+    effect: "Destroy 1 aquatic animal on the field",
+    imageUrl: "/placeholder.svg?height=120&width=80",
+  },
 
   // 2x Scare
   {
@@ -280,15 +356,8 @@ export const GAME_DECK: GameCard[] = [
     effect: "Send 1 animal from the field to the top of the deck",
     imageUrl: "/placeholder.svg?height=120&width=80",
   },
-  {
-    id: 33,
-    type: "impact",
-    name: "Scare",
-    effect: "Send 1 animal from the field to the top of the deck",
-    imageUrl: "/placeholder.svg?height=120&width=80",
-  },
 
-  // 2x Veterinarian
+  // 1x Veterinarian (removed 1)
   {
     id: 34,
     type: "impact",
@@ -296,29 +365,8 @@ export const GAME_DECK: GameCard[] = [
     effect: "Play an animal card from the discard pile",
     imageUrl: "/placeholder.svg?height=120&width=80",
   },
-  {
-    id: 35,
-    type: "impact",
-    name: "Veterinarian",
-    effect: "Play an animal card from the discard pile",
-    imageUrl: "/placeholder.svg?height=120&width=80",
-  },
 
-  // 2x Limit
-  {
-    id: 36,
-    type: "impact",
-    name: "Limit",
-    effect: "If opponent is vegan, destroy 1 animal on their field",
-    imageUrl: "/placeholder.svg?height=120&width=80",
-  },
-  {
-    id: 37,
-    type: "impact",
-    name: "Limit",
-    effect: "If opponent is vegan, destroy 1 animal on their field",
-    imageUrl: "/placeholder.svg?height=120&width=80",
-  },
+  // 0x Limit (removed 2)
 
   // 1x Confuse
   {
@@ -338,32 +386,9 @@ export const GAME_DECK: GameCard[] = [
     imageUrl: "/placeholder.svg?height=120&width=80",
   },
 
-  // 1x Trap
-  {
-    id: 40,
-    type: "impact",
-    name: "Trap",
-    effect: "Opponent gives you 1 animal from their field",
-    imageUrl: "/placeholder.svg?height=120&width=80",
-  },
+  // 0x Drought (removed 1)
 
-  // 1x Drought
-  {
-    id: 41,
-    type: "impact",
-    name: "Drought",
-    effect: "Each player sends animals to the bottom until they have 2",
-    imageUrl: "/placeholder.svg?height=120&width=80",
-  },
-
-  // 1x Flood
-  {
-    id: 42,
-    type: "impact",
-    name: "Flood",
-    effect: "Each player sends 2 animals from their field to the bottom",
-    imageUrl: "/placeholder.svg?height=120&width=80",
-  },
+  // 0x Flood (removed 1)
 
   // 1x Release
   {
@@ -398,15 +423,6 @@ export const GAME_DECK: GameCard[] = [
     type: "impact",
     name: "Prey",
     effect: "Choose 1 animal on your field. Send all animals of same environment with fewer points to the bottom",
-    imageUrl: "/placeholder.svg?height=120&width=80",
-  },
-
-  // 1x Cage
-  {
-    id: 47,
-    type: "impact",
-    name: "Cage",
-    effect: "Send 1 animal to the bottom to gain control of an animal on the field",
     imageUrl: "/placeholder.svg?height=120&width=80",
   },
 

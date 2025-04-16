@@ -1,23 +1,167 @@
-"use client"
+import { HunterArt } from "./impact-arts/hunter-art"
+import { StormArt } from "./impact-arts/storm-art"
+import { FisherArt } from "./impact-arts/fisher-art"
+import { ScareArt } from "./impact-arts/scare-art"
+import { VeterinarianArt } from "./impact-arts/veterinarian-art"
+import { LimitArt } from "./impact-arts/limit-art"
+import { ConfuseArt } from "./impact-arts/confuse-art"
+import { DomesticateArt } from "./impact-arts/domesticate-art"
+import { TrapArt } from "./impact-arts/trap-art"
+import { DroughtArt } from "./impact-arts/drought-art"
+import { FloodArt } from "./impact-arts/flood-art"
+import { ReleaseArt } from "./impact-arts/release-art"
+import { EpidemicArt } from "./impact-arts/epidemic-art"
+import { CompeteArt } from "./impact-arts/compete-art"
+import { PreyArt } from "./impact-arts/prey-art"
+import { CageArt } from "./impact-arts/cage-art"
+import { FlourishArt } from "./impact-arts/flourish-art"
+import { EarthquakeArt } from "./impact-arts/earthquake-art"
 
-export function ImpactArt() {
-  return (
-    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="h-full w-full">
-      <defs>
-        <linearGradient id="impactGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#4B0082" />
-          <stop offset="100%" stopColor="#8A2BE2" />
-        </linearGradient>
-      </defs>
-      <rect x="0" y="0" width="100" height="100" fill="url(#impactGradient)" />
+interface ImpactArtProps {
+  name: string
+  size?: "small" | "medium" | "large"
+  isActive?: boolean
+}
 
-      {/* Impact burst */}
-      <path d="M50,20 L55,40 L75,40 L60,55 L65,75 L50,65 L35,75 L40,55 L25,40 L45,40 Z" fill="#ffffff" opacity="0.8" />
+export function ImpactArt({ name, size = "medium", isActive = false }: ImpactArtProps) {
+  // Common animation classes for all impact arts
+  const animationClass = isActive ? "animate-pulse-fast" : "animate-pulse-slow"
 
-      {/* Energy waves */}
-      <circle cx="50" cy="50" r="30" stroke="#ffffff" strokeWidth="2" fill="none" opacity="0.3" />
-      <circle cx="50" cy="50" r="20" stroke="#ffffff" strokeWidth="2" fill="none" opacity="0.5" />
-      <circle cx="50" cy="50" r="10" stroke="#ffffff" strokeWidth="2" fill="none" opacity="0.7" />
-    </svg>
-  )
+  // Size classes
+  const sizeClass = size === "small" ? "h-full w-full" : size === "large" ? "h-[200px] w-[200px]" : "h-full w-full"
+
+  // Base wrapper classes
+  const wrapperClass = `relative ${sizeClass} overflow-hidden ${animationClass}`
+
+  // Render the appropriate impact art based on name
+  switch (name.toLowerCase()) {
+    case "hunter":
+      return (
+        <div className={wrapperClass}>
+          <HunterArt />
+        </div>
+      )
+    case "storm":
+      return (
+        <div className={wrapperClass}>
+          <StormArt />
+        </div>
+      )
+    case "fisher":
+      return (
+        <div className={wrapperClass}>
+          <FisherArt />
+        </div>
+      )
+    case "scare":
+      return (
+        <div className={wrapperClass}>
+          <ScareArt />
+        </div>
+      )
+    case "veterinarian":
+      return (
+        <div className={wrapperClass}>
+          <VeterinarianArt />
+        </div>
+      )
+    case "limit":
+      return (
+        <div className={wrapperClass}>
+          <LimitArt />
+        </div>
+      )
+    case "confuse":
+      return (
+        <div className={wrapperClass}>
+          <ConfuseArt />
+        </div>
+      )
+    case "domesticate":
+      return (
+        <div className={wrapperClass}>
+          <DomesticateArt />
+        </div>
+      )
+    case "trap":
+      return (
+        <div className={wrapperClass}>
+          <TrapArt />
+        </div>
+      )
+    case "drought":
+      return (
+        <div className={wrapperClass}>
+          <DroughtArt />
+        </div>
+      )
+    case "flood":
+      return (
+        <div className={wrapperClass}>
+          <FloodArt />
+        </div>
+      )
+    case "release":
+      return (
+        <div className={wrapperClass}>
+          <ReleaseArt />
+        </div>
+      )
+    case "epidemic":
+      return (
+        <div className={wrapperClass}>
+          <EpidemicArt />
+        </div>
+      )
+    case "compete":
+      return (
+        <div className={wrapperClass}>
+          <CompeteArt />
+        </div>
+      )
+    case "prey":
+      return (
+        <div className={wrapperClass}>
+          <PreyArt />
+        </div>
+      )
+    case "cage":
+      return (
+        <div className={wrapperClass}>
+          <CageArt />
+        </div>
+      )
+    case "flourish":
+      return (
+        <div className={wrapperClass}>
+          <FlourishArt />
+        </div>
+      )
+    case "earthquake":
+      return (
+        <div className={wrapperClass}>
+          <EarthquakeArt />
+        </div>
+      )
+    default:
+      // Default impact art for unknown impacts
+      return (
+        <div className={`${wrapperClass} bg-purple-900 flex items-center justify-center`}>
+          <div className="text-white text-xs text-center">
+            {name}
+            <div className="mt-1 w-8 h-8 mx-auto rounded-full bg-purple-700 animate-pulse-slow flex items-center justify-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                className="w-5 h-5 text-white animate-spin-slow"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      )
+  }
 }

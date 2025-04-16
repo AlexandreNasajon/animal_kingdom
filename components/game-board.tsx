@@ -1,6 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import type React from "react"
+
+import { useState, useEffect, useRef } from "react"
 import type { GameCard } from "@/types/game"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -11,9 +13,12 @@ interface GameBoardProps {
   cards: GameCard[]
   isOpponent: boolean
   points?: number
-  newCardId?: number // ID of newly played card to animate
+  newCardId?: number | null // ID of newly played card to animate
   discardingCardId?: number | null // ID of card being discarded
   returningToDeckCardId?: number | null // ID of card returning to deck
+  exchangingCardId?: number | null // ID of card being exchanged
+  targetingCardId?: number | null // ID of card being targeted
+  onCardDrop?: (card: GameCard) => void // New prop for drag and drop
 }
 
 // Helper function to get environment color
@@ -58,7 +63,7 @@ const getEnvironmentAnimation = (environment?: string, id?: number) => {
       return `${baseAnimation} animate-aquatic`
     case "amphibian":
       // Amphibians get a combined animation that includes both terrestrial and aquatic properties
-      return `${baseAnimation} animate-amphibian animate-aquatic animate-terrestrial`
+      return `${baseAnimation} animate-amphibian`
     default:
       return baseAnimation
   }
@@ -66,8 +71,38 @@ const getEnvironmentAnimation = (environment?: string, id?: number) => {
 
 // Helper function to get impact card animation
 const getImpactAnimation = (id?: number) => {
-  const animations = ["animate-pulse-slow", "animate-glow", "animate-rotate"]
+  const animations = ["animate-pulse-slow", "animate-glow", "animate-rotate-slow"]
   return animations[(id || 0) % 3]
+}
+
+// Helper function for zone transfer animations
+const getZoneTransferAnimation = (sourceZone: string, targetZone: string) => {
+  // Different animations based on source and target zones
+  if (sourceZone === "hand" && targetZone === "field") {
+    return "animate-hand-to-field"
+  } else if (sourceZone === "field" && targetZone === "discard") {
+    return "animate-field-to-discard"
+  } else if (sourceZone === "field" && targetZone === "deck") {
+    return "animate-field-to-deck"
+  } else if (sourceZone === "deck" && targetZone === "hand") {
+    return "animate-deck-to-hand"
+  } else if (sourceZone === "discard" && targetZone === "hand") {
+    return "animate-discard-to-hand"
+  } else if (sourceZone === "discard" && targetZone === "deck") {
+    return "animate-discard-to-deck"
+  } else {
+    return "animate-zone-transfer" // Generic fallback
+  }
+}
+
+// Helper function for exchange animations
+const getExchangeAnimation = (isSource: boolean) => {
+  return isSource ? "animate-exchange-out" : "animate-exchange-in"
+}
+
+// Helper function for targeting animations
+const getTargetingAnimation = () => {
+  return "animate-being-targeted"
 }
 
 export function GameBoard({
@@ -77,12 +112,17 @@ export function GameBoard({
   newCardId,
   discardingCardId,
   returningToDeckCardId,
+  exchangingCardId,
+  targetingCardId,
+  onCardDrop,
 }: GameBoardProps) {
   const isWinning = points >= 7
   const [animatedCardId, setAnimatedCardId] = useState<number | null>(null)
   const [hoveredCardIndex, setHoveredCardIndex] = useState<number | null>(null)
   const [selectedCard, setSelectedCard] = useState<GameCard | null>(null)
   const [showZoomModal, setShowZoomModal] = useState(false)
+  const [dropHighlight, setDropHighlight] = useState(false)
+  const cardRefs = useRef<Map<number, HTMLDivElement>>(new Map())
 
   // Set up animation for new card
   useEffect(() => {
@@ -98,22 +138,109 @@ export function GameBoard({
     }
   }, [newCardId])
 
+  // Handle card movement animations
+  useEffect(() => {
+    // Create a function to add and remove animation classes
+    const animateCardMovement = (cardId: number | null, animationClass: string, duration: number) => {
+      if (cardId && cardRefs.current.has(cardId)) {
+        const cardElement = cardRefs.current.get(cardId)
+        if (cardElement) {
+          // Add the animation class
+          cardElement.classList.add(animationClass)
+
+          // Remove the animation class after it completes
+          setTimeout(() => {
+            if (cardElement) {
+              cardElement.classList.remove(animationClass)
+            }
+          }, duration)
+        }
+      }
+    }
+
+    // Handle discarding animation
+    if (discardingCardId) {
+      animateCardMovement(discardingCardId, "animate-field-to-discard", 1000)
+    }
+
+    // Handle returning to deck animation
+    if (returningToDeckCardId) {
+      animateCardMovement(returningToDeckCardId, "animate-field-to-deck", 1000)
+    }
+
+    // Handle exchange animation
+    if (exchangingCardId) {
+      animateCardMovement(exchangingCardId, "animate-exchange", 1000)
+    }
+
+    // Handle targeting animation
+    if (targetingCardId) {
+      animateCardMovement(targetingCardId, "animate-being-targeted", 1000)
+    }
+  }, [discardingCardId, returningToDeckCardId, exchangingCardId, targetingCardId])
+
   const handleCardClick = (card: GameCard) => {
     setSelectedCard(card)
     setShowZoomModal(true)
   }
 
+  // Save card element references
+  const setCardRef = (element: HTMLDivElement | null, cardId: number) => {
+    if (element) {
+      cardRefs.current.set(cardId, element)
+    } else {
+      cardRefs.current.delete(cardId)
+    }
+  }
+
+  // Drag and drop handlers
+  const handleDragOver = (e: React.DragEvent) => {
+    // Only allow dropping on player's field, not opponent's
+    if (isOpponent) return
+
+    e.preventDefault()
+    e.dataTransfer.dropEffect = "move"
+    setDropHighlight(true)
+  }
+
+  const handleDragLeave = () => {
+    setDropHighlight(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    // Only allow dropping on player's field, not opponent's
+    if (isOpponent) return
+
+    e.preventDefault()
+    setDropHighlight(false)
+
+    // Get the card index from the drag data
+    const cardIndex = e.dataTransfer.getData("text/plain")
+
+    if (cardIndex && onCardDrop) {
+      // Notify parent component about the drop
+      onCardDrop(Number.parseInt(cardIndex))
+    }
+  }
+
   return (
     <>
       <div
-        className={`flex min-h-[70px] items-center gap-1 rounded-lg border ${
+        className={`flex min-h-[90px] items-center justify-center gap-2 rounded-lg border ${
           isWinning
             ? `${isOpponent ? "border-yellow-500" : "border-yellow-500"} bg-yellow-900 shadow-inner shadow-yellow-500/30`
             : `${isOpponent ? "border-red-700" : "border-blue-700"} bg-green-950`
-        } p-1 ${isOpponent ? "justify-end" : "justify-start"} transition-all duration-300`}
+        } p-2 transition-all duration-300 ${
+          dropHighlight && !isOpponent ? "ring-2 ring-green-400 bg-green-900/50" : ""
+        }`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        data-zone="field"
+        data-player={isOpponent ? "opponent" : "player"}
       >
         {cards.length === 0 ? (
-          <div className="flex w-full items-center justify-center p-0.5 text-[8px] text-green-500">
+          <div className="flex w-full items-center justify-center p-1 text-xs text-green-500">
             {isOpponent ? "Opponent's field is empty" : "Your field is empty"}
           </div>
         ) : (
@@ -123,20 +250,29 @@ export function GameBoard({
 
             // Check if this card is being discarded
             if (discardingCardId === card.id) {
-              animationClass = "animate-discard"
+              animationClass = "animate-field-to-discard"
             }
             // Check if this card is being returned to deck
             else if (returningToDeckCardId === card.id) {
-              animationClass = "animate-return-to-deck"
+              animationClass = "animate-field-to-deck"
+            }
+            // Check if this card is being exchanged
+            else if (exchangingCardId === card.id) {
+              animationClass = "animate-exchange"
+            }
+            // Check if this card is being targeted
+            else if (targetingCardId === card.id) {
+              animationClass = "animate-being-targeted"
             }
             // Otherwise use the normal animations
             else if (animatedCardId === card.id) {
-              animationClass = isOpponent ? "animate-ai-play" : "animate-appear"
+              animationClass = "animate-hand-to-field"
             }
             // Idle animations based on card type and environment
             else if (card.type === "animal") {
               animationClass = getEnvironmentAnimation(card.environment, card.id)
             } else {
+              // For impact cards, use a more dynamic animation
               animationClass = getImpactAnimation(card.id)
             }
 
@@ -147,22 +283,35 @@ export function GameBoard({
                 onMouseEnter={() => setHoveredCardIndex(index)}
                 onMouseLeave={() => setHoveredCardIndex(null)}
                 onClick={() => handleCardClick(card)}
+                ref={(el) => setCardRef(el, card.id)}
               >
                 <Card
-                  className={`h-[60px] w-[45px] ${
+                  className={`h-[90px] w-[70px] ${
                     card.type === "animal" ? getEnvironmentColor(card.environment) : "border-purple-600 bg-purple-900"
-                  } shadow-md card-zoom ${animationClass} relative overflow-hidden cursor-pointer`}
+                  } shadow-md card-zoom ${animationClass} relative overflow-hidden cursor-pointer transition-all duration-300`}
+                  data-card-id={card.id}
+                  data-card-type={card.type}
+                  data-card-environment={card.environment}
+                  data-zone="field"
                 >
                   {/* Card frame decoration */}
                   <div className="absolute inset-0 border-4 border-transparent bg-gradient-to-br from-white/10 to-black/20 pointer-events-none"></div>
                   <div className="absolute inset-0 border border-white/10 rounded-sm pointer-events-none"></div>
+
+                  {/* Animation overlay for special effects */}
+                  {(discardingCardId === card.id ||
+                    returningToDeckCardId === card.id ||
+                    exchangingCardId === card.id ||
+                    targetingCardId === card.id) && (
+                    <div className="absolute inset-0 bg-white/20 z-10 pointer-events-none animate-flash"></div>
+                  )}
 
                   <CardContent className="flex h-full flex-col items-center justify-center p-0">
                     <div className="relative h-full w-full overflow-hidden">
                       {/* Use card art based on name */}
                       {getCardArt(card)}
 
-                      <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-0.5 text-center text-[8px]">
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-0.5 text-center text-[10px]">
                         {card.name}
                         {card.points && <span className="ml-1 font-bold text-yellow-400">({card.points})</span>}
                       </div>

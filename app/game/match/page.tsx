@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { ArrowLeft, RefreshCw, Crown, ScrollText, Brain } from "lucide-react"
+import { ArrowLeft, RefreshCw, Crown, Brain } from "lucide-react"
 import { GameBoard } from "@/components/game-board"
 import { PlayerHand } from "@/components/player-hand"
 import { OpponentHand } from "@/components/opponent-hand"
@@ -12,7 +12,6 @@ import { SharedDeckDisplay } from "@/components/shared-deck-display"
 import { CardSelectionModal } from "@/components/card-selection-modal"
 import { TargetSelectionModal } from "@/components/target-selection-modal"
 import { CardDetailModal } from "@/components/card-detail-modal"
-import { GameLog } from "@/components/game-log"
 import { AnimationStyles } from "@/components/animation-styles"
 import {
   initializeGame,
@@ -47,14 +46,24 @@ const confettiAnimation = `
 }
 `
 
+// Helper function to generate zone transfer animation class
+const getZoneTransferAnimation = (fromZone: string, toZone: string) => {
+  return `animate-zone-transfer-${fromZone}-to-${toZone}`
+}
+
+// Helper function to generate exchange animation class
+const getExchangeAnimation = (isPlayerCard: boolean) => {
+  return `animate-exchange-${isPlayerCard ? "player" : "opponent"}`
+}
+
 export default function GameMatch() {
   const router = useRouter()
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [showAlert, setShowAlert] = useState(false)
   const [alertMessage, setAlertMessage] = useState("")
   const [isAIThinking, setIsAIThinking] = useState(false)
-  const [gameLogs, setGameLogs] = useState<string[]>([])
-  const [showLog, setShowLog] = useState(false)
+  const [lastAction, setLastAction] = useState<string>("")
+  const [currentAction, setCurrentAction] = useState<string>("")
   const [selectedCardIndex, setSelectedCardIndex] = useState<number | null>(null)
   const [showCardDetail, setShowCardDetail] = useState(false)
 
@@ -68,6 +77,10 @@ export default function GameMatch() {
   const [aiDiscardingCards, setAiDiscardingCards] = useState(false)
   const [aiDiscardedCardIds, setAiDiscardedCardIds] = useState<number[]>([])
   const [aiDrawnCardCount, setAiDrawnCardCount] = useState(0)
+
+  // Add new state for AI card play animation
+  const [aiPlayedCard, setAiPlayedCard] = useState<GameCard | null>(null)
+  const [showAiCardAnimation, setShowAiCardAnimation] = useState(false)
 
   // Add new animation states for discard/return to deck
   const [discardingCardId, setDiscardingCardId] = useState<number | null>(null)
@@ -89,16 +102,33 @@ export default function GameMatch() {
   // Add this with the other state declarations:
   const [showAITrapModal, setShowAITrapModal] = useState(false)
 
-  // Helper function to add logs
-  const addLog = (message: string) => {
-    setGameLogs((prev) => [...prev, message])
+  // Add a new state for quit confirmation
+  const [showQuitConfirmation, setShowQuitConfirmation] = useState(false)
+
+  // Add this at the top of the component as a useCallback hook
+  const handleBackToMenu = useCallback(() => {
+    if (gameState?.gameStatus !== "playing") {
+      router.push("/")
+      return
+    }
+
+    // Show confirmation dialog if the game is in progress
+    setAlertMessage("Are you sure you want to quit the current game?")
+    setShowQuitConfirmation(true)
+  }, [gameState?.gameStatus, router])
+
+  // Helper function to add action messages
+  const addAction = (message: string) => {
+    setLastAction(currentAction)
+    setCurrentAction(message)
   }
 
   // Initialize game
   useEffect(() => {
     const newGame = initializeGame()
     setGameState(newGame)
-    setGameLogs([])
+    setCurrentAction("Game started. Good luck!")
+    setLastAction("")
   }, [])
 
   // AI turn logic
@@ -147,7 +177,7 @@ export default function GameMatch() {
         // Discard cards and then draw
         setTimeout(() => {
           const afterDiscard = sendCardsToBottom(gameState, discardIndices, false)
-          addLog(`AI sent ${discardCount} card(s) to the bottom of the deck.`)
+          addAction(`AI sent ${discardCount} card(s) to the bottom of the deck.`)
 
           setAiDiscardingCards(false)
           setAiDrawingCards(true)
@@ -156,7 +186,7 @@ export default function GameMatch() {
           // Draw cards after a delay
           setTimeout(() => {
             const afterDraw = drawCards(afterDiscard, 2, false)
-            addLog(`AI drew 2 cards.`)
+            addAction(`AI drew 2 cards.`)
 
             // End AI turn after animation completes
             setTimeout(() => {
@@ -176,7 +206,7 @@ export default function GameMatch() {
       if (afterAIMove.opponentHand.length > currentOpponentHandLength) {
         setAiDrawingCards(true)
         setAiDrawnCardCount(afterAIMove.opponentHand.length - currentOpponentHandLength)
-        addLog(`AI drew ${afterAIMove.opponentHand.length - currentOpponentHandLength} cards.`)
+        addAction(`AI drew ${afterAIMove.opponentHand.length - currentOpponentHandLength} cards.`)
 
         // End AI thinking state
         setIsAIThinking(false)
@@ -192,21 +222,26 @@ export default function GameMatch() {
 
       // Check if a new card was played to the field
       if (afterAIMove.opponentField.length > currentOpponentFieldLength) {
-        // Get the ID of the newly played card
-        const newCardId = afterAIMove.opponentField[afterAIMove.opponentField.length - 1].id
+        // Get the newly played card
+        const newCard = afterAIMove.opponentField[afterAIMove.opponentField.length - 1]
 
         // Set the playing card ID for hand animation
         setAiPlayingCardId(1) // Just use 1 as a dummy ID since we don't know which card in hand was played
 
-        // After a short delay, show the card appearing on the field
-        setTimeout(() => {
-          setAiPlayingCardId(null)
-          setNewOpponentFieldCardId(newCardId)
+        // Show the AI card play animation
+        setAiPlayedCard(newCard)
+        setShowAiCardAnimation(true)
 
-          // Log AI's action
-          if (afterAIMove.message !== gameState.message) {
-            addLog(afterAIMove.message)
-          }
+        // Log AI's action
+        if (afterAIMove.message !== gameState.message) {
+          addAction(afterAIMove.message)
+        }
+
+        // After a short delay, hide the animation and show the card appearing on the field
+        setTimeout(() => {
+          setShowAiCardAnimation(false)
+          setAiPlayingCardId(null)
+          setNewOpponentFieldCardId(newCard.id)
 
           // End AI thinking state
           setIsAIThinking(false)
@@ -216,14 +251,14 @@ export default function GameMatch() {
             setNewOpponentFieldCardId(null)
             setGameState(endAITurn(afterAIMove))
           }, 1800) // Increased from 1500 to 1800 for longer animation
-        }, 1000) // Increased from 800 to 1000 to better see the card leaving the hand
+        }, 1500) // Increased from 1000 to 1500 to better see the card animation
 
         return
       }
 
       // Check if AI played Trap card
       if (afterAIMove.message.includes("AI played Trap")) {
-        addLog("AI played Trap. You must choose an animal to give.")
+        addAction("AI played Trap. You must choose an animal to give.")
 
         // End AI thinking state
         setIsAIThinking(false)
@@ -254,13 +289,13 @@ export default function GameMatch() {
         afterAIMove.pendingEffect.forPlayer
       ) {
         // AI automatically selects the lowest value animal
-        addLog("AI is choosing an animal to give you.")
+        addAction("AI is choosing an animal to give you.")
 
         // Resolve the effect automatically without showing a modal
         const resolvedState = resolveEffect(afterAIMove, 0) // The AI choice logic is in resolveEffect
 
         if (resolvedState.message !== afterAIMove.message) {
-          addLog(resolvedState.message)
+          addAction(resolvedState.message)
         }
 
         // End AI thinking state
@@ -271,7 +306,7 @@ export default function GameMatch() {
       } else {
         // Log AI's action if no card was played or drawn
         if (afterAIMove.message !== gameState.message) {
-          addLog(afterAIMove.message)
+          addAction(afterAIMove.message)
         }
 
         // End AI thinking state
@@ -296,7 +331,7 @@ export default function GameMatch() {
       setShowAlert(true)
 
       // Log game result
-      addLog(gameState.gameStatus === "playerWin" ? "🏆 You won the game!" : "AI won the game.")
+      addAction(gameState.gameStatus === "playerWin" ? "🏆 You won the game!" : "AI won the game.")
     }
   }, [gameState])
 
@@ -311,12 +346,10 @@ export default function GameMatch() {
       message: "Effect canceled. Your turn continues.",
     })
 
-    addLog("You canceled the effect.")
+    addAction("You canceled the effect.")
     setShowTargetModal(false)
   }
 
-  // Now add a handler for the AI trap selection
-  // Add this function with the other handlers:
   // Handle AI trap selection
   const handleAITrapSelection = (targetIndex: number | number[]) => {
     if (!gameState || !gameState.pendingEffect) return
@@ -332,7 +365,7 @@ export default function GameMatch() {
 
       // Log the effect resolution
       if (newState.message !== gameState.message) {
-        addLog(newState.message)
+        addAction(newState.message)
       }
 
       // Clear the animation state
@@ -533,7 +566,7 @@ export default function GameMatch() {
 
     // Draw 2 cards
     const newState = drawCards(gameState, 2, true)
-    addLog("You drew 2 cards.")
+    addAction("You drew 2 cards.")
 
     // Get IDs of newly drawn cards for animation
     const drawnCardIds = newState.playerHand.slice(currentHandLength).map((card) => card.id)
@@ -571,18 +604,67 @@ export default function GameMatch() {
 
       if (card.type === "animal") {
         newState = playAnimalCard(gameState, selectedCardIndex, true)
-        addLog(`You played ${card.name} (${card.points} points).`)
+        addAction(`You played ${card.name} (${card.points} points).`)
 
         // Set the new card ID for field animation
         setNewPlayerFieldCardId(card.id)
       } else {
         newState = playImpactCard(gameState, selectedCardIndex, true)
-        addLog(`You played ${card.name}: ${card.effect}`)
+        addAction(`You played ${card.name}: ${card.effect}`)
       }
 
       // Close the card detail view
       setShowCardDetail(false)
       setSelectedCardIndex(null)
+
+      // If there's a pending effect, don't end turn yet
+      if (newState && newState.pendingEffect) {
+        setGameState(newState)
+        setPlayingCardId(null)
+        return
+      }
+
+      // End player's turn
+      setGameState(endPlayerTurn(newState))
+
+      // Clear animation states after a delay
+      setTimeout(() => {
+        setNewPlayerFieldCardId(null)
+        setPlayingCardId(null)
+      }, 800)
+    }, 300)
+  }
+
+  // Handle card drop from drag and drop
+  const handleCardDrop = (cardIndex: number) => {
+    if (
+      !gameState ||
+      gameState.currentTurn !== "player" ||
+      gameState.gameStatus !== "playing" ||
+      gameState.pendingEffect
+    )
+      return
+
+    const card = gameState.playerHand[cardIndex]
+    if (!card) return
+
+    // Set the playing card ID for animation
+    setPlayingCardId(card.id)
+
+    // Process the card play after a short delay for animation
+    setTimeout(() => {
+      let newState
+
+      if (card.type === "animal") {
+        newState = playAnimalCard(gameState, cardIndex, true)
+        addAction(`You played ${card.name} (${card.points} points).`)
+
+        // Set the new card ID for field animation
+        setNewPlayerFieldCardId(card.id)
+      } else {
+        newState = playImpactCard(gameState, cardIndex, true)
+        addAction(`You played ${card.name}: ${card.effect}`)
+      }
 
       // If there's a pending effect, don't end turn yet
       if (newState && newState.pendingEffect) {
@@ -616,14 +698,14 @@ export default function GameMatch() {
     setTimeout(() => {
       // Send selected cards to bottom of deck
       const newState = sendCardsToBottom(gameState, selectedIndices, true)
-      addLog(`You sent ${selectedIndices.length} card(s) to the bottom of the deck.`)
+      addAction(`You sent ${selectedIndices.length} card(s) to the bottom of the deck.`)
 
       // Store current hand length to detect new cards
       const currentHandLength = newState.playerHand.length
 
       // Draw 2 cards
       const afterDraw = drawCards(newState, 2, true)
-      addLog("You drew 2 cards.")
+      addAction("You drew 2 cards.")
 
       // Get IDs of newly drawn cards for animation
       const drawnCardIds = afterDraw.playerHand.slice(currentHandLength).map((card) => card.id)
@@ -644,7 +726,7 @@ export default function GameMatch() {
 
   // Handle target selection
   const handleTargetConfirm = (targetIndex: number | number[]) => {
-    if (!gameState) return
+    if (!gameState || !gameState.pendingEffect) return
 
     // Show appropriate animation based on the effect type
     if (gameState.pendingEffect) {
@@ -656,6 +738,12 @@ export default function GameMatch() {
         const idx = targetIndex as number
         const cardId = gameState.opponentField[idx].id
         setDiscardingCardId(cardId)
+
+        // Add animation class for zone transfer
+        const cardElement = document.querySelector(`[data-card-id="${cardId}"]`)
+        if (cardElement) {
+          cardElement.classList.add(getZoneTransferAnimation("field", "discard"))
+        }
       }
 
       // For effects that return cards to deck
@@ -679,23 +767,68 @@ export default function GameMatch() {
             }
           }
           setReturningToDeckCardId(cardId)
+
+          // Add animation class for zone transfer
+          const cardElement = document.querySelector(`[data-card-id="${cardId}"]`)
+          if (cardElement) {
+            cardElement.classList.add(getZoneTransferAnimation("field", "deck"))
+          }
         }
       }
       // Add animation for Cage card's first selection (sending to discard)
       else if (type === "cage" && !gameState.pendingEffect.firstSelection) {
         const cardId = gameState.playerField[targetIndex as number].id
         setDiscardingCardId(cardId)
+
+        // Add animation class for zone transfer
+        const cardElement = document.querySelector(`[data-card-id="${cardId}"]`)
+        if (cardElement) {
+          cardElement.classList.add(getZoneTransferAnimation("field", "discard"))
+        }
       }
       // Add animation for Cage card's second selection (gaining control)
       else if (type === "cage" && gameState.pendingEffect.firstSelection) {
         const cardId = gameState.opponentField[targetIndex as number].id
         // Use a different animation for gaining control
         setNewPlayerFieldCardId(cardId)
+
+        // Add animation class for zone transfer
+        const cardElement = document.querySelector(`[data-card-id="${cardId}"]`)
+        if (cardElement) {
+          cardElement.classList.add(getZoneTransferAnimation("field", "opponent-field"))
+        }
       }
       // Add animation for Trap card (when AI plays it and player selects)
       else if (type === "trap" && !gameState.pendingEffect.forPlayer) {
         const cardId = gameState.playerField[targetIndex as number].id
         setDiscardingCardId(cardId)
+
+        // Add animation class for zone transfer
+        const cardElement = document.querySelector(`[data-card-id="${cardId}"]`)
+        if (cardElement) {
+          cardElement.classList.add(getZoneTransferAnimation("field", "opponent-field"))
+        }
+      }
+      // Add animation for Confuse card (exchange control)
+      else if (type === "confuse") {
+        // For confuse, we need to handle two cards
+        if (Array.isArray(targetIndex) && targetIndex.length === 2) {
+          const [idx1, idx2] = targetIndex
+          let card1Id, card2Id
+
+          // Determine which card belongs to which player
+          if (idx1 < gameState.playerField.length) {
+            card1Id = gameState.playerField[idx1].id
+            card2Id = gameState.opponentField[idx2 - gameState.playerField.length].id
+
+            // Add animation classes for zone transfer
+            const card1 = document.querySelector(`[data-card-id="${card1Id}"]`)
+            const card2 = document.querySelector(`[data-card-id="${card2Id}"]`)
+
+            if (card1) card1.classList.add(getExchangeAnimation(true))
+            if (card2) card2.classList.add(getExchangeAnimation(false))
+          }
+        }
       }
     }
 
@@ -706,7 +839,7 @@ export default function GameMatch() {
 
       // Log the effect resolution
       if (newState.message !== gameState.message) {
-        addLog(newState.message)
+        addAction(newState.message)
       }
 
       // Clear animation states
@@ -731,7 +864,8 @@ export default function GameMatch() {
   const handleRestartGame = () => {
     const newGame = initializeGame()
     setGameState(newGame)
-    setGameLogs([])
+    setCurrentAction("Game started. Good luck!")
+    setLastAction("")
     setShowAlert(false)
   }
 
@@ -743,61 +877,46 @@ export default function GameMatch() {
     )
   }
 
-  // Update the main layout to be more compact
+  // Update the main layout to be more compact and remove the game log
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-b from-green-800 to-green-950 p-0.5 text-white max-w-sm mx-auto">
+    <div className="flex min-h-[85vh] flex-col bg-gradient-to-b from-green-800 to-green-950 p-0 text-white max-w-sm mx-auto">
       <AnimationStyles />
       <style jsx global>
         {confettiAnimation}
       </style>
-      <div className="mb-0.5 flex items-center justify-between">
+      <div className="mb-0 flex items-center justify-between">
         <Button
           variant="outline"
           size="sm"
-          onClick={() => router.push("/")}
-          className="flex h-6 items-center gap-1 px-2 py-0 text-[10px] text-green-300"
+          onClick={handleBackToMenu}
+          className="flex h-5 items-center gap-1 px-1 py-0 text-[9px] text-green-300"
         >
-          <ArrowLeft className="h-3 w-3" /> Back
+          <ArrowLeft className="h-2 w-2" /> Back
         </Button>
-        <div className="text-center text-sm font-bold text-green-300">BioQuest</div>
+        <div className="text-center text-sm font-bold text-green-300">Bioquest</div>
         <div className="flex gap-1">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setShowLog(!showLog)}
-            className="flex h-6 items-center gap-1 px-2 py-0 text-[10px] text-green-300"
-          >
-            <ScrollText className="h-3 w-3" /> {showLog ? "Hide Log" : "Show Log"}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
             onClick={handleRestartGame}
-            className="flex h-6 items-center gap-1 px-2 py-0 text-[10px] text-green-300"
+            className="flex h-5 items-center gap-1 px-1 py-0 text-[9px] text-green-300"
           >
-            <RefreshCw className="h-3 w-3" /> Restart
+            <RefreshCw className="h-2 w-2" /> New
           </Button>
         </div>
       </div>
 
-      {/* Game log (conditionally shown) */}
-      {showLog && (
-        <div className="mb-0.5">
-          <GameLog logs={gameLogs} />
-        </div>
-      )}
-
       {/* Game board */}
       <div className="flex flex-1 flex-col">
         {/* Opponent area */}
-        <div className="mb-0.5">
-          <div className="mb-0.5 flex items-center justify-between">
+        <div className="mb-0">
+          <div className="mb-0 flex items-center justify-between">
             <div className="flex items-center gap-1">
-              <div className={`h-2.5 w-2.5 rounded-full bg-red-700 ${isAIThinking ? "animate-ai-thinking" : ""}`}></div>
+              <div className={`h-2 w-2 rounded-full bg-red-700 ${isAIThinking ? "animate-ai-thinking" : ""}`}></div>
               <span className="text-[8px] flex items-center gap-1">
                 AI {isAIThinking && <Brain className="h-2 w-2 animate-pulse" />}
-                {aiDrawingCards && <span className="text-yellow-300">(Drawing {aiDrawnCardCount} cards...)</span>}
-                {aiDiscardingCards && <span className="text-yellow-300">(Discarding cards...)</span>}
+                {aiDrawingCards && <span className="text-yellow-300">(Drawing...)</span>}
+                {aiDiscardingCards && <span className="text-yellow-300">(Discarding...)</span>}
               </span>
             </div>
             <div className="flex items-center gap-1">
@@ -805,13 +924,13 @@ export default function GameMatch() {
                 <span
                   className={`rounded-md ${
                     gameState.opponentPoints >= 7 ? "animate-pulse bg-yellow-600" : "bg-green-700"
-                  } px-1 py-0 text-[8px]`}
+                  } px-2 py-0.5 text-lg font-bold`}
                 >
-                  Points: {gameState.opponentPoints}
+                  {gameState.opponentPoints}
                 </span>
                 {gameState.opponentPoints >= 7 && (
                   <span className="flex items-center text-yellow-400">
-                    <Crown className="h-2 w-2" />
+                    <Crown className="h-4 w-4" />
                   </span>
                 )}
               </div>
@@ -822,7 +941,7 @@ export default function GameMatch() {
           </div>
 
           {/* AI Hand (face down) */}
-          <div className="mb-0.5">
+          <div className="mb-0">
             <OpponentHand
               cardCount={gameState.opponentHand.length}
               isThinking={isAIThinking}
@@ -840,16 +959,24 @@ export default function GameMatch() {
           />
         </div>
 
-        {/* Center area */}
-        <div className="my-0.5 flex justify-center">
-          <Card className="border border-green-700 bg-green-900/60 px-1 py-0">
-            <span className="text-[8px]">{gameState.message}</span>
+        {/* Center area with current action message */}
+        <div className="my-1 flex justify-center">
+          <Card className="border border-green-700 bg-green-900/60 px-2 py-1 w-full max-w-xs">
+            <span className="text-xs text-center block">{currentAction}</span>
           </Card>
         </div>
 
-        {/* Shared deck display */}
-        <div className="my-0.5 flex justify-center">
-          <SharedDeckDisplay deckCount={gameState.sharedDeck.length} discardPile={gameState.sharedDiscard} />
+        {/* Shared deck display with draw button overlay and last action */}
+        <div className="my-1 flex justify-center items-center gap-2">
+          <SharedDeckDisplay
+            deckCount={gameState.sharedDeck.length}
+            discardPile={gameState.sharedDiscard}
+            onDrawCards={handleDrawCards}
+            canDraw={
+              gameState.currentTurn === "player" && gameState.gameStatus === "playing" && !gameState.pendingEffect
+            }
+            lastAction={lastAction}
+          />
         </div>
 
         {/* Player area */}
@@ -861,23 +988,24 @@ export default function GameMatch() {
             newCardId={newPlayerFieldCardId}
             discardingCardId={discardingCardId}
             returningToDeckCardId={returningToDeckCardId}
+            onCardDrop={handleCardDrop}
           />
-          <div className="mt-0.5 flex items-center justify-between">
+          <div className="mt-0 flex items-center justify-between">
             <div className="flex items-center gap-1">
-              <div className="h-3 w-3 rounded-full bg-blue-700"></div>
+              <div className="h-2 w-2 rounded-full bg-blue-700"></div>
               <span className="text-[8px]">You</span>
             </div>
             <div className="flex items-center gap-1">
               <span
                 className={`rounded-md ${
                   gameState.playerPoints >= 7 ? "animate-pulse bg-yellow-600" : "bg-green-700"
-                } px-1 py-0 text-[8px]`}
+                } px-2 py-0.5 text-lg font-bold`}
               >
-                Points: {gameState.playerPoints}
+                {gameState.playerPoints}
               </span>
               {gameState.playerPoints >= 7 && (
                 <span className="flex items-center text-yellow-400">
-                  <Crown className="h-2 w-2" />
+                  <Crown className="h-4 w-4" />
                 </span>
               )}
             </div>
@@ -886,34 +1014,14 @@ export default function GameMatch() {
       </div>
 
       {/* Player hand */}
-      <div className="mt-0.5">
-        <div className="mb-0.5 flex items-center justify-between">
+      <div className="mt-0">
+        <div className="mb-0 flex items-center justify-between">
           <span className="text-[8px]">Your Hand ({gameState.playerHand.length})</span>
-          <div className="flex gap-1">
-            {gameState.pendingEffect && (
-              <Button
-                size="sm"
-                onClick={() => setShowTargetModal(true)}
-                className="h-4 bg-yellow-600 px-1 py-0 text-[8px] hover:bg-yellow-500"
-              >
-                Select Target
-              </Button>
-            )}
-            <Button
-              size="sm"
-              disabled={
-                gameState.currentTurn !== "player" || gameState.gameStatus !== "playing" || !!gameState.pendingEffect
-              }
-              onClick={handleDrawCards}
-              className="h-4 bg-green-700 px-1 py-0 text-[8px] hover:bg-green-600"
-            >
-              Draw Cards
-            </Button>
-          </div>
         </div>
         <PlayerHand
           cards={gameState.playerHand}
           onSelectCard={handleSelectCard}
+          onPlayCard={handleCardDrop}
           disabled={
             gameState.currentTurn !== "player" || gameState.gameStatus !== "playing" || !!gameState.pendingEffect
           }
@@ -999,6 +1107,46 @@ export default function GameMatch() {
         playerCardIndices={playerCardIndices}
       />
 
+      {/* AI card play animation overlay */}
+      {showAiCardAnimation && aiPlayedCard && (
+        <div className="pointer-events-none fixed inset-0 z-30 overflow-hidden flex items-center justify-center">
+          <div className="relative">
+            <Card
+              className={`h-[240px] w-[160px] border-4 ${
+                aiPlayedCard.type === "animal"
+                  ? aiPlayedCard.environment === "terrestrial"
+                    ? "border-red-600 bg-red-900"
+                    : aiPlayedCard.environment === "aquatic"
+                      ? "border-blue-600 bg-blue-900"
+                      : "border-green-600 bg-green-900"
+                  : "border-purple-600 bg-purple-900"
+              } shadow-xl animate-ai-card-play`}
+            >
+              <div className="absolute inset-0 border-8 border-transparent bg-gradient-to-br from-white/10 to-black/20"></div>
+              <div className="absolute inset-0 flex flex-col items-center justify-between p-2">
+                <div className="text-center text-sm font-bold">{aiPlayedCard.name}</div>
+                <div className="relative h-[140px] w-full flex items-center justify-center">
+                  {/* Card art would be rendered here */}
+                </div>
+                <div className="w-full text-center text-xs">
+                  {aiPlayedCard.type === "animal" ? (
+                    <div className="flex items-center justify-between">
+                      <span className="bg-gray-800 px-1 rounded text-[10px]">{aiPlayedCard.environment}</span>
+                      <span className="bg-yellow-600 px-1 rounded text-[10px]">{aiPlayedCard.points} pts</span>
+                    </div>
+                  ) : (
+                    <div className="text-[10px] text-gray-300">{aiPlayedCard.effect}</div>
+                  )}
+                </div>
+              </div>
+            </Card>
+            <div className="absolute top-full mt-2 text-center w-full">
+              <div className="bg-red-900/80 text-white text-sm px-2 py-1 rounded-md">AI plays {aiPlayedCard.name}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* AI animation overlays */}
       {aiDrawingCards && (
         <div className="pointer-events-none fixed inset-0 z-20 overflow-hidden">
@@ -1061,6 +1209,33 @@ export default function GameMatch() {
           </div>
         </div>
       )}
+      <AlertDialog open={showQuitConfirmation} onOpenChange={setShowQuitConfirmation}>
+        <AlertDialogContent className="border-2 border-green-700 bg-green-900/90 text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Quit Game</AlertDialogTitle>
+            <AlertDialogDescription className="text-green-200">
+              Are you sure you want to quit the current game? Your progress will be lost.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button
+              onClick={() => setShowQuitConfirmation(false)}
+              variant="outline"
+              className="border-red-700 text-red-400 hover:bg-red-900/30 hover:text-red-300"
+            >
+              Cancel
+            </Button>
+            <Button onClick={() => router.push("/")} className="bg-green-700 hover:bg-green-600">
+              Quit Game
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Copyright footer */}
+      <div className="mt-1 text-center text-[8px] text-green-500">
+        © 2025 NasajonGames. Bioquest designed and developed by Alexandre Nasajon.
+      </div>
     </div>
   )
 }

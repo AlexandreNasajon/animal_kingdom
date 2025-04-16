@@ -60,7 +60,7 @@ export function BoardCardZoomModal({ open, onClose, card, isOpponentCard = false
 
         <div className="flex flex-col items-center space-y-3">
           <Card
-            className={`w-[220px] h-[300px] border-2 ${
+            className={`w-[200px] h-[320px] border-2 ${
               card.type === "animal" ? getEnvironmentColor(card.environment) : "border-purple-600 bg-purple-900"
             } p-1 shadow-md transition-all animate-flip relative overflow-hidden ${
               isOpponentCard ? "border-red-500" : "border-blue-500"
@@ -83,9 +83,12 @@ export function BoardCardZoomModal({ open, onClose, card, isOpponentCard = false
                   <Badge className="bg-yellow-600 text-xs">{card.points} pts</Badge>
                 </div>
               ) : (
-                <Badge variant="outline" className="bg-purple-900 text-purple-200 text-xs mt-auto">
-                  Impact Card
-                </Badge>
+                <div className="mt-auto w-full">
+                  <Badge variant="outline" className="bg-purple-900 text-purple-200 text-xs w-full justify-center">
+                    Impact Card
+                  </Badge>
+                  <div className="mt-2 text-xs text-center line-clamp-3">{card.effect}</div>
+                </div>
               )}
             </CardContent>
           </Card>

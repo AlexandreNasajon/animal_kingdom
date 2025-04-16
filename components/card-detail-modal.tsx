@@ -68,24 +68,28 @@ export function CardDetailModal({ open, onClose, card, onPlay, disabled }: CardD
 
         <div className="flex flex-col items-center space-y-2">
           <Card
-            className={`w-[150px] border-2 ${
+            className={`w-[180px] h-[280px] border-2 ${
               card.type === "animal" ? getEnvironmentColor(card.environment) : "border-purple-600 bg-purple-900"
             } p-1 shadow-md transition-all ${isPlaying ? "animate-play" : "animate-flip"}`}
           >
-            <CardContent className="flex flex-col items-center space-y-2 p-1">
-              <div className="relative h-[100px] w-full">{getCardArt(card)}</div>
+            <CardContent className="flex flex-col items-center space-y-4 p-1 h-full">
+              <div className="text-center font-bold">{card.name}</div>
+              <div className="relative h-[160px] w-full flex items-center justify-center">{getCardArt(card)}</div>
 
               {card.type === "animal" ? (
-                <div className="flex w-full items-center justify-between">
+                <div className="flex w-full items-center justify-between mt-auto">
                   <Badge variant="outline" className={`${getEnvironmentBadgeColor(card.environment)} text-xs`}>
                     {card.environment}
                   </Badge>
                   <Badge className="bg-yellow-600 text-xs">{card.points} pts</Badge>
                 </div>
               ) : (
-                <Badge variant="outline" className="bg-purple-900 text-purple-200 text-xs">
-                  Impact Card
-                </Badge>
+                <div className="mt-auto w-full">
+                  <Badge variant="outline" className="bg-purple-900 text-purple-200 text-xs w-full justify-center">
+                    Impact Card
+                  </Badge>
+                  <div className="mt-2 text-xs text-center line-clamp-3">{card.effect}</div>
+                </div>
               )}
             </CardContent>
           </Card>

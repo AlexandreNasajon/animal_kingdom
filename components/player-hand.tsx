@@ -1,14 +1,18 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect, useRef } from "react"
 import type { GameCard } from "@/types/game"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { getCardArt } from "./card-art/card-art-mapper"
+import { getCardAnimation } from "@/utils/animation-utils"
 
 interface PlayerHandProps {
   cards: GameCard[]
   onSelectCard: (cardIndex: number) => void
+  onPlayCard: (cardIndex: number) => void
   disabled: boolean
   newCardIds?: number[] // IDs of newly drawn cards to animate
   playingCardId?: number // ID of card being played
@@ -42,10 +46,18 @@ const getEnvironmentBadgeColor = (environment?: string) => {
   }
 }
 
-export function PlayerHand({ cards, onSelectCard, disabled, newCardIds = [], playingCardId }: PlayerHandProps) {
+export function PlayerHand({
+  cards,
+  onSelectCard,
+  onPlayCard,
+  disabled,
+  newCardIds = [],
+  playingCardId,
+}: PlayerHandProps) {
   const [animatedCardIds, setAnimatedCardIds] = useState<number[]>([])
   const [hoveredCardIndex, setHoveredCardIndex] = useState<number | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null)
 
   // Set up animation for new cards
   useEffect(() => {
@@ -72,17 +84,62 @@ export function PlayerHand({ cards, onSelectCard, disabled, newCardIds = [], pla
     setHoveredCardIndex(null)
   }
 
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    if (disabled) return
+
+    // Set data for drag operation
+    e.dataTransfer.setData("text/plain", index.toString())
+    e.dataTransfer.effectAllowed = "move"
+
+    // Add a custom class to the drag image
+    if (e.target instanceof HTMLElement) {
+      e.target.classList.add("dragging")
+    }
+
+    setDraggingIndex(index)
+
+    // Create a custom drag image
+    const card = cards[index]
+    const dragImage = document.createElement("div")
+    dragImage.className = `h-[100px] w-[75px] border ${
+      card.type === "animal" ? getEnvironmentColor(card.environment) : "border-purple-600 bg-purple-900"
+    } rounded-md shadow-lg opacity-80`
+
+    document.body.appendChild(dragImage)
+    e.dataTransfer.setDragImage(dragImage, 37, 50)
+
+    // Remove the element after drag starts
+    setTimeout(() => {
+      document.body.removeChild(dragImage)
+    }, 0)
+  }
+
+  const handleDragEnd = () => {
+    setDraggingIndex(null)
+
+    // Remove dragging class from all cards
+    const cardElements = containerRef.current?.querySelectorAll(".card-draggable")
+    cardElements?.forEach((el) => {
+      el.classList.remove("dragging")
+    })
+  }
+
   return (
-    <div ref={containerRef} className="flex justify-center overflow-visible p-1 min-h-[120px]">
+    <div ref={containerRef} className="flex justify-center overflow-visible p-1 min-h-[130px]">
       {cards.map((card, index) => {
         const isHovered = hoveredCardIndex === index
         const isPlaying = card.id === playingCardId
         const isAnimating = animatedCardIds.includes(card.id)
+        const isDragging = draggingIndex === index
+
+        // Get the appropriate animation class for this card
+        const animationClass = getCardAnimation(card)
 
         return (
           <div
             key={card.id}
-            className="card-zoom-container"
+            className={`card-zoom-container ${isDragging ? "opacity-50" : ""}`}
             onMouseEnter={() => handleMouseEnter(index)}
             onMouseLeave={handleMouseLeave}
             style={{
@@ -91,25 +148,16 @@ export function PlayerHand({ cards, onSelectCard, disabled, newCardIds = [], pla
             }}
           >
             <Card
-              className={`h-[90px] w-[65px] cursor-pointer border card-zoom ${
+              className={`h-[100px] w-[75px] cursor-pointer border card-zoom card-draggable ${
                 card.type === "animal" ? getEnvironmentColor(card.environment) : "border-purple-600 bg-purple-900"
               } p-0.5 shadow-md ${disabled ? "opacity-70" : ""} 
                 ${isAnimating ? "animate-draw" : ""} 
-                ${
-                  isPlaying
-                    ? card.type === "impact"
-                      ? "animate-play-impact"
-                      : card.environment === "aquatic"
-                        ? "animate-play-aquatic"
-                        : card.environment === "terrestrial"
-                          ? "animate-play-terrestrial"
-                          : card.environment === "amphibian"
-                            ? "animate-play-amphibian"
-                            : "animate-play-animal"
-                    : ""
-                }
+                ${isPlaying ? animationClass : ""}
                 relative overflow-hidden`}
               onClick={() => !disabled && onSelectCard(index)}
+              draggable={!disabled}
+              onDragStart={(e) => handleDragStart(e, index)}
+              onDragEnd={handleDragEnd}
               style={{
                 animationDelay: `${animatedCardIds.indexOf(card.id) * 0.15}s`,
                 zIndex: isHovered ? 10 : 1,
@@ -120,23 +168,23 @@ export function PlayerHand({ cards, onSelectCard, disabled, newCardIds = [], pla
               <div className="absolute inset-0 border border-white/10 rounded-sm pointer-events-none"></div>
 
               <CardContent className="flex h-full flex-col items-center justify-between p-0.5">
-                <div className="w-full text-center text-[10px] font-medium">{card.name}</div>
+                <div className="w-full text-center text-[11px] font-medium">{card.name}</div>
 
-                <div className="relative h-[50px] w-full overflow-hidden">{getCardArt(card)}</div>
+                <div className="relative h-[55px] w-full overflow-hidden">{getCardArt(card)}</div>
 
                 <div className="w-full px-0.5">
                   {card.type === "animal" ? (
                     <div className="flex items-center justify-between">
                       <Badge
                         variant="outline"
-                        className={`${getEnvironmentBadgeColor(card.environment)} text-[8px] px-0.5 py-0`}
+                        className={`${getEnvironmentBadgeColor(card.environment)} text-[9px] px-0.5 py-0`}
                       >
                         {card.environment}
                       </Badge>
-                      <Badge className="bg-yellow-600 text-[8px] px-0.5 py-0">{card.points} pts</Badge>
+                      <Badge className="bg-yellow-600 text-[9px] px-0.5 py-0">{card.points} pts</Badge>
                     </div>
                   ) : (
-                    <div className="text-center text-[8px] text-gray-300 line-clamp-1">{card.effect}</div>
+                    <div className="text-center text-[9px] text-gray-300 line-clamp-1">{card.effect}</div>
                   )}
                 </div>
               </CardContent>

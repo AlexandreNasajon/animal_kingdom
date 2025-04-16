@@ -1,36 +1,58 @@
+"use client"
+
 export function VeterinarianArt() {
   return (
     <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="h-full w-full">
       <defs>
-        <linearGradient id="vetGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <linearGradient id="veterinarianGradient" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#4B0082" />
           <stop offset="100%" stopColor="#8A2BE2" />
         </linearGradient>
       </defs>
-      <rect x="0" y="0" width="100" height="100" fill="url(#vetGradient)" />
+      <rect x="0" y="0" width="100" height="100" fill="url(#veterinarianGradient)" />
 
-      {/* Background */}
-      <rect x="20" y="30" width="60" height="40" rx="5" fill="#ffffff" opacity="0.2" />
-
-      {/* Veterinarian */}
-      <circle cx="40" cy="40" r="10" fill="#ffffff" opacity="0.8" />
-      <path d="M40,50 L40,70" fill="none" stroke="#ffffff" strokeWidth="4" opacity="0.8" />
-      <path d="M30,55 L50,55" fill="none" stroke="#ffffff" strokeWidth="4" opacity="0.8" />
-      <path d="M30,65 L35,75" fill="none" stroke="#ffffff" strokeWidth="4" opacity="0.8" />
-      <path d="M50,65 L45,75" fill="none" stroke="#ffffff" strokeWidth="4" opacity="0.8" />
+      {/* Heart symbol */}
+      <path d="M50,20 C65,20 70,35 50,50 C30,35 35,20 50,20 Z" fill="#FF69B4" opacity="0.8">
+        <animate
+          attributeName="d"
+          values="M50,20 C65,20 70,35 50,50 C30,35 35,20 50,20 Z; M50,22 C65,22 70,37 50,52 C30,37 35,22 50,22 Z; M50,20 C65,20 70,35 50,50 C30,35 35,20 50,20 Z"
+          dur="3s"
+          repeatCount="indefinite"
+        />
+      </path>
 
       {/* Stethoscope */}
-      <path d="M35,45 C30,50 30,55 35,60" fill="none" stroke="#ffffff" strokeWidth="2" opacity="0.8" />
-      <circle cx="35" cy="60" r="3" fill="#ffffff" opacity="0.8" />
+      <path d="M50,50 L50,60" fill="none" stroke="#ffffff" strokeWidth="2" />
+      <circle cx="50" cy="65" r="5" fill="none" stroke="#ffffff" strokeWidth="2" />
+      <path d="M45,65 L35,75" fill="none" stroke="#ffffff" strokeWidth="2" />
+      <path d="M55,65 L65,75" fill="none" stroke="#ffffff" strokeWidth="2" />
 
-      {/* Animal */}
-      <ellipse cx="65" cy="60" rx="10" ry="7" fill="#A0522D" opacity="0.6" />
-      <circle cx="70" cy="57" r="2" fill="#000000" opacity="0.6" />
-      <path d="M60,60 C62,63 68,63 70,60" fill="none" stroke="#000000" strokeWidth="1" opacity="0.6" />
-      <path d="M75,60 L80,65" fill="none" stroke="#A0522D" strokeWidth="2" opacity="0.6" />
+      {/* Animal silhouette */}
+      <path
+        d="M70,50 C75,45 80,50 75,55 L80,60 L70,55 C65,60 60,55 65,45 C70,40 70,45 70,50 Z"
+        fill="#ffffff"
+        opacity="0.6"
+      >
+        <animate
+          attributeName="d"
+          values="M70,50 C75,45 80,50 75,55 L80,60 L70,55 C65,60 60,55 65,45 C70,40 70,45 70,50 Z; M71,51 C76,46 81,51 76,56 L81,61 L71,56 C66,61 61,56 66,46 C71,41 71,46 71,51 Z; M70,50 C75,45 80,50 75,55 L80,60 L70,55 C65,60 60,55 65,45 C70,40 70,45 70,50 Z"
+          dur="3s"
+          repeatCount="indefinite"
+        />
+      </path>
+      <circle cx="75" cy="48" r="1" fill="#000000" opacity="0.6" />
 
-      {/* Medical cross */}
-      <path d="M75,35 L85,35 M80,30 L80,40" fill="none" stroke="#FF0000" strokeWidth="2" />
+      {/* Plus signs */}
+      <g>
+        <animate attributeName="opacity" values="0.7; 1; 0.7" dur="1s" repeatCount="indefinite" />
+        <path d="M20,30 L30,30" fill="none" stroke="#ffffff" strokeWidth="1" />
+        <path d="M25,25 L25,35" fill="none" stroke="#ffffff" strokeWidth="1" />
+      </g>
+      <g>
+        <animate attributeName="opacity" values="0.7; 1; 0.7" dur="1s" repeatCount="indefinite" begin="0.5s" />
+        <path d="M20,70 L30,70" fill="none" stroke="#ffffff" strokeWidth="1" />
+        <path d="M25,65 L25,75" fill="none" stroke="#ffffff" strokeWidth="1" />
+      </g>
     </svg>
   )
 }

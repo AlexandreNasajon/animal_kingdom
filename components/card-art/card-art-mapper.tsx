@@ -5,13 +5,6 @@ import { AquaticArt } from "./aquatic-art"
 import { TerrestrialArt } from "./terrestrial-art"
 import { AmphibianArt } from "./amphibian-art"
 import { ImpactArt } from "./impact-art"
-import { FishArt } from "./animal-arts/fish-art"
-import { DolphinArt } from "./animal-arts/dolphin-art"
-import { OctopusArt } from "./animal-arts/octopus-art"
-import { MouseArt } from "./animal-arts/mouse-art"
-import { SnakeArt } from "./animal-arts/snake-art"
-import { LionArt } from "./animal-arts/lion-art"
-import { CrocodileArt } from "./animal-arts/crocodile-art"
 import { HunterArt } from "./impact-arts/hunter-art"
 import { FisherArt } from "./impact-arts/fisher-art"
 import { ScareArt } from "./impact-arts/scare-art"
@@ -30,84 +23,134 @@ import { CageArt } from "./impact-arts/cage-art"
 import { FlourishArt } from "./impact-arts/flourish-art"
 import { EarthquakeArt } from "./impact-arts/earthquake-art"
 import { StormArt } from "./impact-arts/storm-art"
+import { DolphinArt } from "./animal-arts/dolphin-art"
+import { OtterArt } from "./animal-arts/otter-art"
+import { LionArt } from "./animal-arts/lion-art"
+import { FrogArt } from "./animal-arts/frog-art"
+import { CrabArt } from "./animal-arts/crab-art"
+import { FishArt } from "./animal-arts/fish-art"
+import { MouseArt } from "./animal-arts/mouse-art"
+import { OctopusArt } from "./animal-arts/octopus-art"
+import { SnakeArt } from "./animal-arts/snake-art"
+import { CrocodileArt } from "./animal-arts/crocodile-art"
 
 export function getCardArt(card: GameCard) {
-  // Animal cards
-  if (card.type === "animal") {
-    switch (card.name.toLowerCase()) {
-      case "fish":
-        return <FishArt />
-      case "dolphin":
-        return <DolphinArt />
-      case "octopus":
-        return <OctopusArt />
-      case "mouse":
-        return <MouseArt />
-      case "snake":
-        return <SnakeArt />
-      case "lion":
-        return <LionArt />
-      case "crocodile":
-        return <CrocodileArt />
-      default:
-        // Fallback to generic art based on environment
-        switch (card.environment) {
-          case "aquatic":
-            return <AquaticArt />
-          case "terrestrial":
-            return <TerrestrialArt />
-          case "amphibian":
-            return <AmphibianArt />
-          default:
-            return <TerrestrialArt />
-        }
-    }
+  // Default to environment art if no specific art is found
+  if (!card.name && card.environment === "aquatic") {
+    return <AquaticArt />
+  }
+  if (!card.name && card.environment === "terrestrial") {
+    return <TerrestrialArt />
+  }
+  if (!card.name && card.environment === "amphibian") {
+    return <AmphibianArt />
+  }
+  if (!card.name && card.type === "impact") {
+    return <ImpactArt />
   }
 
   // Impact cards
-  if (card.type === "impact") {
-    switch (card.name.toLowerCase()) {
-      case "hunter":
-        return <HunterArt />
-      case "fisher":
-        return <FisherArt />
-      case "scare":
-        return <ScareArt />
-      case "veterinarian":
-        return <VeterinarianArt />
-      case "limit":
-        return <LimitArt />
-      case "confuse":
-        return <ConfuseArt />
-      case "domesticate":
-        return <DomesticateArt />
-      case "trap":
-        return <TrapArt />
-      case "drought":
-        return <DroughtArt />
-      case "flood":
-        return <FloodArt />
-      case "release":
-        return <ReleaseArt />
-      case "epidemic":
-        return <EpidemicArt />
-      case "compete":
-        return <CompeteArt />
-      case "prey":
-        return <PreyArt />
-      case "cage":
-        return <CageArt />
-      case "flourish":
-        return <FlourishArt />
-      case "earthquake":
-        return <EarthquakeArt />
-      case "storm":
-        return <StormArt />
-      default:
-        return <ImpactArt />
-    }
+  if (card.name === "Hunter") {
+    return <HunterArt />
+  }
+  if (card.name === "Fisher") {
+    return <FisherArt />
+  }
+  if (card.name === "Scare") {
+    return <ScareArt />
+  }
+  if (card.name === "Veterinarian") {
+    return <VeterinarianArt />
+  }
+  if (card.name === "Limit") {
+    return <LimitArt />
+  }
+  if (card.name === "Confuse") {
+    return <ConfuseArt />
+  }
+  if (card.name === "Domesticate") {
+    return <DomesticateArt />
+  }
+  if (card.name === "Trap") {
+    return <TrapArt />
+  }
+  if (card.name === "Drought") {
+    return <DroughtArt />
+  }
+  if (card.name === "Flood") {
+    return <FloodArt />
+  }
+  if (card.name === "Release") {
+    return <ReleaseArt />
+  }
+  if (card.name === "Epidemic") {
+    return <EpidemicArt />
+  }
+  if (card.name === "Compete") {
+    return <CompeteArt />
+  }
+  if (card.name === "Prey") {
+    return <PreyArt />
+  }
+  if (card.name === "Cage") {
+    return <CageArt />
+  }
+  if (card.name === "Flourish") {
+    return <FlourishArt />
+  }
+  if (card.name === "Earthquake") {
+    return <EarthquakeArt />
+  }
+  if (card.name === "Storm") {
+    return <StormArt />
   }
 
-  // Default fallback
-  return <TerrestrialArt />
+  // Animal cards
+  if (card.name === "Dolphin") {
+    return <DolphinArt />
+  }
+  if (card.name === "Otter") {
+    return <OtterArt />
+  }
+  if (card.name === "Lion") {
+    return <LionArt />
+  }
+  if (card.name === "Frog") {
+    return <FrogArt />
+  }
+  if (card.name === "Crab") {
+    return <CrabArt />
+  }
+  if (card.name === "Fish") {
+    return <FishArt />
+  }
+  if (card.name === "Mouse") {
+    return <MouseArt />
+  }
+  if (card.name === "Octopus") {
+    return <OctopusArt />
+  }
+  if (card.name === "Snake") {
+    return <SnakeArt />
+  }
+  if (card.name === "Crocodile") {
+    return <CrocodileArt />
+  }
+
+  // Default to environment art if no specific art is found
+  if (card.environment === "aquatic") {
+    return <AquaticArt />
+  }
+  if (card.environment === "terrestrial") {
+    return <TerrestrialArt />
+  }
+  if (card.environment === "amphibian") {
+    return <AmphibianArt />
+  }
+  if (card.type === "impact") {
+    return <ImpactArt />
+  }
+
+  // Fallback
+  return <div className="flex h-full w-full items-center justify-center bg-green-900">No Art</div>
 }

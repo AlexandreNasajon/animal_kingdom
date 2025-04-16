@@ -1,86 +1,101 @@
 "use client"
 
 import { useState } from "react"
-import type { GameCard } from "@/types/game"
-import Image from "next/image"
+import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { DiscardPileGallery } from "./discard-pile-gallery"
+import type { GameCard } from "@/types/game"
+import { Clock } from "lucide-react"
 
+// Update the SharedDeckDisplay component to accept lastAction prop
+
+// Add lastAction to the props interface
 interface SharedDeckDisplayProps {
   deckCount: number
   discardPile: GameCard[]
+  onDrawCards: () => void
+  canDraw: boolean
+  lastAction?: string
 }
 
-// Helper function to get environment color
-const getEnvironmentColor = (environment?: string) => {
-  switch (environment) {
-    case "terrestrial":
-      return "border-red-600 bg-red-900"
-    case "aquatic":
-      return "border-blue-600 bg-blue-900"
-    case "amphibian":
-      return "border-green-600 bg-green-900"
-    default:
-      return "border-gray-600 bg-gray-800"
-  }
-}
+// Update the component to display the lastAction
+export function SharedDeckDisplay({
+  deckCount,
+  discardPile,
+  onDrawCards,
+  canDraw,
+  lastAction,
+}: SharedDeckDisplayProps) {
+  const [showDiscardPile, setShowDiscardPile] = useState(false)
 
-export function SharedDeckDisplay({ deckCount, discardPile }: SharedDeckDisplayProps) {
-  const topDiscard = discardPile.length > 0 ? discardPile[discardPile.length - 1] : null
-  const [showDiscardGallery, setShowDiscardGallery] = useState(false)
+  // Rest of the component remains the same
 
+  // Add this near the return statement to display the lastAction
   return (
-    <>
-      <div className="flex items-center justify-center gap-2">
-        {/* Deck */}
-        <div className="flex flex-col items-center">
-          <div className="relative h-[50px] w-[40px] rounded-lg border border-green-600 bg-green-800 shadow-md card-zoom">
-            {deckCount > 0 && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-xs font-bold text-white">{deckCount}</span>
-              </div>
-            )}
+    <div className="relative flex items-center gap-2">
+      {/* Deck */}
+      <div className="relative">
+        <div
+          className="h-16 w-12 rounded-md border border-green-700 bg-green-900 shadow-md"
+          onClick={() => setShowDiscardPile(false)}
+        >
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-xs font-bold text-green-300">{deckCount}</span>
           </div>
-          <span className="mt-0.5 text-[8px] text-green-300">Deck</span>
         </div>
-
-        {/* Discard Pile */}
-        <div className="flex flex-col items-center">
-          <div
-            className="relative h-[50px] w-[40px] rounded-lg border border-green-700 bg-green-900 shadow-md card-zoom cursor-pointer"
-            onClick={() => setShowDiscardGallery(true)}
+        {canDraw && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onDrawCards}
+            className="absolute -bottom-2 left-1/2 h-5 -translate-x-1/2 transform rounded-full border border-green-500 bg-green-700 px-1 py-0 text-[8px] text-white hover:bg-green-600"
           >
-            {topDiscard ? (
-              <div className="relative h-full w-full">
-                <Image
-                  src={topDiscard.imageUrl || "/placeholder.svg?height=120&width=80"}
-                  alt={topDiscard.name}
-                  fill
-                  className="rounded-lg object-cover"
-                />
-                <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-0.5 text-center text-[8px]">
-                  {topDiscard.name}
-                </div>
-                {topDiscard.type === "animal" && (
-                  <div
-                    className={`absolute left-0 right-0 top-0 ${getEnvironmentColor(topDiscard.environment)} h-1`}
-                  ></div>
-                )}
-              </div>
-            ) : (
-              <div className="flex h-full w-full items-center justify-center">
-                <span className="text-[8px] text-green-500">Empty</span>
-              </div>
-            )}
+            Draw
+          </Button>
+        )}
+      </div>
+
+      {/* Discard pile */}
+      <div className="relative">
+        <div
+          className="h-16 w-12 cursor-pointer rounded-md border border-green-700 bg-green-800 shadow-md"
+          onClick={() => setShowDiscardPile(true)}
+        >
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-xs font-bold text-green-300">{discardPile.length}</span>
           </div>
-          <span className="mt-0.5 text-[8px] text-green-300">
-            Discard ({discardPile.length})
-            {discardPile.length > 0 && <span className="text-yellow-300 ml-0.5">↑ Click</span>}
-          </span>
+          {discardPile.length > 0 && (
+            <div className="absolute inset-0 flex items-center justify-center opacity-30">
+              <div
+                className={`h-12 w-10 rounded-sm ${
+                  discardPile[discardPile.length - 1].type === "animal"
+                    ? discardPile[discardPile.length - 1].environment === "terrestrial"
+                      ? "bg-red-700"
+                      : discardPile[discardPile.length - 1].environment === "aquatic"
+                        ? "bg-blue-700"
+                        : "bg-green-700"
+                    : "bg-purple-700"
+                }`}
+              ></div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Discard Pile Gallery Modal */}
-      <DiscardPileGallery open={showDiscardGallery} onClose={() => setShowDiscardGallery(false)} cards={discardPile} />
-    </>
+      {/* Last action display */}
+      {lastAction && (
+        <div className="flex items-center">
+          <Card className="border border-green-700 bg-green-900/40 px-1 py-0.5">
+            <div className="flex items-center gap-1">
+              <Clock className="h-3 w-3 text-green-400" />
+              <span className="text-[9px] text-green-300">{lastAction}</span>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Discard pile gallery */}
+      <DiscardPileGallery open={showDiscardPile} onClose={() => setShowDiscardPile(false)} cards={discardPile} />
+    </div>
   )
 }

@@ -1,40 +1,74 @@
+"use client"
+
 export function ScareArt() {
   return (
     <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="h-full w-full">
       <defs>
         <linearGradient id="scareGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#4B0082" />
-          <stop offset="100%" stopColor="#8A2BE2" />
+          <stop offset="0%" stopColor="#4B0082">
+            <animate attributeName="stop-color" values="#4B0082; #6A287E; #4B0082" dur="3s" repeatCount="indefinite" />
+          </stop>
+          <stop offset="100%" stopColor="#8A2BE2">
+            <animate attributeName="stop-color" values="#8A2BE2; #9370DB; #8A2BE2" dur="3s" repeatCount="indefinite" />
+          </stop>
         </linearGradient>
       </defs>
       <rect x="0" y="0" width="100" height="100" fill="url(#scareGradient)" />
 
-      {/* Spooky background */}
-      <path d="M0,70 Q25,65 50,70 T100,70 L100,100 L0,100 Z" fill="#2F4F4F" opacity="0.4" />
+      {/* Forest/environment background */}
+      <path d="M0,70 Q25,65 50,70 Q75,75 100,70 L100,100 L0,100 Z" fill="#006400" opacity="0.3">
+        <animate
+          attributeName="d"
+          values="M0,70 Q25,65 50,70 Q75,75 100,70 L100,100 L0,100 Z; 
+                 M0,72 Q25,67 50,72 Q75,77 100,72 L100,100 L0,100 Z; 
+                 M0,70 Q25,65 50,70 Q75,75 100,70 L100,100 L0,100 Z"
+          dur="4s"
+          repeatCount="indefinite"
+        />
+      </path>
 
-      {/* Ghost */}
-      <path
-        d="M50,30 C60,30 70,40 70,50 C70,60 70,70 70,80 C65,75 60,80 55,75 C50,80 45,75 40,80 C40,70 40,60 40,50 C40,40 45,30 50,30 Z"
-        fill="#ffffff"
-        opacity="0.8"
-      />
-      <circle cx="45" cy="45" r="3" fill="#000000" opacity="0.8" />
-      <circle cx="55" cy="45" r="3" fill="#000000" opacity="0.8" />
-      <path d="M45,55 C50,60 55,60 60,55" fill="none" stroke="#000000" strokeWidth="2" />
-
-      {/* Scared animal */}
-      <path d="M20,60 C15,55 15,50 20,45 L30,45 C35,50 35,55 30,60 Z" fill="#A0522D" opacity="0.6" />
-      <circle cx="22" cy="50" r="2" fill="#000000" opacity="0.6" />
-      <path d="M25,55 L20,60" fill="none" stroke="#000000" strokeWidth="1" opacity="0.6" />
-      <path d="M25,55 L30,60" fill="none" stroke="#000000" strokeWidth="1" opacity="0.6" />
+      {/* Scared animal silhouette */}
+      <g>
+        <animateTransform
+          attributeName="transform"
+          type="translate"
+          values="0,0; -2,0; 0,0; 2,0; 0,0"
+          dur="0.5s"
+          repeatCount="indefinite"
+        />
+        <path d="M50,60 C45,55 45,50 50,45 L60,45 C65,50 65,55 60,60 Z" fill="#A0522D" opacity="0.8" />
+        <circle cx="52" cy="50" r="2" fill="#000000" opacity="0.8" />
+        <path d="M60,55 L65,60" fill="none" stroke="#A0522D" strokeWidth="2" opacity="0.8" />
+      </g>
 
       {/* Exclamation marks */}
-      <text x="15" y="40" fontSize="10" fill="#ffffff" opacity="0.8">
-        !
-      </text>
-      <text x="80" y="40" fontSize="10" fill="#ffffff" opacity="0.8">
-        !
-      </text>
+      <g>
+        <animate attributeName="opacity" values="0.8; 1; 0.8" dur="0.7s" repeatCount="indefinite" />
+        <text x="30" y="40" fontSize="15" fontWeight="bold" fill="#ffffff">
+          !
+        </text>
+        <text x="70" y="40" fontSize="15" fontWeight="bold" fill="#ffffff">
+          !
+        </text>
+      </g>
+
+      {/* Sound waves */}
+      <g opacity="0.7">
+        <animate attributeName="opacity" values="0.7; 0.3; 0.7" dur="1s" repeatCount="indefinite" />
+        <path d="M20,50 Q25,45 30,50" fill="none" stroke="#ffffff" strokeWidth="1" />
+        <path d="M15,50 Q25,40 35,50" fill="none" stroke="#ffffff" strokeWidth="1" />
+        <path d="M10,50 Q25,35 40,50" fill="none" stroke="#ffffff" strokeWidth="1" />
+
+        <path d="M70,50 Q75,45 80,50" fill="none" stroke="#ffffff" strokeWidth="1" />
+        <path d="M65,50 Q75,40 85,50" fill="none" stroke="#ffffff" strokeWidth="1" />
+        <path d="M60,50 Q75,35 90,50" fill="none" stroke="#ffffff" strokeWidth="1" />
+      </g>
+
+      {/* Arrows pointing up (to deck) */}
+      <g>
+        <animate attributeName="opacity" values="0.8; 0.4; 0.8" dur="1.5s" repeatCount="indefinite" />
+        <path d="M50,30 L50,10 M45,15 L50,10 L55,15" fill="none" stroke="#ffffff" strokeWidth="2" />
+      </g>
     </svg>
   )
 }

@@ -4,112 +4,97 @@ export function DolphinArt() {
   return (
     <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="h-full w-full">
       <defs>
-        <linearGradient id="dolphinGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#0077be">
-            <animate attributeName="stopColor" values="#0077be; #00a0d2; #0077be" dur="4s" repeatCount="indefinite" />
-          </stop>
-          <stop offset="100%" stopColor="#00a0d2">
-            <animate attributeName="stopColor" values="#00a0d2; #0077be; #00a0d2" dur="4s" repeatCount="indefinite" />
-          </stop>
+        <linearGradient id="dolphinWater" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#104e8b" />
+          <stop offset="100%" stopColor="#1874CD" />
         </linearGradient>
+
+        {/* Water animation */}
+        <path id="waterWave" d="M0,20 Q25,15 50,20 Q75,25 100,20 L100,100 L0,100 Z">
+          <animate
+            attributeName="d"
+            values="M0,20 Q25,15 50,20 Q75,25 100,20 L100,100 L0,100 Z;
+                   M0,20 Q25,25 50,20 Q75,15 100,20 L100,100 L0,100 Z;
+                   M0,20 Q25,15 50,20 Q75,25 100,20 L100,100 L0,100 Z"
+            dur="5s"
+            repeatCount="indefinite"
+          />
+        </path>
       </defs>
-      <rect x="0" y="0" width="100" height="100" fill="url(#dolphinGradient)" />
 
-      {/* Animated Ocean waves */}
-      <path d="M0,70 C15,60 30,80 50,70 C70,60 85,80 100,70 L100,100 L0,100 Z" fill="#005a87" opacity="0.4">
-        <animate
-          attributeName="d"
-          values="M0,70 C15,60 30,80 50,70 C70,60 85,80 100,70 L100,100 L0,100 Z;
-                 M0,72 C15,62 30,82 50,72 C70,62 85,82 100,72 L100,100 L0,100 Z;
-                 M0,70 C15,60 30,80 50,70 C70,60 85,80 100,70 L100,100 L0,100 Z"
-          dur="6s"
-          repeatCount="indefinite"
-        />
-      </path>
-      <path d="M0,80 C25,70 45,90 75,80 C85,75 95,85 100,80 L100,100 L0,100 Z" fill="#004a77" opacity="0.3">
-        <animate
-          attributeName="d"
-          values="M0,80 C25,70 45,90 75,80 C85,75 95,85 100,80 L100,100 L0,100 Z;
-                 M0,82 C25,72 45,92 75,82 C85,77 95,87 100,82 L100,100 L0,100 Z;
-                 M0,80 C25,70 45,90 75,80 C85,75 95,85 100,80 L100,100 L0,100 Z"
-          dur="5s"
-          repeatCount="indefinite"
-        />
-      </path>
+      {/* Background */}
+      <rect x="0" y="0" width="100" height="100" fill="url(#dolphinWater)" />
 
-      {/* Dolphin body with animation */}
+      {/* Water waves */}
+      <use href="#waterWave" fill="#2c8cdd" opacity="0.4" />
+
+      {/* Dolphin body */}
       <g>
         <animateTransform
           attributeName="transform"
           type="translate"
-          values="0,0; 2,-2; 0,0; -1,1; 0,0"
+          values="0,0; 0,-5; 0,0"
           dur="3s"
           repeatCount="indefinite"
         />
+
+        {/* Dolphin body */}
         <path
-          d="M30,60 C35,40 45,30 60,35 C75,40 85,30 85,45 C85,55 75,65 65,60 C55,65 45,70 35,65 C25,60 25,70 30,60 Z"
-          fill="#708090"
-          stroke="#2c3e50"
+          d="M30,50 Q45,35 60,45 Q75,55 85,45 L80,60 Q75,65 60,60 Q45,65 30,50 Z"
+          fill="#a0c8e0"
+          stroke="#6a9cc8"
           strokeWidth="1"
         >
           <animate
             attributeName="d"
-            values="M30,60 C35,40 45,30 60,35 C75,40 85,30 85,45 C85,55 75,65 65,60 C55,65 45,70 35,65 C25,60 25,70 30,60 Z;
-                   M32,58 C37,38 47,28 62,33 C77,38 87,28 87,43 C87,53 77,63 67,58 C57,63 47,68 37,63 C27,58 27,68 32,58 Z;
-                   M30,60 C35,40 45,30 60,35 C75,40 85,30 85,45 C85,55 75,65 65,60 C55,65 45,70 35,65 C25,60 25,70 30,60 Z"
-            dur="4s"
+            values="M30,50 Q45,35 60,45 Q75,55 85,45 L80,60 Q75,65 60,60 Q45,65 30,50 Z;
+                   M30,50 Q45,40 60,50 Q75,60 85,50 L80,65 Q75,70 60,65 Q45,70 30,50 Z;
+                   M30,50 Q45,35 60,45 Q75,55 85,45 L80,60 Q75,65 60,60 Q45,65 30,50 Z"
+            dur="3s"
             repeatCount="indefinite"
           />
         </path>
 
-        {/* Dolphin fin with animation */}
-        <path d="M55,35 L45,20 L60,40" fill="#708090" stroke="#2c3e50" strokeWidth="1">
-          <animate
-            attributeName="d"
-            values="M55,35 L45,20 L60,40; M55,35 L43,18 L60,40; M55,35 L45,20 L60,40"
-            dur="2.5s"
+        {/* Dolphin fin */}
+        <path d="M60,45 L65,30 L70,45" fill="#a0c8e0" stroke="#6a9cc8" strokeWidth="1">
+          <animateTransform
+            attributeName="transform"
+            type="rotate"
+            values="0 60 45; 5 60 45; 0 60 45; -5 60 45; 0 60 45"
+            dur="3s"
             repeatCount="indefinite"
           />
         </path>
 
-        {/* Dolphin tail with animation */}
-        <path d="M30,60 L20,50 L25,65 L15,70 L30,65" fill="#708090" stroke="#2c3e50" strokeWidth="1">
-          <animate
-            attributeName="d"
-            values="M30,60 L20,50 L25,65 L15,70 L30,65; 
-                   M30,60 L18,48 L25,65 L13,72 L30,65; 
-                   M30,60 L20,50 L25,65 L15,70 L30,65"
-            dur="2s"
+        {/* Dolphin tail */}
+        <path d="M30,50 L20,40 L25,55" fill="#a0c8e0" stroke="#6a9cc8" strokeWidth="1">
+          <animateTransform
+            attributeName="transform"
+            type="rotate"
+            values="0 30 50; 10 30 50; 0 30 50; -10 30 50; 0 30 50"
+            dur="1.5s"
             repeatCount="indefinite"
           />
         </path>
 
         {/* Dolphin eye */}
-        <circle cx="70" cy="45" r="2" fill="#000000" />
+        <circle cx="75" cy="50" r="2" fill="#000" />
+
+        {/* Water splash */}
+        <path d="M85,45 Q90,40 95,45" fill="none" stroke="#ffffff" strokeWidth="1" opacity="0.7">
+          <animate attributeName="opacity" values="0.7;0;0.7" dur="3s" repeatCount="indefinite" />
+        </path>
       </g>
 
-      {/* Water splash with animation */}
-      <path d="M75,30 C80,25 85,30 80,35" fill="none" stroke="#ffffff" strokeWidth="1" opacity="0.7">
-        <animate
-          attributeName="d"
-          values="M75,30 C80,25 85,30 80,35; M75,28 C80,23 85,28 80,33; M75,30 C80,25 85,30 80,35"
-          dur="3s"
-          repeatCount="indefinite"
-        />
-      </path>
+      {/* Bubbles */}
+      <circle cx="25" cy="60" r="1" fill="#ffffff" opacity="0.7">
+        <animate attributeName="cy" values="60;30;10" dur="4s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0.7;0.3;0" dur="4s" repeatCount="indefinite" />
+      </circle>
 
-      {/* Animated bubbles */}
-      <circle cx="80" cy="25" r="1" fill="#ffffff" opacity="0.7">
-        <animate attributeName="cy" values="25;20;15;10;5;0" dur="4s" repeatCount="indefinite" />
-        <animate attributeName="opacity" values="0.7;0.6;0.5;0.3;0.1;0" dur="4s" repeatCount="indefinite" />
-      </circle>
-      <circle cx="85" cy="28" r="1.5" fill="#ffffff" opacity="0.7">
-        <animate attributeName="cy" values="28;23;18;13;8;3;-2" dur="5s" repeatCount="indefinite" />
-        <animate attributeName="opacity" values="0.7;0.6;0.5;0.4;0.3;0.1;0" dur="5s" repeatCount="indefinite" />
-      </circle>
-      <circle cx="75" cy="35" r="1.2" fill="#ffffff" opacity="0.7">
-        <animate attributeName="cy" values="35;30;25;20;15;10;5;0" dur="6s" repeatCount="indefinite" />
-        <animate attributeName="opacity" values="0.7;0.6;0.5;0.4;0.3;0.2;0.1;0" dur="6s" repeatCount="indefinite" />
+      <circle cx="28" cy="65" r="1.5" fill="#ffffff" opacity="0.7">
+        <animate attributeName="cy" values="65;40;15" dur="5s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0.7;0.3;0" dur="5s" repeatCount="indefinite" />
       </circle>
     </svg>
   )
