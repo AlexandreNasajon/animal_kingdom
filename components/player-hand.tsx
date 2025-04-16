@@ -61,6 +61,8 @@ export function PlayerHand({
   const [touchStartPos, setTouchStartPos] = useState<{ x: number; y: number } | null>(null)
   const [touchedCardIndex, setTouchedCardIndex] = useState<number | null>(null)
   const [isDragging, setIsDragging] = useState(false)
+  // Track which card is directly under the mouse
+  const [activeCardIndex, setActiveCardIndex] = useState<number | null>(null)
 
   // Set up animation for new cards
   useEffect(() => {
@@ -87,15 +89,44 @@ export function PlayerHand({
     return () => window.removeEventListener("resize", handleResize)
   }, [])
 
-  // Handle mouse enter/leave for card zoom effect
+  // Update the handleMouseEnter function to set both hover and active states
   const handleMouseEnter = (index: number) => {
     if (!disabled) {
       setHoveredCardIndex(index)
+      setActiveCardIndex(index)
     }
   }
 
+  // Update the handleMouseLeave function to clear both states
   const handleMouseLeave = () => {
     setHoveredCardIndex(null)
+    setActiveCardIndex(null)
+  }
+
+  // Add a new function to handle mouse movement over cards
+  const handleMouseMove = (e: React.MouseEvent, index: number) => {
+    if (disabled) return
+
+    // Get the card element
+    const cardElement = e.currentTarget as HTMLElement
+    const rect = cardElement.getBoundingClientRect()
+
+    // Check if the mouse is directly over this card (not over the overlapped portion)
+    const isDirectlyOver =
+      e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom
+
+    if (isDirectlyOver) {
+      setActiveCardIndex(index)
+    } else if (activeCardIndex === index) {
+      setActiveCardIndex(null)
+    }
+  }
+
+  // Update the onClick handler to only work when the card is active
+  const handleCardClick = (index: number) => {
+    if (!disabled && activeCardIndex === index) {
+      onSelectCard(index)
+    }
   }
 
   // Drag and drop handlers
@@ -239,10 +270,12 @@ export function PlayerHand({
     return <div className="mt-1 text-[9px] text-center px-1 text-white">{card.effect}</div>
   }
 
+  // In the return statement, update the card div's className and onClick
   return (
     <div ref={containerRef} className="flex justify-center overflow-visible p-1 min-h-[150px] sm:min-h-[170px]">
       {cards.map((card, index) => {
         const isHovered = hoveredCardIndex === index
+        const isActive = activeCardIndex === index
         const isPlaying = card.id === playingCardId
         const isAnimating = animatedCardIds.includes(card.id)
         const isDragging = draggingIndex === index
@@ -254,14 +287,15 @@ export function PlayerHand({
           <div
             key={index}
             className={`relative cursor-pointer transform transition-all ${
-              disabled ? "opacity-50" : ""
+              disabled ? "opacity-50" : "opacity-100"
             } ${isAnimating ? "animate-new-card" : ""} ${isPlaying ? "animate-play-card" : ""}`}
-            onClick={() => onSelectCard(index)}
+            onClick={() => handleCardClick(index)}
             onMouseEnter={() => handleMouseEnter(index)}
             onMouseLeave={handleMouseLeave}
+            onMouseMove={(e) => handleMouseMove(e, index)}
             onDragStart={(e) => handleDragStart(e, index)}
             onDragEnd={handleDragEnd}
-            draggable={!disabled}
+            draggable={!disabled && isActive}
             onTouchStart={(e) => handleTouchStart(e, index)}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
@@ -269,20 +303,26 @@ export function PlayerHand({
             style={{
               marginLeft:
                 index > 0 ? (typeof window !== "undefined" && window.innerWidth < 640 ? "-30px" : "-15px") : "0", // Make cards overlap more on mobile
-              zIndex: isHovered ? 10 : index, // Reverse stacking order so rightmost cards are on top
+              zIndex: isActive ? 10 : index, // Active card gets highest z-index
+              pointerEvents: isActive || !cards.some((_c, i) => activeCardIndex === i) ? "auto" : "none", // Only allow interaction with active card
+              boxShadow: isActive ? "0 0 10px rgba(255, 255, 255, 0.5)" : "none", // Add subtle glow to active card
             }}
           >
             <Card
               className={`relative h-[140px] w-[90px] sm:h-[140px] sm:w-[90px] h-[120px] w-[80px] transform transition-transform ${
                 card.type === "animal"
                   ? card.environment === "terrestrial"
-                    ? "bg-red-900/60"
+                    ? "bg-red-900"
                     : card.environment === "aquatic"
-                      ? "bg-blue-900/60"
-                      : "bg-green-900/60"
-                  : "bg-purple-900/60"
-              } ${isDragging ? "scale-105" : "hover:scale-105"} border-0 shadow-md`}
+                      ? "bg-blue-900"
+                      : "bg-green-900"
+                  : "bg-purple-900"
+              } ${isDragging ? "scale-105" : isActive ? "scale-105" : ""} border-0 shadow-md`}
             >
+              {/* Add a subtle highlight for the active card */}
+              {isActive && (
+                <div className="absolute inset-0 border-2 border-white/30 rounded-md pointer-events-none z-10"></div>
+              )}
               <div className="absolute inset-0 border-2 border-transparent bg-gradient-to-br from-white/10 to-black/20 pointer-events-none"></div>
               <div className="absolute inset-0 flex flex-col items-center justify-between overflow-hidden p-1">
                 <div className="w-full text-center text-[12px] font-bold truncate">{card.name}</div>

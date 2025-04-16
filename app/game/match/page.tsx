@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { ArrowLeft, RefreshCw, Crown, Brain, Layers } from "lucide-react"
+import { ArrowLeft, RefreshCw, Crown, Layers } from "lucide-react"
 import { GameBoard } from "@/components/game-board"
 import { PlayerHand } from "@/components/player-hand"
 import { OpponentHand } from "@/components/opponent-hand"
@@ -1307,42 +1307,17 @@ export default function GameMatch() {
       </div>
       {/* Game board */}
       <div className="flex flex-1 flex-col px-2 max-h-[calc(100vh-120px)] overflow-hidden">
-        {/* Opponent area */}
+        {/* AI Hand (face down) */}
         <div className="mb-1">
-          <div className="mb-1 flex items-center justify-between">
-            <div className="flex items-center gap-1">
-              <div className={`h-2 w-2 rounded-full bg-red-700 ${isAIThinking ? "animate-ai-thinking" : ""}`}></div>
-              <span className="text-[10px] flex items-center gap-1">
-                AI {isAIThinking && <Brain className="h-3 w-3 animate-pulse" />}
-                {aiDrawingCards && <span className="text-yellow-300">(Drawing...)</span>}
-                {aiDiscardingCards && <span className="text-yellow-300">(Discarding...)</span>}
-              </span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span
-                className={`rounded-md ${
-                  gameState.opponentPoints >= 7 ? "animate-pulse bg-yellow-600" : "bg-green-700"
-                } px-1 py-0 text-sm font-bold`}
-              >
-                {gameState.opponentPoints}
-              </span>
-              {gameState.opponentPoints >= 7 && (
-                <span className="flex items-center text-yellow-400">
-                  <Crown className="h-3 w-3" />
-                </span>
-              )}
-            </div>
-          </div>
+          <OpponentHand
+            cardCount={gameState.opponentHand.length}
+            isThinking={isAIThinking}
+            playingCardId={aiPlayingCardId}
+          />
+        </div>
 
-          {/* AI Hand (face down) */}
-          <div className="mb-1">
-            <OpponentHand
-              cardCount={gameState.opponentHand.length}
-              isThinking={isAIThinking}
-              playingCardId={aiPlayingCardId}
-            />
-          </div>
-
+        {/* Opponent field */}
+        <div className="mb-1">
           <GameBoard
             cards={gameState.opponentField}
             isOpponent={true}
@@ -1353,10 +1328,52 @@ export default function GameMatch() {
           />
         </div>
 
-        {/* Game Log - single line */}
-        <div className="my-1 px-1 w-full">
-          <div className="bg-black/30 rounded-md p-1 text-xs text-center overflow-hidden text-white">
-            {lastGameMessage || "Game started. Your turn."}
+        {/* Score display and game log between fields */}
+        <div className="my-1 flex flex-col gap-1">
+          {/* Score display */}
+          <div className="flex justify-center items-center gap-4">
+            <div className="flex items-center gap-1">
+              <div className="h-2 w-2 rounded-full bg-red-700"></div>
+              <span className="text-[10px] flex items-center gap-1">
+                AI {isAIThinking && <span className="text-yellow-300">(Thinking...)</span>}
+              </span>
+              <span
+                className={`rounded-md ${
+                  gameState.opponentPoints >= 7 ? "animate-pulse bg-yellow-600" : "bg-green-700"
+                } px-1 py-0 text-sm font-bold flex items-center gap-1`}
+              >
+                {gameState.opponentPoints}
+                {gameState.opponentPoints >= 7 && (
+                  <span className="flex items-center text-yellow-400">
+                    <Crown className="h-3 w-3" />
+                  </span>
+                )}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <span
+                className={`rounded-md ${
+                  gameState.playerPoints >= 7 ? "animate-pulse bg-yellow-600" : "bg-green-700"
+                } px-1 py-0 text-sm font-bold flex items-center gap-1`}
+              >
+                {gameState.playerPoints}
+                {gameState.playerPoints >= 7 && (
+                  <span className="flex items-center text-yellow-400">
+                    <Crown className="h-3 w-3" />
+                  </span>
+                )}
+              </span>
+              <span className="text-[10px]">You</span>
+              <div className="h-2 w-2 rounded-full bg-blue-700"></div>
+            </div>
+          </div>
+
+          {/* Game Log */}
+          <div className="w-full">
+            <div className="bg-black/30 rounded-md p-1 text-xs text-center overflow-hidden text-white">
+              {lastGameMessage || "Game started. Your turn."}
+            </div>
           </div>
         </div>
 
@@ -1365,7 +1382,7 @@ export default function GameMatch() {
           <div className="flex items-center justify-between gap-1">
             {/* Discard pile on the left */}
             <div className="w-[70px] flex-shrink-0">
-              <Card className="h-[90px] w-[65px] border-2 border-green-700 bg-green-900/60 shadow-md relative overflow-hidden">
+              <Card className="h-[90px] w-[65px] border-2 border-green-700 bg-green-900 shadow-md relative overflow-hidden">
                 {/* Card frame decoration */}
                 <div className="absolute inset-0 border-4 border-transparent bg-gradient-to-br from-green-800/20 to-black/30 pointer-events-none"></div>
                 <div className="absolute inset-0 border border-green-400/10 rounded-sm pointer-events-none"></div>
@@ -1431,27 +1448,6 @@ export default function GameMatch() {
                   </div>
                 </div>
               </Card>
-            </div>
-          </div>
-
-          <div className="mt-1 flex items-center justify-between">
-            <div className="flex items-center gap-1">
-              <div className="h-2 w-2 rounded-full bg-blue-700"></div>
-              <span className="text-[10px]">You</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span
-                className={`rounded-md ${
-                  gameState.playerPoints >= 7 ? "animate-pulse bg-yellow-600" : "bg-green-700"
-                } px-1 py-0 text-sm font-bold`}
-              >
-                {gameState.playerPoints}
-              </span>
-              {gameState.playerPoints >= 7 && (
-                <span className="flex items-center text-yellow-400">
-                  <Crown className="h-3 w-3" />
-                </span>
-              )}
             </div>
           </div>
         </div>
