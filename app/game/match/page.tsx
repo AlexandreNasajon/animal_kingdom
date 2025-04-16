@@ -1339,7 +1339,7 @@ export default function GameMatch() {
         </div>
       </div>
       {/* Game board */}
-      <div className="flex flex-1 flex-col px-2 max-h-[calc(100vh-120px)] overflow-hidden">
+      <div className="flex flex-1 flex-col px-2 max-h-[calc(100vh-100px)] overflow-hidden">
         {/* AI Hand (face down) */}
         <div className="mb-0">
           <OpponentHand
@@ -1415,19 +1415,6 @@ export default function GameMatch() {
 
         {/* Player field */}
         <div className="mt-0">
-          <GameBoard
-            cards={gameState.playerField}
-            isOpponent={false}
-            points={gameState.playerPoints}
-            newCardId={newPlayerFieldCardId}
-            discardingCardId={discardingCardId}
-            returningToDeckCardId={returningToDeckCardId}
-            onCardDrop={handleCardDrop}
-          />
-        </div>
-
-        {/* Player area with deck and discard on sides */}
-        <div className="mt-auto">
           <div className="flex items-center justify-between gap-1">
             {/* Discard pile on the left */}
             <div className="w-[70px] flex-shrink-0">
@@ -1450,6 +1437,19 @@ export default function GameMatch() {
                   )}
                 </div>
               </Card>
+            </div>
+
+            {/* Player field in the middle */}
+            <div className="flex-1">
+              <GameBoard
+                cards={gameState.playerField}
+                isOpponent={false}
+                points={gameState.playerPoints}
+                newCardId={newPlayerFieldCardId}
+                discardingCardId={discardingCardId}
+                returningToDeckCardId={returningToDeckCardId}
+                onCardDrop={handleCardDrop}
+              />
             </div>
 
             {/* Deck on the right */}
@@ -1490,22 +1490,21 @@ export default function GameMatch() {
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Player hand */}
-      <div className="mt-1 px-2 pb-1">
-        <div className="mb-0"></div>
-        <div className="flex items-center justify-center">
-          <PlayerHand
-            cards={gameState.playerHand}
-            onSelectCard={handleSelectCard}
-            onPlayCard={handleCardDrop}
-            disabled={
-              gameState.currentTurn !== "player" || gameState.gameStatus !== "playing" || !!gameState.pendingEffect
-            }
-            newCardIds={newCardIds}
-            playingCardId={playingCardId}
-          />
+        {/* Player hand */}
+        <div className="px-2 pb-1">
+          <div className="flex items-center justify-center">
+            <PlayerHand
+              cards={gameState.playerHand}
+              onSelectCard={handleSelectCard}
+              onPlayCard={handleCardDrop}
+              disabled={
+                gameState.currentTurn !== "player" || gameState.gameStatus !== "playing" || !!gameState.pendingEffect
+              }
+              newCardIds={newCardIds}
+              playingCardId={playingCardId}
+            />
+          </div>
         </div>
       </div>
 

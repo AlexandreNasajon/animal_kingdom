@@ -251,11 +251,11 @@ export function GameBoard({
   return (
     <>
       <div
-        className={`flex min-h-[110px] items-center justify-center gap-2 rounded-lg border ${
+        className={`flex min-h-[100px] items-center justify-center gap-2 rounded-lg border ${
           isWinning
             ? `${isOpponent ? "border-yellow-500" : "border-yellow-500"} bg-yellow-900 shadow-inner shadow-yellow-500/30`
             : `${isOpponent ? "border-red-700" : "border-blue-700"} bg-green-950`
-        } p-2 transition-all duration-300 ${
+        } p-1 transition-all duration-300 ${
           dropHighlight && !isOpponent ? "ring-2 ring-green-400 bg-green-900/50" : ""
         }`}
         onDragOver={handleDragOver}
