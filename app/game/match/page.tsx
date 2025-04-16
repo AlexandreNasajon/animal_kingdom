@@ -1360,17 +1360,80 @@ export default function GameMatch() {
           </div>
         </div>
 
-        {/* Player area */}
+        {/* Player area with deck and discard on sides */}
         <div className="mt-auto">
-          <GameBoard
-            cards={gameState.playerField}
-            isOpponent={false}
-            points={gameState.playerPoints}
-            newCardId={newPlayerFieldCardId}
-            discardingCardId={discardingCardId}
-            returningToDeckCardId={returningToDeckCardId}
-            onCardDrop={handleCardDrop}
-          />
+          <div className="flex items-center justify-between gap-1">
+            {/* Discard pile on the left */}
+            <div className="w-[70px] flex-shrink-0">
+              <Card className="h-[90px] w-[65px] border-2 border-green-700 bg-green-900/60 shadow-md relative overflow-hidden">
+                {/* Card frame decoration */}
+                <div className="absolute inset-0 border-4 border-transparent bg-gradient-to-br from-green-800/20 to-black/30 pointer-events-none"></div>
+                <div className="absolute inset-0 border border-green-400/10 rounded-sm pointer-events-none"></div>
+
+                <div className="absolute inset-0 flex items-center justify-center">
+                  {gameState.sharedDiscard.length > 0 ? (
+                    <div className="text-center">
+                      <div className="text-sm font-bold text-green-400">{gameState.sharedDiscard.length}</div>
+                      <div className="text-[10px] text-green-400">Discard</div>
+                    </div>
+                  ) : (
+                    <div className="text-[10px] text-green-400 text-center">Empty</div>
+                  )}
+                </div>
+              </Card>
+            </div>
+
+            {/* Player field in the middle */}
+            <div className="flex-1">
+              <GameBoard
+                cards={gameState.playerField}
+                isOpponent={false}
+                points={gameState.playerPoints}
+                newCardId={newPlayerFieldCardId}
+                discardingCardId={discardingCardId}
+                returningToDeckCardId={returningToDeckCardId}
+                onCardDrop={handleCardDrop}
+              />
+            </div>
+
+            {/* Deck on the right */}
+            <div className="w-[70px] flex-shrink-0">
+              <Card
+                className={`h-[90px] w-[65px] ${
+                  gameState.currentTurn === "player" && gameState.gameStatus === "playing" && !gameState.pendingEffect
+                    ? "cursor-pointer hover:scale-105 transition-transform"
+                    : "cursor-not-allowed opacity-70"
+                } border-2 border-green-700 bg-green-900 shadow-md relative overflow-hidden`}
+                onClick={
+                  gameState.currentTurn === "player" && gameState.gameStatus === "playing" && !gameState.pendingEffect
+                    ? handleDrawCards
+                    : undefined
+                }
+              >
+                {/* Card frame decoration */}
+                <div className="absolute inset-0 border-4 border-transparent bg-gradient-to-br from-green-800/20 to-black/30 pointer-events-none"></div>
+                <div className="absolute inset-0 border border-green-400/10 rounded-sm pointer-events-none"></div>
+
+                {/* Draw text at the top */}
+                {gameState.currentTurn === "player" &&
+                  gameState.gameStatus === "playing" &&
+                  !gameState.pendingEffect && (
+                    <div className="absolute top-0 left-0 right-0 bg-green-700/80 text-[9px] text-center py-0.5 text-white font-bold">
+                      Draw 2
+                    </div>
+                  )}
+
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="card-back-pattern"></div>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <Layers className="h-6 w-6 text-green-400 mb-1" />
+                    <div className="text-sm font-bold text-green-400">{gameState.sharedDeck.length}</div>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          </div>
+
           <div className="mt-1 flex items-center justify-between">
             <div className="flex items-center gap-1">
               <div className="h-2 w-2 rounded-full bg-blue-700"></div>
@@ -1394,86 +1457,22 @@ export default function GameMatch() {
         </div>
       </div>
 
-      {/* Player hand with deck and discard on the sides */}
+      {/* Player hand */}
       <div className="mt-1 px-2 pb-1">
         <div className="mb-0 flex items-center justify-between">
           <span className="text-[8px]">Your Hand ({gameState.playerHand.length})</span>
         </div>
-        <div className="flex items-center justify-between">
-          {/* Discard pile on the left */}
-          <div className="w-[80px] flex justify-center">
-            <div className="relative">
-              <Card className="h-[90px] w-[70px] border-2 border-green-700 bg-green-900/60 shadow-md relative overflow-hidden">
-                {/* Card frame decoration */}
-                <div className="absolute inset-0 border-4 border-transparent bg-gradient-to-br from-green-800/20 to-black/30 pointer-events-none"></div>
-                <div className="absolute inset-0 border border-green-400/10 rounded-sm pointer-events-none"></div>
-
-                <div className="absolute inset-0 flex items-center justify-center">
-                  {gameState.sharedDiscard.length > 0 ? (
-                    <div className="text-center">
-                      <div className="text-sm font-bold text-green-400">{gameState.sharedDiscard.length}</div>
-                      <div className="text-[10px] text-green-400">Discard</div>
-                    </div>
-                  ) : (
-                    <div className="text-[10px] text-green-400 text-center">Empty</div>
-                  )}
-                </div>
-              </Card>
-            </div>
-          </div>
-
-          {/* Player hand in the middle */}
-          <div className="flex-1">
-            <PlayerHand
-              cards={gameState.playerHand}
-              onSelectCard={handleSelectCard}
-              onPlayCard={handleCardDrop}
-              disabled={
-                gameState.currentTurn !== "player" || gameState.gameStatus !== "playing" || !!gameState.pendingEffect
-              }
-              newCardIds={newCardIds}
-              playingCardId={playingCardId}
-            />
-          </div>
-
-          {/* Deck on the right */}
-          <div className="w-[80px] flex justify-center">
-            <div className="relative">
-              <Card
-                className={`h-[90px] w-[70px] ${
-                  gameState.currentTurn === "player" && gameState.gameStatus === "playing" && !gameState.pendingEffect
-                    ? "cursor-pointer hover:scale-105 transition-transform"
-                    : "cursor-not-allowed opacity-70"
-                } border-2 border-green-700 bg-green-900 shadow-md relative overflow-hidden`}
-                onClick={
-                  gameState.currentTurn === "player" && gameState.gameStatus === "playing" && !gameState.pendingEffect
-                    ? handleDrawCards
-                    : undefined
-                }
-              >
-                {/* Card frame decoration */}
-                <div className="absolute inset-0 border-4 border-transparent bg-gradient-to-br from-green-800/20 to-black/30 pointer-events-none"></div>
-                <div className="absolute inset-0 border border-green-400/10 rounded-sm pointer-events-none"></div>
-
-                {/* Draw text at the top */}
-                {gameState.currentTurn === "player" &&
-                  gameState.gameStatus === "playing" &&
-                  !gameState.pendingEffect && (
-                    <div className="absolute top-0 left-0 right-0 bg-green-700/80 text-[9px] text-center py-0.5 text-white font-bold">
-                      Draw 2 Cards
-                    </div>
-                  )}
-
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="card-back-pattern"></div>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <Layers className="h-6 w-6 text-green-400 mb-1" />
-                    <div className="text-sm font-bold text-green-400">{gameState.sharedDeck.length}</div>
-                  </div>
-                </div>
-              </Card>
-            </div>
-          </div>
+        <div className="flex items-center justify-center">
+          <PlayerHand
+            cards={gameState.playerHand}
+            onSelectCard={handleSelectCard}
+            onPlayCard={handleCardDrop}
+            disabled={
+              gameState.currentTurn !== "player" || gameState.gameStatus !== "playing" || !!gameState.pendingEffect
+            }
+            newCardIds={newCardIds}
+            playingCardId={playingCardId}
+          />
         </div>
       </div>
 
