@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { X, Play } from "lucide-react"
+import { Play } from "lucide-react"
 import { getCardArt } from "./card-art/card-art-mapper"
 
 interface CardDetailModalProps {
@@ -129,15 +129,7 @@ export function CardDetailModal({ open, onClose, card, onPlay, disabled }: CardD
           </div>
         </div>
 
-        <DialogFooter className="flex justify-between pt-2">
-          <Button
-            onClick={onClose}
-            variant="outline"
-            className="flex items-center gap-1 border-red-700 text-white hover:bg-red-900/30 hover:text-white"
-            size="sm"
-          >
-            <X className="h-3 w-3" /> Close
-          </Button>
+        <DialogFooter className="flex justify-center pt-2">
           <Button
             onClick={handlePlay}
             disabled={disabled || isPlaying}

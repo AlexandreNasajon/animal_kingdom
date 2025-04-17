@@ -123,6 +123,23 @@ export function GameBoard({
   const [dropHighlight, setDropHighlight] = useState(false)
   const cardRefs = useRef<Map<number, HTMLDivElement>>(new Map())
   const [activeAnimations, setActiveAnimations] = useState<Set<number>>(new Set())
+  const [viewportWidth, setViewportWidth] = useState(0)
+
+  // Track viewport size for responsive adjustments
+  useEffect(() => {
+    const updateViewportWidth = () => {
+      setViewportWidth(window.innerWidth)
+    }
+
+    // Set initial value
+    updateViewportWidth()
+
+    // Add event listener
+    window.addEventListener("resize", updateViewportWidth)
+
+    // Clean up
+    return () => window.removeEventListener("resize", updateViewportWidth)
+  }, [])
 
   // Set up animation for new card
   useEffect(() => {
@@ -248,6 +265,28 @@ export function GameBoard({
     }
   }
 
+  // Calculate card sizes based on viewport width
+  const getCardSize = () => {
+    if (viewportWidth < 360) {
+      return {
+        height: isOpponent ? "70px" : "75px",
+        width: isOpponent ? "45px" : "50px",
+      }
+    } else if (viewportWidth < 640) {
+      return {
+        height: isOpponent ? "85px" : "90px",
+        width: isOpponent ? "55px" : "60px",
+      }
+    } else {
+      return {
+        height: isOpponent ? "100px" : "110px",
+        width: isOpponent ? "65px" : "70px",
+      }
+    }
+  }
+
+  const cardSize = getCardSize()
+
   return (
     <>
       <div
@@ -303,7 +342,11 @@ export function GameBoard({
 
             return (
               <div
-                className={`relative cursor-pointer transition-all h-[85px] w-[55px] sm:h-[100px] sm:w-[65px] transform`}
+                className={`relative cursor-pointer transition-all transform ${animationClass}`}
+                style={{
+                  height: cardSize.height,
+                  width: cardSize.width,
+                }}
                 key={card.id}
                 data-card-id={card.id}
                 onDragOver={isOpponent ? undefined : handleDragOver}

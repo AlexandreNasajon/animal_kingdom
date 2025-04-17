@@ -63,6 +63,23 @@ export function PlayerHand({
   const [isDragging, setIsDragging] = useState(false)
   // Track which card is directly under the mouse
   const [activeCardIndex, setActiveCardIndex] = useState<number | null>(null)
+  const [viewportWidth, setViewportWidth] = useState(0)
+
+  // Track viewport size for responsive adjustments
+  useEffect(() => {
+    const updateViewportWidth = () => {
+      setViewportWidth(window.innerWidth)
+    }
+
+    // Set initial value
+    updateViewportWidth()
+
+    // Add event listener
+    window.addEventListener("resize", updateViewportWidth)
+
+    // Clean up
+    return () => window.removeEventListener("resize", updateViewportWidth)
+  }, [])
 
   // Set up animation for new cards
   useEffect(() => {
@@ -270,6 +287,31 @@ export function PlayerHand({
     return <div className="mt-1 text-[9px] text-center px-1 text-white">{card.effect}</div>
   }
 
+  // Calculate card sizes and overlap based on viewport width
+  const getCardSize = () => {
+    if (viewportWidth < 360) {
+      return {
+        height: "90px",
+        width: "60px",
+        overlap: "-35px",
+      }
+    } else if (viewportWidth < 640) {
+      return {
+        height: "110px",
+        width: "75px",
+        overlap: "-40px",
+      }
+    } else {
+      return {
+        height: "120px",
+        width: "80px",
+        overlap: "-25px",
+      }
+    }
+  }
+
+  const cardSize = getCardSize()
+
   // In the return statement, update the card div's className and onClick
   return (
     <div ref={containerRef} className="flex justify-center overflow-visible p-0 min-h-[100px] sm:min-h-[110px]">
@@ -301,15 +343,16 @@ export function PlayerHand({
             onTouchEnd={handleTouchEnd}
             data-card-id={card.id}
             style={{
-              marginLeft:
-                index > 0 ? (typeof window !== "undefined" && window.innerWidth < 640 ? "-40px" : "-25px") : "0", // Make cards overlap more on mobile
+              height: cardSize.height,
+              width: cardSize.width,
+              marginLeft: index > 0 ? cardSize.overlap : "0",
               zIndex: isActive ? 10 : index, // Active card gets highest z-index
               pointerEvents: isActive || !cards.some((_c, i) => activeCardIndex === i) ? "auto" : "none", // Only allow interaction with active card
               boxShadow: isActive ? "0 0 10px rgba(255, 255, 255, 0.5)" : "none", // Add subtle glow to active card
             }}
           >
             <Card
-              className={`relative h-[110px] w-[75px] sm:h-[120px] sm:w-[80px] transform transition-transform ${
+              className={`relative h-full w-full transform transition-transform ${
                 card.type === "animal"
                   ? card.environment === "terrestrial"
                     ? "bg-red-900"

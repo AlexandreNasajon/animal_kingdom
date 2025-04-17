@@ -1,10 +1,8 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { X } from "lucide-react"
 import type { GameCard } from "@/types/game"
 import { getCardArt } from "@/components/card-art/card-art-mapper"
 
@@ -58,17 +56,7 @@ export function BoardCardZoomModal({ open, onClose, card, isOpponentCard = false
     <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="border-2 border-green-700 bg-green-900 p-2 text-white">
         <DialogHeader>
-          <DialogTitle className="text-base flex justify-between items-center text-white">
-            <span>{card.name}</span>
-            <Button
-              onClick={onClose}
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0 rounded-full hover:bg-red-900 text-white bg-green-600 hover:bg-green-700"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </DialogTitle>
+          <DialogTitle className="text-base text-white">{card.name}</DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col items-center space-y-3">

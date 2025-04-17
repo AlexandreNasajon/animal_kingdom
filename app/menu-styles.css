@@ -1,78 +1,169 @@
-/* Base styles for the background */
 .bioquest-bg {
   min-height: 100vh;
+  min-height: 100dvh; /* Use dynamic viewport height when available */
+  width: 100%;
+  background: linear-gradient(to bottom, #1a472a, #0d2818);
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1a472a 0%, #2d5a3a 100%);
+  align-items: center;
+  padding: 1rem;
   position: relative;
   overflow: hidden;
-  padding: 2rem;
 }
 
-/* 3D Button Styles */
-.menu-button {
-  border-radius: 8px;
-  font-weight: bold;
-  letter-spacing: 0.5px;
-  transition: all 0.2s ease;
-  position: relative;
-  text-shadow: 0px 1px 1px rgba(0, 0, 0, 0.5);
-  box-shadow: 0 6px 0 #0a3517, 0 8px 10px rgba(0, 0, 0, 0.4);
-  transform: translateY(0);
-}
-
-.menu-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 0 #0a3517, 0 10px 15px rgba(0, 0, 0, 0.4);
-}
-
-.menu-button:active {
-  transform: translateY(3px);
-  box-shadow: 0 3px 0 #0a3517, 0 4px 5px rgba(0, 0, 0, 0.4);
-}
-
-.primary-button {
-  background: linear-gradient(to bottom, #4caf50 0%, #388e3c 100%);
-  padding: 16px 24px;
-  font-size: 1.25rem;
-  border: 2px solid #2e7d32;
-}
-
-.secondary-button {
-  background: linear-gradient(to bottom, #388e3c 0%, #2e7d32 100%);
-  padding: 14px 20px;
-  font-size: 1.1rem;
-  border: 2px solid #1b5e20;
-}
-
-.small-button {
-  background: linear-gradient(to bottom, #2e7d32 0%, #1b5e20 100%);
-  padding: 12px 16px;
-  font-size: 1rem;
-  border: 2px solid #0a3517;
-}
-
-/* Embossed title styles */
 .embossed-title {
-  color: #4caf50;
-  text-shadow: 0 2px 0 #388e3c, 0 4px 6px rgba(0, 0, 0, 0.4);
+  color: #e0f2e9;
+  text-shadow: 0 -2px 4px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(255, 255, 255, 0.2);
   font-weight: bold;
   letter-spacing: 1px;
 }
 
-/* Animation for the title */
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0);
+/* Button styles with 3D effect */
+.menu-button {
+  position: relative;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.menu-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));
+  border-radius: 0.5rem 0.5rem 0 0;
+  pointer-events: none;
+}
+
+.menu-button::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0));
+  border-radius: 0 0 0.5rem 0.5rem;
+  pointer-events: none;
+}
+
+.menu-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.menu-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.primary-button {
+  background: linear-gradient(to bottom, #4caf50, #2e7d32);
+  color: white;
+  font-size: 1.1rem;
+  padding: 1rem 2rem;
+}
+
+.primary-button:hover {
+  background: linear-gradient(to bottom, #5cb860, #3b9a40);
+}
+
+.primary-button:active {
+  background: linear-gradient(to bottom, #3b9a40, #2e7d32);
+}
+
+.secondary-button {
+  background: linear-gradient(to bottom, #2196f3, #1976d2);
+  color: white;
+  font-size: 0.9rem;
+}
+
+.secondary-button:hover {
+  background: linear-gradient(to bottom, #42a5f5, #1e88e5);
+}
+
+.secondary-button:active {
+  background: linear-gradient(to bottom, #1e88e5, #1976d2);
+}
+
+.small-button {
+  background: linear-gradient(to bottom, #78909c, #546e7a);
+  color: white;
+  font-size: 0.8rem;
+  padding: 0.6rem 1.2rem;
+}
+
+.small-button:hover {
+  background: linear-gradient(to bottom, #90a4ae, #607d8b);
+}
+
+.small-button:active {
+  background: linear-gradient(to bottom, #607d8b, #546e7a);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .embossed-title {
+    font-size: clamp(1.5rem, 8vw, 3rem);
   }
-  50% {
-    transform: translateY(-10px);
+
+  .menu-button {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+  }
+
+  .primary-button {
+    font-size: 1rem;
+    padding: 0.8rem 1.6rem;
+  }
+
+  .secondary-button {
+    font-size: 0.8rem;
+  }
+
+  .small-button {
+    font-size: 0.7rem;
+    padding: 0.5rem 1rem;
   }
 }
 
-.embossed-title {
-  animation: float 6s ease-in-out infinite;
+/* For very small screens */
+@media (max-width: 360px) {
+  .embossed-title {
+    font-size: clamp(1.2rem, 6vw, 2rem);
+  }
+
+  .menu-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* For landscape orientation on small screens */
+@media (max-height: 450px) and (orientation: landscape) {
+  .bioquest-bg {
+    padding-top: 0.5rem;
+    justify-content: flex-start;
+  }
+
+  .embossed-title {
+    font-size: clamp(1.2rem, 5vh, 2rem);
+    margin-bottom: 0.5rem;
+  }
+
+  .menu-button {
+    padding: 0.4rem 0.8rem;
+    margin-bottom: 0.5rem;
+  }
 }
