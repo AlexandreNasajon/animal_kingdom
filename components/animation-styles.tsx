@@ -321,6 +321,22 @@ export function AnimationStyles() {
         }
       }
 
+      /* New discard pile highlight animation */
+      @keyframes discard-highlight {
+        0% {
+          box-shadow: 0 0 0 0 rgba(0, 200, 0, 0.7);
+          transform: scale(1);
+        }
+        50% {
+          box-shadow: 0 0 15px 5px rgba(0, 200, 0, 0.5);
+          transform: scale(1.05);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(0, 200, 0, 0);
+          transform: scale(1);
+        }
+      }
+
       /* Animation classes */
       .animate-draw {
         animation: draw 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
@@ -420,6 +436,11 @@ export function AnimationStyles() {
         animation: amphibian-idle 4s ease-in-out infinite;
       }
 
+      /* New discard pile highlight animation class */
+      .animate-discard-highlight {
+        animation: discard-highlight 0.5s ease-in-out;
+      }
+
       /* Card zoom effect */
       .card-zoom-container {
         position: relative;
@@ -473,6 +494,14 @@ export function AnimationStyles() {
         height: 5px;
         border-radius: 50%;
         animation: particle-float 1s ease-out forwards;
+      }
+
+      /* Card trail animation */
+      .card-trail {
+        position: fixed;
+        pointer-events: none;
+        z-index: 1000;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
       }
 
       /* Confetti animation for victory */

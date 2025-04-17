@@ -41,6 +41,9 @@ import {
 } from "@/components/ui/alert-dialog"
 import { DiscardPileGallery } from "@/components/discard-pile-gallery"
 
+// Import the new animation function
+import { createCardToDiscardAnimation } from "@/utils/animation-utils"
+
 // Let's completely revise the AI card animation approach to make sure it falls onto the AI field.
 
 // 1. First, update the confettiAnimation with a much simpler animation approach:
@@ -186,6 +189,9 @@ function OriginalGameMatch() {
   // Add a new state to track when the discard gallery should be shown
   // Add this with the other state declarations near the top of the component
   const [showDiscardGallery, setShowDiscardGallery] = useState(false)
+
+  // Add a ref for the discard pile element
+  const discardPileRef = useRef<HTMLDivElement>(null)
 
   // First, add this effect to update the message whenever gameState changes
   useEffect(() => {
@@ -568,12 +574,15 @@ function OriginalGameMatch() {
       async () => {
         // Show discard animation for the selected card
         const cardId = gameState.playerField[targetIndex as number].id
+        const card = gameState.playerField[targetIndex as number]
         setDiscardingCardId(cardId)
 
-        // Add particle effect for the trap
-        setTimeout(() => {
-          addParticleEffect(cardId, "#aa66ff")
-        }, 100)
+        // Find the card element and use our new animation
+        const cardElement = document.querySelector(`[data-card-id="${cardId}"]`)
+        if (cardElement instanceof HTMLElement && discardPileRef.current) {
+          // Use our new animation function
+          createCardToDiscardAnimation(card, cardElement, discardPileRef.current)
+        }
 
         // Allow animation to play
         await new Promise((resolve) => setTimeout(resolve, 800))
@@ -1109,17 +1118,14 @@ function OriginalGameMatch() {
             // Get the card ID for animation
             const idx = targetIndex as number
             const cardId = gameState.opponentField[idx].id
+            const card = gameState.opponentField[idx]
             setDiscardingCardId(cardId)
 
-            // Add animation class for zone transfer
+            // Find the card element
             const cardElement = document.querySelector(`[data-card-id="${cardId}"]`)
-            if (cardElement) {
-              cardElement.classList.add(getZoneTransferAnimation("field", "discard"))
-
-              // Add particle effect
-              setTimeout(() => {
-                addParticleEffect(cardId, "#ff0000") // Red particles for destruction
-              }, 100)
+            if (cardElement instanceof HTMLElement && discardPileRef.current) {
+              // Use our new animation function
+              createCardToDiscardAnimation(card, cardElement, discardPileRef.current)
             }
           }
 
@@ -1127,27 +1133,31 @@ function OriginalGameMatch() {
           else if (["scare", "epidemic", "compete", "prey"].includes(type)) {
             // Handle single index or array of indices
             if (typeof targetIndex === "number") {
-              let cardId
+              let cardId, card
               if (type === "epidemic") {
                 // For epidemic, we're only selecting from player field
                 cardId = gameState.playerField[targetIndex].id
+                card = gameState.playerField[targetIndex]
               } else if (type === "compete" || type === "prey") {
                 // For compete, we're selecting from player hand or field
                 cardId = gameState.playerHand[targetIndex].id
+                card = gameState.playerHand[targetIndex]
               } else {
                 // For scare, we need to check if it's player or opponent field
                 const playerFieldLength = gameState.playerField.length
                 if (targetIndex < playerFieldLength) {
                   cardId = gameState.playerField[targetIndex].id
+                  card = gameState.playerField[targetIndex]
                 } else {
                   cardId = gameState.opponentField[targetIndex - playerFieldLength].id
+                  card = gameState.opponentField[targetIndex - playerFieldLength]
                 }
               }
               setReturningToDeckCardId(cardId)
 
               // Add animation class for zone transfer
               const cardElement = document.querySelector(`[data-card-id="${cardId}"]`)
-              if (cardElement) {
+              if (cardElement instanceof HTMLElement) {
                 cardElement.classList.add(getZoneTransferAnimation("field", "deck"))
 
                 // Add particle effect
@@ -1160,17 +1170,14 @@ function OriginalGameMatch() {
           // Add animation for Cage card's first selection (sending to discard)
           else if (type === "cage" && !gameState.pendingEffect.firstSelection) {
             const cardId = gameState.playerField[targetIndex as number].id
+            const card = gameState.playerField[targetIndex as number]
             setDiscardingCardId(cardId)
 
-            // Add animation class for zone transfer
+            // Find the card element
             const cardElement = document.querySelector(`[data-card-id="${cardId}"]`)
-            if (cardElement) {
-              cardElement.classList.add(getZoneTransferAnimation("field", "discard"))
-
-              // Add particle effect
-              setTimeout(() => {
-                addParticleEffect(cardId, "#ff0000") // Red particles for discard
-              }, 100)
+            if (cardElement instanceof HTMLElement && discardPileRef.current) {
+              // Use our new animation function
+              createCardToDiscardAnimation(card, cardElement, discardPileRef.current)
             }
           }
           // Add animation for Cage card's second selection (gaining control)
@@ -1193,17 +1200,14 @@ function OriginalGameMatch() {
           // Add animation for Trap card (when AI plays it and player selects)
           else if (type === "trap" && !gameState.pendingEffect.forPlayer) {
             const cardId = gameState.playerField[targetIndex as number].id
+            const card = gameState.playerField[targetIndex as number]
             setDiscardingCardId(cardId)
 
-            // Add animation class for zone transfer
+            // Find the card element
             const cardElement = document.querySelector(`[data-card-id="${cardId}"]`)
-            if (cardElement) {
-              cardElement.classList.add(getZoneTransferAnimation("field", "opponent-field"))
-
-              // Add particle effect
-              setTimeout(() => {
-                addParticleEffect(cardId, "#ffff00") // Yellow particles for control change
-              }, 100)
+            if (cardElement instanceof HTMLElement && discardPileRef.current) {
+              // Use our new animation function
+              createCardToDiscardAnimation(card, cardElement, discardPileRef.current)
             }
           }
         }
@@ -1373,6 +1377,7 @@ function OriginalGameMatch() {
               <Card
                 className={`h-[100px] w-[65px] border-2 border-green-700 bg-green-900 shadow-md relative overflow-hidden cursor-pointer hover:scale-105 transition-transform`}
                 onClick={() => setShowDiscardGallery(true)}
+                ref={discardPileRef}
               >
                 {/* Card frame decoration */}
                 <div className="absolute inset-0 border-4 border-transparent bg-gradient-to-br from-green-800/20 to-black/30 pointer-events-none"></div>

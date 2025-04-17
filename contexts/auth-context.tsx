@@ -13,6 +13,7 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<{ error: any }>
   signUp: (email: string, password: string, username: string) => Promise<{ error: any; user: User | null }>
   signOut: () => Promise<void>
+  isEmailVerified: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -21,6 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isEmailVerified, setIsEmailVerified] = useState(false)
   const supabase = getSupabaseClient()
 
   useEffect(() => {
@@ -30,6 +32,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } = await supabase.auth.getSession()
       setSession(session)
       setUser(session?.user ?? null)
+
+      // Check if email is verified
+      if (session?.user) {
+        setIsEmailVerified(session.user.email_confirmed_at != null)
+      }
+
       setIsLoading(false)
 
       const {
@@ -37,6 +45,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } = supabase.auth.onAuthStateChange((_event, session) => {
         setSession(session)
         setUser(session?.user ?? null)
+
+        // Update email verification status
+        if (session?.user) {
+          setIsEmailVerified(session.user.email_confirmed_at != null)
+        } else {
+          setIsEmailVerified(false)
+        }
+
         setIsLoading(false)
       })
 
@@ -57,6 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password,
       options: {
         data: { username },
+        emailRedirectTo: `${window.location.origin}/auth/verify`,
       },
     })
 
@@ -77,7 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, isLoading, signIn, signUp, signOut, isEmailVerified }}>
       {children}
     </AuthContext.Provider>
   )
