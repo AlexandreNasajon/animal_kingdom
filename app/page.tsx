@@ -11,7 +11,7 @@ export default function HomePage() {
       <MenuBackgroundAnimation />
 
       <div className="mb-8 sm:mb-16 text-center relative z-10">
-        <h1 className="embossed-title text-4xl sm:text-6xl mb-1 sm:mb-2">BioQuest</h1>
+        <h1 className="embossed-title text-4xl sm:text-6xl mb-1 sm:mb-2">BioDuel</h1>
         <h2 className="embossed-title text-2xl sm:text-4xl">Card Game</h2>
       </div>
 

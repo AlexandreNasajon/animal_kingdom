@@ -133,10 +133,9 @@ export function CardDetailModal({ open, onClose, card, onPlay, disabled }: CardD
           <Button
             onClick={handlePlay}
             disabled={disabled || isPlaying}
-            className="flex items-center gap-1 bg-green-700 hover:bg-green-600 text-white"
-            size="sm"
+            className="flex items-center gap-1 bg-green-700 hover:bg-green-600 text-white h-12 text-lg py-6"
           >
-            <Play className="h-3 w-3" /> Play Card
+            <Play className="h-5 w-5 mr-2" /> Play Card
           </Button>
         </DialogFooter>
       </DialogContent>
