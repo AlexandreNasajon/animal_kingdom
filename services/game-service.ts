@@ -7,6 +7,15 @@ export class GameService {
   // Create a new game session
   static async createGameSession(hostId: string) {
     const supabase = getSupabaseClient()
+
+    // First check if the user exists
+    const { data: user, error: userError } = await supabase.from("users").select("id").eq("id", hostId).single()
+
+    if (userError || !user) {
+      console.error("Error finding user:", userError)
+      throw new Error("User not found. Please sign in again.")
+    }
+
     const roomCode = generateRoomCode()
 
     const { data: gameSession, error } = await supabase

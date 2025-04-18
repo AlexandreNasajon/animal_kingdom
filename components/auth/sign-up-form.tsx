@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { AlertCircle, CheckCircle, Loader2 } from "lucide-react"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 
 export function SignUpForm() {
   const [email, setEmail] = useState("")
@@ -35,6 +36,34 @@ export function SignUpForm() {
 
       setIsSuccess(true)
       setIsLoading(false)
+
+      // Add code to ensure user is registered after sign-up
+      // After successful authentication and sign-up:
+      const supabase = createClientComponentClient()
+      const { data } = await supabase.auth.getUser()
+
+      async function ensureUserRegistered(userId: string, userData: { username: string; avatar_url?: string | null }) {
+        const supabase = createClientComponentClient()
+        const { data: existingUser } = await supabase.from("users").select("*").eq("id", userId).single()
+
+        if (!existingUser) {
+          await supabase.from("users").insert([
+            {
+              id: userId,
+              username: userData.username,
+              avatar_url: userData.avatar_url || null,
+            },
+          ])
+        }
+      }
+
+      if (data.user) {
+        // Ensure the user is registered in the users table
+        await ensureUserRegistered(data.user.id, {
+          username: username || data.user.email || "Anonymous Player",
+          avatar_url: null, // If you collect this during sign-up
+        })
+      }
     } catch (err: any) {
       setError(err.message || "An error occurred during sign up")
       setIsLoading(false)

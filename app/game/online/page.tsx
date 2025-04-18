@@ -28,7 +28,10 @@ export default function OnlinePlay() {
   }, [user, isLoading, router])
 
   const handleHostGame = async () => {
-    if (!user) return
+    if (!user) {
+      setError("You must be signed in to host a game")
+      return
+    }
 
     setIsCreating(true)
     setError(null)
@@ -43,7 +46,10 @@ export default function OnlinePlay() {
   }
 
   const handleJoinGame = async () => {
-    if (!user) return
+    if (!user) {
+      setError("You must be signed in to join a game")
+      return
+    }
 
     setIsJoining(true)
     setError(null)

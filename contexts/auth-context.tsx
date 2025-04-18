@@ -4,10 +4,16 @@ import type React from "react"
 
 import { createContext, useContext, useEffect, useState } from "react"
 import { getSupabaseClient } from "@/lib/supabase"
+import { ensureUserRegistered } from "@/lib/utils"
 import type { Session, User } from "@supabase/supabase-js"
 
 type AuthContextType = {
-  user: User | null
+  user: {
+    id: string | undefined
+    email: string | undefined
+    username: string
+    avatar_url: string | null
+  } | null
   session: Session | null
   isLoading: boolean
   signIn: (email: string, password: string) => Promise<{ error: any }>
@@ -19,48 +25,69 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<{
+    id: string | undefined
+    email: string | undefined
+    username: string
+    avatar_url: string | null
+  } | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isEmailVerified, setIsEmailVerified] = useState(false)
   const supabase = getSupabaseClient()
 
   useEffect(() => {
-    const setupAuth = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      setSession(session)
-      setUser(session?.user ?? null)
+    const getSession = async () => {
+      const { data, error } = await supabase.auth.getSession()
 
-      // Check if email is verified
-      if (session?.user) {
-        setIsEmailVerified(session.user.email_confirmed_at != null)
+      if (data.session) {
+        const supabaseUser = data.session.user
+
+        // Ensure user is registered in the database
+        await ensureUserRegistered(supabaseUser.id, {
+          username: supabaseUser.email || "Anonymous Player",
+          avatar_url: supabaseUser.user_metadata?.avatar_url,
+        })
+
+        setUser({
+          id: supabaseUser.id,
+          email: supabaseUser.email,
+          username: supabaseUser.user_metadata?.username || supabaseUser.email?.split("@")[0] || "Anonymous",
+          avatar_url: supabaseUser.user_metadata?.avatar_url || null,
+        })
       }
 
       setIsLoading(false)
-
-      const {
-        data: { subscription },
-      } = supabase.auth.onAuthStateChange((_event, session) => {
-        setSession(session)
-        setUser(session?.user ?? null)
-
-        // Update email verification status
-        if (session?.user) {
-          setIsEmailVerified(session.user.email_confirmed_at != null)
-        } else {
-          setIsEmailVerified(false)
-        }
-
-        setIsLoading(false)
-      })
-
-      return () => subscription.unsubscribe()
     }
 
-    setupAuth()
-  }, [])
+    getSession()
+
+    // Set up auth state listener
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const supabaseUser = session.user
+
+        // Ensure user is registered in the database
+        await ensureUserRegistered(supabaseUser.id, {
+          username: supabaseUser.email || "Anonymous Player",
+          avatar_url: supabaseUser.user_metadata?.avatar_url,
+        })
+
+        setUser({
+          id: supabaseUser.id,
+          email: supabaseUser.email,
+          username: supabaseUser.user_metadata?.username || supabaseUser.email?.split("@")[0] || "Anonymous",
+          avatar_url: supabaseUser.user_metadata?.avatar_url || null,
+        })
+      } else {
+        setUser(null)
+      }
+    })
+
+    return () => {
+      authListener.subscription.unsubscribe()
+    }
+  }, [supabase])
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
@@ -79,11 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (!error && data.user) {
       // Create user profile
-      await supabase.from("users").insert({
-        id: data.user.id,
-        username,
-        avatar_url: null,
-      })
+      await ensureUserRegistered(data.user.id, { username })
     }
 
     return { error, user: data.user }

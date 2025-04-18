@@ -8,6 +8,8 @@ import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { AlertCircle, Loader2, Mail } from "lucide-react"
+import { supabase } from "@/lib/supabase"
+import { ensureUserRegistered } from "@/lib/utils"
 
 export function SignInForm() {
   const [email, setEmail] = useState("")
@@ -36,6 +38,16 @@ export function SignInForm() {
         setError("Please verify your email before signing in")
         setIsLoading(false)
         return
+      }
+
+      // After successful authentication:
+      const { data } = await supabase.auth.getUser()
+      if (data.user) {
+        // Ensure the user is registered in the users table
+        await ensureUserRegistered(data.user.id, {
+          username: data.user.email || "Anonymous Player",
+          avatar_url: data.user.user_metadata?.avatar_url,
+        })
       }
 
       router.push("/")

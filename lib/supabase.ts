@@ -15,6 +15,9 @@ export const getSupabaseClient = () => {
   return supabaseClient
 }
 
+// Add the named export for supabase
+export const supabase = getSupabaseClient()
+
 // Server-side client (for server components and API routes)
 export const createServerSupabaseClient = () => {
   return createClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
