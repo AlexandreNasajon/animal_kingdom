@@ -1,25 +1,47 @@
 "use client"
+import { useState } from "react"
+import type { GameCard } from "@/types/game"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import type { GameCard } from "@/types/game"
 import { getCardArt } from "./card-art/card-art-mapper"
+import { Check } from "lucide-react"
 
-interface OpponentHandRevealProps {
+interface OpponentHandSelectionProps {
   open: boolean
   onClose: () => void
   cards: GameCard[]
-  title?: string
+  onSelect: (index: number) => void
+  title: string
   description?: string
 }
 
-export function OpponentHandReveal({
+export function OpponentHandSelectionModal({
   open,
   onClose,
   cards,
-  title = "Opponent's Hand",
+  onSelect,
+  title,
   description,
-}: OpponentHandRevealProps) {
+}: OpponentHandSelectionProps) {
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
+
+  const handleCardClick = (index: number) => {
+    setSelectedIndex(index)
+  }
+
+  const handleConfirm = () => {
+    if (selectedIndex !== null) {
+      onSelect(selectedIndex)
+      setSelectedIndex(null)
+    }
+  }
+
+  const handleClose = () => {
+    onClose()
+    setSelectedIndex(null)
+  }
+
   // Helper function to get environment color
   const getEnvironmentColor = (environment?: string) => {
     switch (environment) {
@@ -35,7 +57,7 @@ export function OpponentHandReveal({
   }
 
   return (
-    <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={open} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="border-2 border-green-700 bg-green-900 p-2 text-white max-w-3xl">
         <DialogHeader>
           <DialogTitle className="text-base text-white">{title}</DialogTitle>
@@ -47,11 +69,17 @@ export function OpponentHandReveal({
             <p className="text-center text-sm">Opponent has no cards in hand.</p>
           ) : (
             cards.map((card, index) => (
-              <div key={index} className="relative cursor-pointer transform transition-all hover:scale-105">
+              <div
+                key={index}
+                className={`relative cursor-pointer transform transition-all ${
+                  selectedIndex === index ? "scale-105" : ""
+                } hover:scale-105`}
+                onClick={() => handleCardClick(index)}
+              >
                 <Card
                   className={`w-[120px] h-[180px] border-2 ${
                     card.type === "animal" ? getEnvironmentColor(card.environment) : "border-purple-600 bg-purple-900"
-                  } p-1 shadow-md`}
+                  } p-1 shadow-md ${selectedIndex === index ? "ring-2 ring-yellow-400" : ""}`}
                 >
                   <CardContent className="flex flex-col items-center p-1 h-full">
                     <div className="text-center text-xs font-bold text-white">{card.name}</div>
@@ -82,6 +110,11 @@ export function OpponentHandReveal({
                       )}
                     </div>
                   </CardContent>
+                  {selectedIndex === index && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                      <Check className="h-6 w-6 text-yellow-400" />
+                    </div>
+                  )}
                 </Card>
               </div>
             ))
@@ -89,8 +122,12 @@ export function OpponentHandReveal({
         </div>
 
         <DialogFooter className="flex justify-center pt-2">
-          <Button onClick={onClose} className="bg-green-700 hover:bg-green-600 text-white">
-            Close
+          <Button
+            onClick={handleConfirm}
+            disabled={selectedIndex === null}
+            className="bg-green-700 hover:bg-green-600 text-white"
+          >
+            Discard Selected Card
           </Button>
         </DialogFooter>
       </DialogContent>

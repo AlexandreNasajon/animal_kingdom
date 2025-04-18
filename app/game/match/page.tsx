@@ -46,9 +46,15 @@ import { createCardToDiscardAnimation } from "@/utils/animation-utils"
 import { createCardToDeckAnimation } from "@/utils/animation-utils"
 
 // Import the OpponentHandReveal component
-// Add this import near the top of the file with the other imports
 import { OpponentHandReveal } from "@/components/opponent-hand-reveal"
 import { resolveAnimalEffect } from "@/utils/game-effects"
+
+// Import our modal components
+import { OpponentHandSelectionModal } from "@/components/opponent-hand-selection-modal"
+import { PlayerHandSelectionModal } from "@/components/player-hand-selection-modal"
+
+// First, import the new DeckTopCardsModal component
+import { DeckTopCardsModal } from "@/components/deck-top-cards-modal"
 
 // Let's completely revise the AI card animation approach to make sure it falls onto the AI field.
 
@@ -170,7 +176,7 @@ function OriginalGameMatch() {
   const [playingCardId, setPlayingCardId] = useState<number | null>(null)
   const [aiPlayingCardId, setAiPlayingCardId] = useState<number | null>(null)
   const [aiDrawingCards, setAiDrawingCards] = useState(false)
-  const [aiDiscardingCards, setAiDiscardingCards] = useState(false)
+  const [aiDiscardingCards, setAiDiscardingCards] = useState<number[]>([])
   const [aiDiscardedCardIds, setAiDiscardedCardIds] = useState<number[]>([])
   const [aiDrawnCardCount, setAiDrawnCardCount] = useState(0)
 
@@ -234,6 +240,18 @@ function OriginalGameMatch() {
   // Add a new state for the opponent hand reveal modal
   // Add this with the other state declarations
   const [showOpponentHand, setShowOpponentHand] = useState(false)
+
+  // Add a new state for the squirrel effect modal
+  // Add this with the other state declarations
+  const [showSquirrelModal, setShowSquirrelModal] = useState(false)
+
+  // Add new states for Tuna and Turtle effect modals
+  const [showTunaModal, setShowTunaModal] = useState(false)
+  const [showTurtleModal, setShowTurtleModal] = useState(false)
+
+  // Add a new state for the Crab effect modal
+  // Add this with the other state declarations near the top of the component
+  const [showCrabModal, setShowCrabModal] = useState(false)
 
   // First, add this effect to update the message whenever gameState changes
   useEffect(() => {
@@ -580,6 +598,42 @@ function OriginalGameMatch() {
     return () => clearTimeout(aiTimer)
   }, [gameState])
 
+  // Add this effect to handle the squirrel, tuna, and turtle effects
+  // Add this with the other useEffect hooks that check for pending effects
+  useEffect(() => {
+    if (!gameState || !gameState.pendingEffect) return
+
+    // Check if we have a pending effect
+    if (gameState.pendingEffect.type === "squirrel" && gameState.pendingEffect.forPlayer) {
+      setShowSquirrelModal(true)
+    } else if (gameState.pendingEffect.type === "tuna" && gameState.pendingEffect.forPlayer) {
+      setShowTunaModal(true)
+    } else if (gameState.pendingEffect.type === "turtle" && gameState.pendingEffect.forPlayer) {
+      setShowTurtleModal(true)
+    }
+  }, [gameState])
+
+  // Add this effect to handle the Crab effect
+  // Add this with the other useEffect hooks that check for pending effects
+  useEffect(() => {
+    if (!gameState || !gameState.pendingEffect) return
+
+    // Check if we have a pending effect
+    if (gameState.pendingEffect.type === "crab" && gameState.pendingEffect.forPlayer) {
+      setShowCrabModal(true)
+    }
+  }, [gameState])
+
+  // Add this effect to handle the Zebra effect - place it with the other useEffect hooks that check for pending effects
+  useEffect(() => {
+    if (!gameState || !gameState.pendingEffect) return
+
+    // Check if we have a pending effect
+    if (gameState.pendingEffect.type === "zebra" && gameState.pendingEffect.forPlayer) {
+      setShowOpponentHand(true)
+    }
+  }, [gameState])
+
   // Add this useEffect to process the animation queue
   // Add this after the other useEffect hooks
   useEffect(() => {
@@ -721,6 +775,178 @@ function OriginalGameMatch() {
         // End AI's turn
         setGameState(endAITurn(newState))
         setShowAITrapModal(false)
+      },
+    ])
+  }
+
+  // Add a handler for the squirrel effect selection
+  // Add this with the other handler functions
+  const handleSquirrelSelection = (targetIndex: number) => {
+    if (!gameState || !gameState.pendingEffect) return
+
+    // Add the animation to the queue
+    setAnimationQueue((prev) => [
+      ...prev,
+      async () => {
+        // Get the card being discarded
+        const targetCard = gameState.opponentHand[targetIndex]
+
+        // Create a new state with the card discarded
+        const newOpponentHand = [...gameState.opponentHand]
+        newOpponentHand.splice(targetIndex, 1)
+
+        const newState = {
+          ...gameState,
+          opponentHand: newOpponentHand,
+          sharedDiscard: [...gameState.sharedDiscard, targetCard],
+          pendingEffect: null,
+          message: `You made the opponent discard ${targetCard.name}.`,
+        }
+
+        // Log the effect resolution
+        console.log(newState.message)
+
+        // End player's turn
+        setGameState(endPlayerTurn(newState))
+        setShowSquirrelModal(false)
+      },
+    ])
+  }
+
+  // Add handlers for Tuna and Turtle effects
+  const handleTunaSelection = (targetIndex: number) => {
+    if (!gameState || !gameState.pendingEffect) return
+
+    // Add the animation to the queue
+    setAnimationQueue((prev) => [
+      ...prev,
+      async () => {
+        // Get the card being played
+        const targetCard = gameState.playerHand[targetIndex]
+
+        // Create a new state with the card played
+        const newPlayerHand = [...gameState.playerHand]
+        newPlayerHand.splice(targetIndex, 1)
+
+        const newState = {
+          ...gameState,
+          playerHand: newPlayerHand,
+          playerField: [...gameState.playerField, targetCard],
+          playerPoints: gameState.playerPoints + (targetCard.points || 0),
+          pendingEffect: null,
+          message: `You played ${targetCard.name} from your hand.`,
+        }
+
+        // Log the effect resolution
+        console.log(newState.message)
+
+        // Set the new card ID for field animation
+        setNewPlayerFieldCardId(targetCard.id)
+
+        // Add particle effect based on environment
+        setTimeout(() => {
+          let particleColor = "#ff6666" // Default red for terrestrial
+          if (targetCard.environment === "aquatic") particleColor = "#6666ff"
+          else if (targetCard.environment === "amphibian") particleColor = "#66ff66"
+
+          addParticleEffect(targetCard.id, particleColor)
+        }, 400)
+
+        // End player's turn
+        setGameState(endPlayerTurn(newState))
+        setShowTunaModal(false)
+
+        // Wait for field animation to complete
+        await new Promise((resolve) => setTimeout(resolve, 800))
+
+        // Clear animation states
+        setNewPlayerFieldCardId(null)
+      },
+    ])
+  }
+
+  const handleTurtleSelection = (targetIndex: number) => {
+    if (!gameState || !gameState.pendingEffect) return
+
+    // Add the animation to the queue
+    setAnimationQueue((prev) => [
+      ...prev,
+      async () => {
+        // Get the card being played
+        const targetCard = gameState.playerHand[targetIndex]
+
+        // Create a new state with the card played
+        const newPlayerHand = [...gameState.playerHand]
+        newPlayerHand.splice(targetIndex, 1)
+
+        const newState = {
+          ...gameState,
+          playerHand: newPlayerHand,
+          playerField: [...gameState.playerField, targetCard],
+          playerPoints: gameState.playerPoints + (targetCard.points || 0),
+          pendingEffect: null,
+          message: `You played ${targetCard.name} from your hand.`,
+        }
+
+        // Log the effect resolution
+        console.log(newState.message)
+
+        // Set the new card ID for field animation
+        setNewPlayerFieldCardId(targetCard.id)
+
+        // Add particle effect based on environment
+        setTimeout(() => {
+          let particleColor = "#ff6666" // Default red for terrestrial
+          if (targetCard.environment === "aquatic") particleColor = "#6666ff"
+          else if (targetCard.environment === "amphibian") particleColor = "#66ff66"
+
+          addParticleEffect(targetCard.id, particleColor)
+        }, 400)
+
+        // End player's turn
+        setGameState(endPlayerTurn(newState))
+        setShowTurtleModal(false)
+
+        // Wait for field animation to complete
+        await new Promise((resolve) => setTimeout(resolve, 800))
+
+        // Clear animation states
+        setNewPlayerFieldCardId(null)
+      },
+    ])
+  }
+
+  // Add a handler for the Crab effect selection
+  // Add this with the other handler functions
+  const handleCrabSelection = (selectedIndex: number) => {
+    if (!gameState || !gameState.pendingEffect) return
+
+    // Add the animation to the queue
+    setAnimationQueue((prev) => [
+      ...prev,
+      async () => {
+        // Get the selected card and the other card
+        const topCards = gameState.sharedDeck.slice(0, 2)
+        const selectedCard = topCards[selectedIndex]
+        const otherCard = topCards[1 - selectedIndex]
+
+        // Create a new state with the selected card added to hand and the other sent to bottom
+        const newDeck = [...gameState.sharedDeck.slice(2), otherCard]
+
+        const newState = {
+          ...gameState,
+          playerHand: [...gameState.playerHand, selectedCard],
+          sharedDeck: newDeck,
+          pendingEffect: null,
+          message: `You added ${selectedCard.name} to your hand and sent ${otherCard.name} to the bottom of the deck.`,
+        }
+
+        // Log the effect resolution
+        console.log(newState.message)
+
+        // End player's turn
+        setGameState(endPlayerTurn(newState))
+        setShowCrabModal(false)
       },
     ])
   }
@@ -994,6 +1220,37 @@ function OriginalGameMatch() {
         // No player cards
         playerCardIndices = []
         break
+
+      case "squirrel":
+        setTargetTitle("Select Card")
+        setTargetDescription("Select a card from your opponent's hand to discard.")
+        setShowSquirrelModal(true)
+        playerCardIndices = []
+        break
+
+      case "tuna":
+        // Don't show the target modal, we'll use our custom modal
+        playerCardIndices = []
+        break
+
+      case "turtle":
+        // Don't show the target modal, we'll use our custom modal
+        playerCardIndices = []
+        break
+
+      case "crab":
+        setTargetTitle("Choose a Card")
+        setTargetDescription("Select one card to add to your hand. The other will be sent to the bottom of the deck.")
+        setShowCrabModal(true)
+        playerCardIndices = []
+        break
+
+      case "zebra":
+        setTargetTitle("Zebra Effect")
+        setTargetDescription("View your opponent's hand.")
+        setShowOpponentHand(true)
+        playerCardIndices = []
+        break
     }
 
     // Store the player card indices
@@ -1003,6 +1260,14 @@ function OriginalGameMatch() {
   // Handle player drawing cards
   const handleDrawCards = () => {
     if (!gameState) return
+
+    // Check if hand is already full (6 cards)
+    if (gameState.playerHand.length >= 6) {
+      console.log("Your hand is full (maximum 6 cards). You must play a card first.")
+      // Update the message without drawing cards
+      setLastGameMessage("Your hand is full (maximum 6 cards). You must play a card first.")
+      return
+    }
 
     // Check if player needs to discard first
     if (gameState.playerHand.length >= 5) {
@@ -1017,10 +1282,11 @@ function OriginalGameMatch() {
       async () => {
         // Store current hand length to detect new cards
         const currentHandLength = gameState.playerHand.length
+        const maxDraw = Math.min(2, 6 - currentHandLength)
 
-        // Draw 2 cards
-        const newState = drawCards(gameState, 2, true)
-        console.log("You drew 2 cards.")
+        // Draw cards (up to 6 total in hand)
+        const newState = drawCards(gameState, maxDraw, true)
+        console.log(`You drew ${maxDraw} card${maxDraw !== 1 ? "s" : ""}.`)
 
         // Get IDs of newly drawn cards for animation
         const drawnCardIds = newState.playerHand.slice(currentHandLength).map((card) => card.id)
@@ -1251,10 +1517,11 @@ function OriginalGameMatch() {
 
         // Store current hand length to detect new cards
         const currentHandLength = newState.playerHand.length
+        const maxDraw = Math.min(2, 6 - currentHandLength)
 
-        // Draw 2 cards
-        const afterDraw = drawCards(newState, 2, true)
-        console.log("You drew 2 cards.")
+        // Draw cards (up to 6 total in hand)
+        const afterDraw = drawCards(newState, maxDraw, true)
+        console.log(`You drew ${maxDraw} card${maxDraw !== 1 ? "s" : ""}.`)
 
         // Get IDs of newly drawn cards for animation
         const drawnCardIds = afterDraw.playerHand.slice(currentHandLength).map((card) => card.id)
@@ -1329,6 +1596,7 @@ function OriginalGameMatch() {
                   card = gameState.playerField[targetIndex]
                 } else {
                   cardId = gameState.opponentField[targetIndex - playerFieldLength].id
+                  card = gameState.opponentField[targetIndex - playerFieldLength]
                   card = gameState.opponentField[targetIndex - playerFieldLength]
                 }
               }
@@ -1885,14 +2153,79 @@ function OriginalGameMatch() {
       <OpponentHandReveal
         open={showOpponentHand}
         onClose={() => {
-          setShowOpponentHand(false)
-          // Resolve the octopus effect
-          if (gameState?.pendingEffect?.type === "octopus") {
+          // If it's the Zebra effect, use the dedicated handler
+          if (gameState?.pendingEffect?.type === "zebra") {
+            handleZebraEffectClose()
+          } else if (gameState?.pendingEffect?.type === "octopus") {
+            // Keep the existing octopus handling
+            setShowOpponentHand(false)
             const newState = resolveAnimalEffect(gameState, 0)
             setGameState(newState)
+          } else {
+            // Default close behavior
+            setShowOpponentHand(false)
           }
         }}
         cards={gameState?.opponentHand || []}
+        title={gameState?.pendingEffect?.type === "zebra" ? "Zebra Effect: Opponent's Hand" : "Opponent's Hand"}
+        description={
+          gameState?.pendingEffect?.type === "zebra"
+            ? "You're looking at your opponent's hand. Click close when done."
+            : undefined
+        }
+      />
+      {/* Add the OpponentHandSelectionModal component to the JSX */}
+      {/* Add this near the bottom of the component, with the other modals */}
+      <OpponentHandSelectionModal
+        open={showSquirrelModal}
+        onClose={() => setShowSquirrelModal(false)}
+        cards={gameState?.opponentHand || []}
+        onSelect={handleSquirrelSelection}
+        title="Squirrel Effect: Select a Card to Discard"
+        description="Choose one of your opponent's cards to send to the discard pile."
+      />
+      {/* Add the PlayerHandSelectionModal components for Tuna and Turtle effects */}
+      <PlayerHandSelectionModal
+        open={showTunaModal}
+        onClose={() => setShowTunaModal(false)}
+        cards={gameState?.playerHand || []}
+        onSelect={handleTunaSelection}
+        title="Tuna Effect: Play an Aquatic Animal"
+        description="Select an aquatic animal from your hand to play."
+        filter={(card) =>
+          card.type === "animal" && (card.environment === "aquatic" || card.environment === "amphibian")
+        }
+      />
+      <PlayerHandSelectionModal
+        open={showTurtleModal}
+        onClose={() => setShowTurtleModal(false)}
+        cards={gameState?.playerHand || []}
+        onSelect={handleTurtleSelection}
+        title="Turtle Effect: Play a Small Aquatic Animal"
+        description="Select an aquatic animal with 2 or fewer points from your hand to play."
+        filter={(card) =>
+          card.type === "animal" &&
+          (card.environment === "aquatic" || card.environment === "amphibian") &&
+          (card.points || 0) <= 2
+        }
+      />
+      {/* Add the DeckTopCardsModal component to the JSX */}
+      {/* Add this near the bottom of the component, with the other modals */}
+      <DeckTopCardsModal
+        open={showCrabModal}
+        onClose={() => setShowCrabModal(false)}
+        cards={gameState?.sharedDeck.slice(0, Math.min(2, gameState?.sharedDeck.length || 0)) || []}
+        onSelect={handleCrabSelection}
+        title="Crab Effect: Choose a Card"
+        description="Select one card to add to your hand. The other will be sent to the bottom of the deck."
+      />
+      {/* Add the OpponentHandReveal component for Zebra effect */}
+      <OpponentHandReveal
+        open={showOpponentHand && gameState?.pendingEffect?.type === "zebra"}
+        onClose={handleZebraEffectClose}
+        cards={gameState?.opponentHand || []}
+        title="Zebra Effect: Opponent's Hand"
+        description="Here are the cards in your opponent's hand."
       />
     </div>
   )
@@ -1954,4 +2287,15 @@ export default function MatchPage() {
 
   // Default to AI mode if no valid mode is specified
   return <OriginalGameMatch />
+}
+
+// Define handleZebraEffectClose
+function handleZebraEffectClose() {
+  // Implement the logic to close the Zebra effect modal and resolve the effect
+  // For example:
+  // setShowOpponentHand(false);
+  // if (gameState?.pendingEffect?.type === "zebra") {
+  //   const newState = resolveAnimalEffect(gameState, 0);
+  //   setGameState(newState);
+  // }
 }

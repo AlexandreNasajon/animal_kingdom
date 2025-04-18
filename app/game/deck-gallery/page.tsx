@@ -4,19 +4,19 @@ import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Grid, Mountain, Droplets, Fish, Zap, BookOpen } from "lucide-react"
+import { ArrowLeft, Grid, Mountain, Droplets, Fish, Zap } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getCardArt } from "@/components/card-art/card-art-mapper"
-import { ORIGINAL_DECK } from "@/types/original-deck"
-import { EXPANDED_DECK } from "@/types/expanded-deck"
+import { ADVANCED_DECK } from "@/types/advanced-deck"
 import type { GameCard } from "@/types/game"
+import { CardZoomModal } from "@/components/card-zoom-modal"
 
 export default function DeckGallery() {
-  const [currentDeck, setCurrentDeck] = useState<"original" | "expanded">("original")
   const [filter, setFilter] = useState<string>("all")
+  const [selectedCard, setSelectedCard] = useState<GameCard | null>(null)
 
-  // Get the appropriate deck based on selection
-  const allCards = currentDeck === "original" ? ORIGINAL_DECK : EXPANDED_DECK
+  // Use the advanced deck
+  const allCards = ADVANCED_DECK
 
   const filteredCards = allCards.filter((card: GameCard) => {
     if (filter === "all") return true
@@ -26,6 +26,34 @@ export default function DeckGallery() {
     if (filter === "impact") return card.type === "impact"
     return true
   })
+
+  // Count cards by type for display
+  const terrestrialCount = allCards.filter(
+    (card) => card.type === "animal" && card.environment === "terrestrial",
+  ).length
+  const aquaticCount = allCards.filter((card) => card.type === "animal" && card.environment === "aquatic").length
+  const amphibianCount = allCards.filter((card) => card.type === "animal" && card.environment === "amphibian").length
+  const impactCount = allCards.filter((card) => card.type === "impact").length
+
+  const handleCardClick = (card: GameCard) => {
+    setSelectedCard(card)
+  }
+
+  // Helper function to get card border color
+  const getCardBorderColor = (card: GameCard) => {
+    if (card.type !== "animal") return "border-purple-600 bg-green-800"
+
+    switch (card.environment) {
+      case "terrestrial":
+        return "border-red-600 hover:border-red-400 bg-green-800"
+      case "aquatic":
+        return "border-blue-600 hover:border-blue-400 bg-green-800"
+      case "amphibian":
+        return "border-green-600 hover:border-green-400 bg-green-800"
+      default:
+        return "border-green-600 hover:border-green-400 bg-green-800"
+    }
+  }
 
   return (
     <div className="min-h-screen h-full bg-gradient-to-b from-green-800 to-green-950 p-4 text-white overflow-auto">
@@ -44,31 +72,13 @@ export default function DeckGallery() {
         <Card className="border-2 border-green-700 bg-green-900/60 shadow-xl mb-6">
           <CardHeader>
             <div className="flex items-center justify-between flex-wrap gap-4">
-              <CardTitle className="text-2xl text-white">Select Deck</CardTitle>
-              <Tabs
-                defaultValue="original"
-                className="w-[400px] max-w-full"
-                onValueChange={(value) => setCurrentDeck(value as "original" | "expanded")}
-              >
-                <TabsList className="grid w-full grid-cols-2 gap-2 bg-green-900/40 p-1">
-                  <TabsTrigger
-                    value="original"
-                    className="bg-green-700 text-white data-[state=active]:bg-green-500 data-[state=active]:text-white"
-                    title="Original Deck"
-                  >
-                    <BookOpen className="h-5 w-5 mr-2" />
-                    Original Deck
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="expanded"
-                    className="bg-green-700 text-white data-[state=active]:bg-green-500 data-[state=active]:text-white"
-                    title="Expanded Deck"
-                  >
-                    <BookOpen className="h-5 w-5 mr-2" />
-                    Expanded Deck
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
+              <CardTitle className="text-2xl text-white">Advanced Deck</CardTitle>
+              <div className="text-green-300">
+                <span className="mr-3">Terrestrial: {terrestrialCount}</span>
+                <span className="mr-3">Aquatic: {aquaticCount}</span>
+                <span className="mr-3">Amphibian: {amphibianCount}</span>
+                <span>Impact: {impactCount}</span>
+              </div>
             </div>
           </CardHeader>
         </Card>
@@ -121,13 +131,25 @@ export default function DeckGallery() {
           <CardContent className="max-h-[calc(100vh-300px)] overflow-y-auto">
             <div className="mb-4">
               <h2 className="text-xl font-semibold text-green-300">
-                {currentDeck === "original" ? "Original Deck" : "Expanded Deck"} - {filteredCards.length} cards
+                {filter === "all"
+                  ? "All Cards"
+                  : filter === "terrestrial"
+                    ? "Terrestrial Animals"
+                    : filter === "aquatic"
+                      ? "Aquatic Animals"
+                      : filter === "amphibian"
+                        ? "Amphibian Animals"
+                        : "Impact Cards"}{" "}
+                - {filteredCards.length} cards
               </h2>
             </div>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               {filteredCards.map((card) => (
                 <div key={card.id} className="relative">
-                  <div className="group relative h-[240px] w-[160px] cursor-pointer overflow-hidden rounded-lg border-2 border-green-600 bg-green-800 p-2 transition-all hover:scale-105 hover:border-green-400 hover:shadow-lg">
+                  <div
+                    className={`group relative h-[240px] w-[160px] cursor-pointer overflow-hidden rounded-lg border-2 ${getCardBorderColor(card)} p-2 transition-all hover:scale-105 hover:shadow-lg`}
+                    onClick={() => handleCardClick(card)}
+                  >
                     {card.points > 0 && (
                       <div className="absolute left-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-yellow-500 text-xs font-bold text-black">
                         {card.points}
@@ -148,6 +170,9 @@ export default function DeckGallery() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Card zoom modal */}
+      <CardZoomModal open={selectedCard !== null} onClose={() => setSelectedCard(null)} card={selectedCard} />
     </div>
   )
 }
