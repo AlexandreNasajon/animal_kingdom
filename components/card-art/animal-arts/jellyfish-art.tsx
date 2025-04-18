@@ -1,34 +1,33 @@
-import { WatercolorBackground } from "../watercolor-utils"
+"use client"
 
 export function JellyfishArt() {
   return (
-    <div className="relative h-full w-full overflow-hidden">
-      <WatercolorBackground baseColor="#4B0082" />
+    <div className="relative w-full h-full overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-b from-purple-700/30 to-purple-900/50" />
 
-      {/* Deep ocean background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-blue-900 to-indigo-900 opacity-70"></div>
+      {/* Deep Water */}
+      <div className="absolute inset-0 bg-blue-900/40" />
 
-      {/* Jellyfish bell */}
-      <div className="absolute top-1/3 left-1/2 h-1/4 w-1/3 -translate-x-1/2 rounded-t-full bg-purple-400 opacity-80"></div>
+      {/* Jellyfish Body */}
+      <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 w-10 h-6 rounded-t-full bg-purple-400/80">
+        {/* Inner Glow */}
+        <div className="absolute inset-1 rounded-t-full bg-purple-300/50" />
 
-      {/* Jellyfish inner glow */}
-      <div className="absolute top-[35%] left-1/2 h-1/5 w-1/4 -translate-x-1/2 rounded-t-full bg-purple-300 opacity-50"></div>
+        {/* Tentacles */}
+        <div className="absolute bottom-0 left-1 w-0.5 h-8 bg-purple-300/80 animate-pulse" />
+        <div className="absolute bottom-0 left-3 w-0.5 h-10 bg-purple-300/80 animate-pulse" />
+        <div className="absolute bottom-0 left-5 w-0.5 h-9 bg-purple-300/80 animate-pulse" />
+        <div className="absolute bottom-0 left-7 w-0.5 h-11 bg-purple-300/80 animate-pulse" />
+        <div className="absolute bottom-0 left-9 w-0.5 h-7 bg-purple-300/80 animate-pulse" />
+      </div>
 
-      {/* Jellyfish tentacles */}
-      <div className="absolute top-[57%] left-[40%] h-1/3 w-1/32 bg-purple-300 opacity-70 animate-pulse"></div>
-      <div className="absolute top-[57%] left-[45%] h-1/4 w-1/32 bg-purple-300 opacity-70 animate-pulse"></div>
-      <div className="absolute top-[57%] left-[50%] h-1/3 w-1/32 bg-purple-300 opacity-70 animate-pulse"></div>
-      <div className="absolute top-[57%] left-[55%] h-1/4 w-1/32 bg-purple-300 opacity-70 animate-pulse"></div>
-      <div className="absolute top-[57%] left-[60%] h-1/3 w-1/32 bg-purple-300 opacity-70 animate-pulse"></div>
+      {/* Bioluminescent Glow */}
+      <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 w-12 h-8 rounded-full bg-purple-400/20 animate-pulse" />
 
-      {/* Bioluminescent spots */}
-      <div className="absolute top-[40%] left-[45%] h-1/24 w-1/24 rounded-full bg-blue-200 opacity-90 animate-pulse"></div>
-      <div className="absolute top-[45%] left-[50%] h-1/24 w-1/24 rounded-full bg-blue-200 opacity-90 animate-pulse"></div>
-      <div className="absolute top-[40%] left-[55%] h-1/24 w-1/24 rounded-full bg-blue-200 opacity-90 animate-pulse"></div>
-
-      {/* Small bubbles */}
-      <div className="absolute top-1/4 left-1/3 h-1/24 w-1/24 rounded-full bg-white opacity-30"></div>
-      <div className="absolute top-1/5 left-2/3 h-1/32 w-1/32 rounded-full bg-white opacity-30"></div>
+      {/* Bubbles */}
+      <div className="absolute top-2 left-3 w-1 h-1 rounded-full bg-white/50" />
+      <div className="absolute top-4 left-6 w-1.5 h-1.5 rounded-full bg-white/50" />
+      <div className="absolute top-3 right-4 w-1 h-1 rounded-full bg-white/50" />
     </div>
   )
 }

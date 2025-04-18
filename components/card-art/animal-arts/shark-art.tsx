@@ -1,42 +1,40 @@
-import { WatercolorBackground } from "../watercolor-utils"
+"use client"
 
 export function SharkArt() {
   return (
-    <div className="relative h-full w-full overflow-hidden">
-      <WatercolorBackground baseColor="#00008B" />
+    <div className="relative w-full h-full overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-b from-blue-800/30 to-blue-950/50" />
 
-      {/* Deep ocean background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-blue-700 to-blue-900 opacity-70"></div>
+      {/* Deep Water */}
+      <div className="absolute inset-0 bg-blue-900/40" />
 
-      {/* Light rays */}
-      <div className="absolute top-0 left-1/4 h-full w-1/12 bg-blue-200 opacity-10 transform rotate-12"></div>
-      <div className="absolute top-0 left-1/2 h-full w-1/12 bg-blue-200 opacity-10 transform -rotate-6"></div>
-      <div className="absolute top-0 left-3/4 h-full w-1/12 bg-blue-200 opacity-10 transform rotate-6"></div>
+      {/* Shark Body */}
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-6 bg-gray-500 rounded-full">
+        {/* Shark Head */}
+        <div className="absolute top-0 left-0 w-8 h-6 bg-gray-500 rounded-l-full">
+          {/* Eye */}
+          <div className="absolute top-2 left-2 w-1 h-1 rounded-full bg-black" />
 
-      {/* Shark body */}
-      <div className="absolute top-1/2 left-1/2 h-1/5 w-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-500 rounded-full transform scale-x-150"></div>
+          {/* Mouth */}
+          <div className="absolute bottom-1 left-1 w-6 h-0.5 bg-white rounded-l-full" />
+        </div>
 
-      {/* Shark head */}
-      <div className="absolute top-1/2 left-[30%] h-1/6 w-1/6 -translate-y-1/2 bg-gray-500 rounded-l-lg"></div>
+        {/* Dorsal Fin */}
+        <div className="absolute -top-3 left-6 w-4 h-4 bg-gray-500 clip-path-triangle" />
 
-      {/* Shark tail */}
-      <div className="absolute top-1/2 left-[75%] h-1/6 w-1/6 -translate-y-1/2 bg-gray-500">
-        <div className="absolute top-0 right-0 h-1/2 w-full bg-gray-500 transform origin-right -rotate-30"></div>
-        <div className="absolute bottom-0 right-0 h-1/2 w-full bg-gray-500 transform origin-right rotate-30"></div>
+        {/* Tail */}
+        <div className="absolute top-0 right-0 w-4 h-6 bg-gray-500">
+          <div className="absolute top-0 right-0 w-3 h-3 bg-gray-500 clip-path-triangle transform rotate-[-45deg]" />
+          <div className="absolute bottom-0 right-0 w-3 h-3 bg-gray-500 clip-path-triangle transform rotate-[45deg]" />
+        </div>
+
+        {/* Pectoral Fin */}
+        <div className="absolute bottom-0 left-6 w-3 h-2 bg-gray-500 rounded-b-full transform rotate-[-10deg]" />
       </div>
 
-      {/* Shark dorsal fin */}
-      <div className="absolute top-[35%] left-1/2 h-1/6 w-1/12 -translate-x-1/2 bg-gray-500 transform origin-bottom -rotate-12"></div>
-
-      {/* Shark pectoral fins */}
-      <div className="absolute top-[55%] left-[40%] h-1/12 w-1/6 -translate-y-1/2 bg-gray-500 transform origin-left rotate-30"></div>
-      <div className="absolute top-[45%] left-[40%] h-1/12 w-1/6 -translate-y-1/2 bg-gray-500 transform origin-left -rotate-30"></div>
-
-      {/* Shark eye */}
-      <div className="absolute top-1/2 left-[32%] h-1/32 w-1/32 -translate-y-1/2 rounded-full bg-black"></div>
-
-      {/* Shark mouth */}
-      <div className="absolute top-[53%] left-[28%] h-1/48 w-1/12 -translate-y-1/2 bg-white rounded-l-sm"></div>
+      {/* Bubbles */}
+      <div className="absolute top-3 left-4 w-1 h-1 rounded-full bg-white/70" />
+      <div className="absolute top-5 left-6 w-1.5 h-1.5 rounded-full bg-white/70" />
     </div>
   )
 }

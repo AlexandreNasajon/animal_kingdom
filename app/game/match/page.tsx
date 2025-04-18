@@ -1308,6 +1308,87 @@ function OriginalGameMatch() {
         // Don't show the target modal, we'll use our custom modal for Zebra
         playerCardIndices = []
         break
+      case "payCost":
+        if (gameState.pendingEffect.selectedCard === undefined) return
+
+        // Process sacrifice or return to hand
+        const selectedCardIndex = gameState.pendingEffect.selectedCard
+        const costType = gameState.pendingEffect.costType
+        const targetCardId = gameState.pendingEffect.targetCardId
+
+        // Find the card to be played from player's hand
+        const cardToPlay = gameState.playerHand.find((c) => c.id === targetCardId)
+        if (!cardToPlay) return
+
+        // Find the index of the card to play
+        const cardToPlayIndex = gameState.playerHand.findIndex((c) => c.id === targetCardId)
+
+        // Get the animal being sacrificed
+        const targetIndex = gameState.pendingEffect.targetIndex
+        const sacrificedAnimal = gameState.playerField[targetIndex as number]
+
+        // Create a new player field with the sacrificed animal removed
+        const newPlayerField = [...gameState.playerField]
+        newPlayerField.splice(targetIndex as number, 1)
+
+        // Create a new player hand with the played card removed
+        const newPlayerHand = [...gameState.playerHand]
+        newPlayerHand.splice(cardToPlayIndex, 1)
+
+        // Temporarily update points
+        const newPlayerPoints = newPlayerField.reduce((sum, card) => sum + (card.points || 0), 0)
+
+        // Create a temporary new state
+        let tempState = {
+          ...gameState,
+          playerField: newPlayerField,
+          playerHand: newPlayerHand,
+          playerPoints: newPlayerPoints,
+          pendingEffect: null,
+        }
+
+        if (costType === "return") {
+          // For Crocodile, return the animal to hand
+          tempState.playerHand.push(sacrificedAnimal)
+          tempState.message = `You returned ${sacrificedAnimal.name} to your hand and played ${cardToPlay.name}.`
+        } else {
+          // For Lion and Shark, send to discard
+          tempState.sharedDiscard = [...gameState.sharedDiscard, sacrificedAnimal]
+          tempState.message = `You sacrificed ${sacrificedAnimal.name} to play ${cardToPlay.name}.`
+        }
+
+        // Now add the played card to the field
+        tempState.playerField = [...tempState.playerField, cardToPlay]
+        tempState.playerPoints = tempState.playerField.reduce((sum, card) => sum + (card.points || 0), 0)
+
+        // Apply the card's effect
+        if (cardToPlay.type === "animal" && cardToPlay.effect) {
+          tempState = applyAnimalEffect(tempState, cardToPlay, true)
+        }
+
+        // Set the new player field card for animation
+        setNewPlayerFieldCardId(cardToPlay.id)
+
+        // Show discard animation if needed
+        if (costType !== "return") {
+          setDiscardingCardId(sacrificedAnimal.id)
+        }
+
+        // Log the effect
+        console.log(tempState.message)
+
+        // Close the target modal
+        setShowTargetModal(false)
+
+        // Update the game state
+        if (tempState.pendingEffect) {
+          // If there's a pending effect from the played card, don't end turn yet
+          setGameState(tempState)
+        } else {
+          // End player's turn if no pending effect
+          setGameState(endPlayerTurn(tempState))
+        }
+        break
     }
 
     // Store the player card indices
@@ -1370,6 +1451,48 @@ function OriginalGameMatch() {
 
     const card = gameState.playerHand[selectedCardIndex]
     if (!card || !card.type) return
+
+    if (card.type === "animal" && ["Lion", "Shark", "Crocodile"].includes(card.name)) {
+      // Check if there are enough animals on the field to pay the cost
+      if (gameState.playerField.length === 0) {
+        // Create a new state with a message that the player can't play the card
+        const newState = {
+          ...gameState,
+          message: `You need an animal on your field to play ${card.name}.`,
+        }
+        setGameState(newState)
+        setShowCardDetail(false)
+        setSelectedCardIndex(null)
+        return
+      }
+
+      // For Lion and Shark, set up target selection for sacrifice
+      // For Crocodile, set up target selection for returning to hand
+      const costType = card.name === "Crocodile" ? "return" : "sacrifice"
+
+      setTargetTitle(`Select an Animal to ${costType === "return" ? "Return to Hand" : "Sacrifice"}`)
+      setTargetDescription(
+        `Select one of your animals to ${costType === "return" ? "return to your hand" : "sacrifice"} in order to play ${card.name}.`,
+      )
+      setTargetFilter((c) => c?.type === "animal")
+      setTargetCards(gameState.playerField)
+      setPlayerCardIndices(Array.from({ length: gameState.playerField.length }, (_, i) => i))
+
+      // Store the card to play after cost is paid
+      gameState.pendingEffect = {
+        type: "payCost",
+        forPlayer: true,
+        targetCardId: card.id,
+        costType: costType,
+        selectedCard: selectedCardIndex,
+        targetIndex: null,
+      }
+
+      setShowCardDetail(false)
+      setSelectedCardIndex(null)
+      setShowTargetModal(true)
+      return
+    }
 
     // Add the animation to the queue instead of playing immediately
     setAnimationQueue((prev) => [
@@ -1469,6 +1592,44 @@ function OriginalGameMatch() {
 
     const card = gameState.playerHand[cardIndex]
     if (!card) return
+
+    if (card.type === "animal" && ["Lion", "Shark", "Crocodile"].includes(card.name)) {
+      // Check if there are enough animals on the field to pay the cost
+      if (gameState.playerField.length === 0) {
+        // Create a new state with a message that the player can't play the card
+        const newState = {
+          ...gameState,
+          message: `You need an animal on your field to play ${card.name}.`,
+        }
+        setGameState(newState)
+        return
+      }
+
+      // For Lion and Shark, set up target selection for sacrifice
+      // For Crocodile, set up target selection for returning to hand
+      const costType = card.name === "Crocodile" ? "return" : "sacrifice"
+
+      setTargetTitle(`Select an Animal to ${costType === "return" ? "Return to Hand" : "Sacrifice"}`)
+      setTargetDescription(
+        `Select one of your animals to ${costType === "return" ? "return to your hand" : "sacrifice"} in order to play ${card.name}.`,
+      )
+      setTargetFilter((c) => c?.type === "animal")
+      setTargetCards(gameState.playerField)
+      setPlayerCardIndices(Array.from({ length: gameState.playerField.length }, (_, i) => i))
+
+      // Store the card to play after cost is paid
+      gameState.pendingEffect = {
+        type: "payCost",
+        forPlayer: true,
+        targetCardId: card.id,
+        costType: costType,
+        selectedCard: cardIndex,
+        targetIndex: null,
+      }
+
+      setShowTargetModal(true)
+      return
+    }
 
     // Add the animation to the queue instead of playing immediately
     setAnimationQueue((prev) => [
@@ -2228,7 +2389,11 @@ function OriginalGameMatch() {
       <PlayerHandSelectionModal
         open={showTunaModal}
         onClose={() => setShowTunaModal(false)}
-        cards={gameState?.playerHand || []}
+        cards={
+          gameState?.playerHand.filter(
+            (card) => card.type === "animal" && (card.environment === "aquatic" || card.environment === "amphibian"),
+          ) || []
+        }
         onSelect={handleTunaSelection}
         title="Tuna Effect: Play an Aquatic Animal"
         description="Select an aquatic animal from your hand to play."

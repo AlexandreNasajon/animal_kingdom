@@ -937,7 +937,456 @@ export function resolveEffect(state: GameState, targetIndex: number | number[]):
       }
       break
 
-    // Add other impact card effect resolutions here...
+    case "fisher":
+      if (forPlayer) {
+        // Player targeting opponent's aquatic animal (or amphibian)
+        const targetCard = state.opponentField[targetIndex as number]
+        if (!targetCard || (targetCard.environment !== "aquatic" && targetCard.environment !== "amphibian"))
+          return state
+
+        const newOpponentField = [...state.opponentField]
+        newOpponentField.splice(targetIndex as number, 1)
+        return {
+          ...state,
+          opponentField: newOpponentField,
+          opponentPoints: state.opponentPoints - (targetCard.points || 0),
+          sharedDiscard: [...state.sharedDiscard, targetCard],
+          pendingEffect: null,
+          message: `You destroyed the opponent's ${targetCard.name}.`,
+        }
+      }
+      break
+
+    case "scare":
+      if (forPlayer) {
+        // Player targeting an animal to send to the top of the deck
+        const playerFieldLength = state.playerField.length
+        let targetCard, newField, pointsChange
+
+        if ((targetIndex as number) < playerFieldLength) {
+          // Player targeting their own animal
+          targetCard = state.playerField[targetIndex as number]
+          newField = [...state.playerField]
+          newField.splice(targetIndex as number, 1)
+          pointsChange = state.playerPoints - (targetCard.points || 0)
+
+          return {
+            ...state,
+            playerField: newField,
+            playerPoints: pointsChange,
+            sharedDeck: [targetCard, ...state.sharedDeck], // Add to top of deck
+            pendingEffect: null,
+            message: `You sent your ${targetCard.name} to the top of the deck.`,
+          }
+        } else {
+          // Player targeting opponent's animal
+          const opponentIndex = (targetIndex as number) - playerFieldLength
+          targetCard = state.opponentField[opponentIndex]
+          newField = [...state.opponentField]
+          newField.splice(opponentIndex, 1)
+          pointsChange = state.opponentPoints - (targetCard.points || 0)
+
+          return {
+            ...state,
+            opponentField: newField,
+            opponentPoints: pointsChange,
+            sharedDeck: [targetCard, ...state.sharedDeck], // Add to top of deck
+            pendingEffect: null,
+            message: `You sent the opponent's ${targetCard.name} to the top of the deck.`,
+          }
+        }
+      }
+      break
+
+    case "veterinarian":
+      if (forPlayer) {
+        // Player selecting an animal from the discard pile to play
+        const targetCard = state.sharedDiscard[targetIndex as number]
+        if (!targetCard || targetCard.type !== "animal") return state
+
+        const newDiscard = [...state.sharedDiscard]
+        newDiscard.splice(targetIndex as number, 1)
+
+        return {
+          ...state,
+          playerField: [...state.playerField, targetCard],
+          playerPoints: state.playerPoints + (targetCard.points || 0),
+          sharedDiscard: newDiscard,
+          pendingEffect: null,
+          message: `You played ${targetCard.name} from the discard pile.`,
+        }
+      }
+      break
+
+    case "limit":
+      if (forPlayer) {
+        // Player selecting an opponent's animal to destroy
+        const targetCard = state.opponentField[targetIndex as number]
+        if (!targetCard) return state
+
+        const newOpponentField = [...state.opponentField]
+        newOpponentField.splice(targetIndex as number, 1)
+
+        return {
+          ...state,
+          opponentField: newOpponentField,
+          opponentPoints: state.opponentPoints - (targetCard.points || 0),
+          sharedDiscard: [...state.sharedDiscard, targetCard],
+          pendingEffect: null,
+          message: `You destroyed the opponent's ${targetCard.name}.`,
+          // Set the Limit effect to last for 2 turns
+          persistentEffects: {
+            ...state.persistentEffects,
+            limitUntilTurn: 2,
+          },
+          effectsThisTurn: {
+            ...state.effectsThisTurn,
+            limitInEffect: true,
+          },
+        }
+      }
+      break
+
+    case "confuse":
+      if (forPlayer && Array.isArray(targetIndex) && targetIndex.length === 2) {
+        // Player selecting one of their animals and one of the opponent's to exchange
+        const playerIdx = targetIndex[0]
+        const opponentIdx = targetIndex[1]
+
+        const playerCard = state.playerField[playerIdx]
+        const opponentCard = state.opponentField[opponentIdx]
+
+        if (!playerCard || !opponentCard) return state
+
+        // Create new arrays with the cards exchanged
+        const newPlayerField = [...state.playerField]
+        const newOpponentField = [...state.opponentField]
+
+        // Remove the cards from their original positions
+        newPlayerField.splice(playerIdx, 1)
+        newOpponentField.splice(opponentIdx, 1)
+
+        // Add the cards to their new positions
+        newPlayerField.push(opponentCard)
+        newOpponentField.push(playerCard)
+
+        // Calculate new points
+        const newPlayerPoints = newPlayerField.reduce((sum, card) => sum + (card.points || 0), 0)
+        const newOpponentPoints = newOpponentField.reduce((sum, card) => sum + (card.points || 0), 0)
+
+        return {
+          ...state,
+          playerField: newPlayerField,
+          opponentField: newOpponentField,
+          playerPoints: newPlayerPoints,
+          opponentPoints: newOpponentPoints,
+          pendingEffect: null,
+          message: `You exchanged ${playerCard.name} with the opponent's ${opponentCard.name}.`,
+        }
+      }
+      break
+
+    case "domesticate":
+      if (forPlayer) {
+        // Player selecting a 2-point animal to gain control of
+        const targetCard = state.opponentField[targetIndex as number]
+        if (!targetCard || targetCard.points !== 2) return state
+
+        const newOpponentField = [...state.opponentField]
+        newOpponentField.splice(targetIndex as number, 1)
+
+        return {
+          ...state,
+          playerField: [...state.playerField, targetCard],
+          opponentField: newOpponentField,
+          playerPoints: state.playerPoints + (targetCard.points || 0),
+          opponentPoints: state.opponentPoints - (targetCard.points || 0),
+          pendingEffect: null,
+          message: `You gained control of the opponent's ${targetCard.name}.`,
+        }
+      }
+      break
+
+    case "trap":
+      if (forPlayer) {
+        // AI selecting an animal to give to the player
+        const targetCard = state.opponentField[targetIndex as number]
+        if (!targetCard) return state
+
+        const newOpponentField = [...state.opponentField]
+        newOpponentField.splice(targetIndex as number, 1)
+
+        return {
+          ...state,
+          playerField: [...state.playerField, targetCard],
+          opponentField: newOpponentField,
+          playerPoints: state.playerPoints + (targetCard.points || 0),
+          opponentPoints: state.opponentPoints - (targetCard.points || 0),
+          pendingEffect: null,
+          message: `AI gave you their ${targetCard.name}.`,
+        }
+      } else {
+        // Player selecting an animal to give to the AI
+        const targetCard = state.playerField[targetIndex as number]
+        if (!targetCard) return state
+
+        const newPlayerField = [...state.playerField]
+        newPlayerField.splice(targetIndex as number, 1)
+
+        return {
+          ...state,
+          opponentField: [...state.opponentField, targetCard],
+          playerField: newPlayerField,
+          opponentPoints: state.opponentPoints + (targetCard.points || 0),
+          playerPoints: state.playerPoints - (targetCard.points || 0),
+          pendingEffect: null,
+          message: `You gave your ${targetCard.name} to the AI.`,
+        }
+      }
+      break
+
+    case "epidemic":
+      if (forPlayer) {
+        // Player selecting an animal from their field
+        const targetCard = state.playerField[targetIndex as number]
+        if (!targetCard || targetCard.type !== "animal") return state
+
+        // Find all animals of the same environment with more points
+        const environment = targetCard.environment
+        const points = targetCard.points || 0
+
+        // Get all animals of the same environment with more points from both fields
+        const playerAnimalsToRemove = state.playerField.filter(
+          (c) => c.environment === environment && (c.points || 0) > points,
+        )
+        const opponentAnimalsToRemove = state.opponentField.filter(
+          (c) => c.environment === environment && (c.points || 0) > points,
+        )
+
+        // Create new fields without the removed animals
+        const newPlayerField = state.playerField.filter(
+          (c) => c.environment !== environment || (c.points || 0) <= points || c.id === targetCard.id,
+        )
+        const newOpponentField = state.opponentField.filter(
+          (c) => c.environment !== environment || (c.points || 0) <= points,
+        )
+
+        // Calculate point changes
+        const playerPointsChange = state.playerField
+          .filter((c) => !newPlayerField.includes(c))
+          .reduce((sum, card) => sum + (card.points || 0), 0)
+        const opponentPointsChange = state.opponentField
+          .filter((c) => !newOpponentField.includes(c))
+          .reduce((sum, card) => sum + (card.points || 0), 0)
+
+        // Add all removed animals to the bottom of the deck
+        const cardsToBottom = [...playerAnimalsToRemove, ...opponentAnimalsToRemove]
+
+        return {
+          ...state,
+          playerField: newPlayerField,
+          opponentField: newOpponentField,
+          playerPoints: state.playerPoints - playerPointsChange,
+          opponentPoints: state.opponentPoints - opponentPointsChange,
+          sharedDeck: [...state.sharedDeck, ...cardsToBottom],
+          pendingEffect: null,
+          message: `You sent all ${environment} animals with more than ${points} points to the bottom of the deck.`,
+        }
+      }
+      break
+
+    case "compete":
+      if (forPlayer) {
+        // Player selecting an animal from their hand
+        const targetCard = state.playerHand[targetIndex as number]
+        if (!targetCard || targetCard.type !== "animal") return state
+
+        // Find all animals with the same points in both hands
+        const points = targetCard.points || 0
+
+        // Get all animals with the same points from both hands
+        const playerHandAnimalsToRemove = state.playerHand.filter(
+          (c) => c.type === "animal" && (c.points || 0) === points && c.id !== targetCard.id,
+        )
+        const opponentHandAnimalsToRemove = state.opponentHand.filter(
+          (c) => c.type === "animal" && (c.points || 0) === points,
+        )
+
+        // Create new hands without the removed animals
+        const newPlayerHand = state.playerHand.filter(
+          (c) => c.id === targetCard.id || c.type !== "animal" || (c.points || 0) !== points,
+        )
+        const newOpponentHand = state.opponentHand.filter((c) => c.type !== "animal" || (c.points || 0) !== points)
+
+        // Remove the selected card from player's hand
+        const finalPlayerHand = newPlayerHand.filter((c) => c.id !== targetCard.id)
+
+        // Add all removed animals to the bottom of the deck
+        const cardsToBottom = [targetCard, ...playerHandAnimalsToRemove, ...opponentHandAnimalsToRemove]
+
+        return {
+          ...state,
+          playerHand: finalPlayerHand,
+          opponentHand: newOpponentHand,
+          sharedDeck: [...state.sharedDeck, ...cardsToBottom],
+          pendingEffect: null,
+          message: `You sent ${targetCard.name} and all ${points}-point animals to the bottom of the deck.`,
+        }
+      }
+      break
+
+    case "prey":
+      if (forPlayer) {
+        // Player selecting an animal from their field
+        const targetCard = state.playerField[targetIndex as number]
+        if (!targetCard || targetCard.type !== "animal") return state
+
+        // Find all animals of the same environment with fewer points
+        const environment = targetCard.environment
+        const points = targetCard.points || 0
+
+        // Get all animals of the same environment with fewer points from both fields
+        const playerAnimalsToRemove = state.playerField.filter(
+          (c) => c.environment === environment && (c.points || 0) < points,
+        )
+        const opponentAnimalsToRemove = state.opponentField.filter(
+          (c) => c.environment === environment && (c.points || 0) < points,
+        )
+
+        // Create new fields without the removed animals
+        const newPlayerField = state.playerField.filter(
+          (c) => c.environment !== environment || (c.points || 0) >= points,
+        )
+        const newOpponentField = state.opponentField.filter(
+          (c) => c.environment !== environment || (c.points || 0) >= points,
+        )
+
+        // Calculate point changes
+        const playerPointsChange = state.playerField
+          .filter((c) => !newPlayerField.includes(c))
+          .reduce((sum, card) => sum + (card.points || 0), 0)
+        const opponentPointsChange = state.opponentField
+          .filter((c) => !newOpponentField.includes(c))
+          .reduce((sum, card) => sum + (card.points || 0), 0)
+
+        // Add all removed animals to the bottom of the deck
+        const cardsToBottom = [...playerAnimalsToRemove, ...opponentAnimalsToRemove]
+
+        return {
+          ...state,
+          playerField: newPlayerField,
+          opponentField: newOpponentField,
+          playerPoints: state.playerPoints - playerPointsChange,
+          opponentPoints: state.opponentPoints - opponentPointsChange,
+          sharedDeck: [...state.sharedDeck, ...cardsToBottom],
+          pendingEffect: null,
+          message: `You sent all ${environment} animals with fewer than ${points} points to the bottom of the deck.`,
+        }
+      }
+      break
+
+    case "cage":
+      if (forPlayer) {
+        if (!state.pendingEffect.firstSelection) {
+          // First selection: player selecting an animal from their field to discard
+          const targetCard = state.playerField[targetIndex as number]
+          if (!targetCard) return state
+
+          const newPlayerField = [...state.playerField]
+          newPlayerField.splice(targetIndex as number, 1)
+
+          return {
+            ...state,
+            playerField: newPlayerField,
+            playerPoints: state.playerPoints - (targetCard.points || 0),
+            sharedDiscard: [...state.sharedDiscard, targetCard],
+            pendingEffect: {
+              ...state.pendingEffect,
+              firstSelection: targetIndex,
+            },
+            message: `You sent ${targetCard.name} to the discard pile. Now select an opponent's animal to gain control of.`,
+          }
+        } else {
+          // Second selection: player selecting an opponent's animal to gain control of
+          const targetCard = state.opponentField[targetIndex as number]
+          if (!targetCard) return state
+
+          const newOpponentField = [...state.opponentField]
+          newOpponentField.splice(targetIndex as number, 1)
+
+          return {
+            ...state,
+            playerField: [...state.playerField, targetCard],
+            opponentField: newOpponentField,
+            playerPoints: state.playerPoints + (targetCard.points || 0),
+            opponentPoints: state.opponentPoints - (targetCard.points || 0),
+            pendingEffect: null,
+            message: `You gained control of the opponent's ${targetCard.name}.`,
+          }
+        }
+      }
+      break
+
+    case "payCost":
+      if (forPlayer) {
+        // Process sacrifice or return to hand
+        const selectedCardIndex = state.pendingEffect.selectedCard
+        const costType = state.pendingEffect.costType
+        const targetCardId = state.pendingEffect.targetCardId
+
+        // Find the card to be played from player's hand
+        const cardToPlay = state.playerHand.find((c) => c.id === targetCardId)
+        if (!cardToPlay) return state
+
+        // Find the index of the card to play
+        const cardToPlayIndex = state.playerHand.findIndex((c) => c.id === targetCardId)
+
+        // Get the animal being sacrificed
+        const sacrificedAnimal = state.playerField[targetIndex as number]
+
+        // Create a new player field with the sacrificed animal removed
+        const newPlayerField = [...state.playerField]
+        newPlayerField.splice(targetIndex as number, 1)
+
+        // Create a new player hand with the played card removed
+        const newPlayerHand = [...state.playerHand]
+        newPlayerHand.splice(cardToPlayIndex, 1)
+
+        // Temporarily update points
+        const newPlayerPoints = newPlayerField.reduce((sum, card) => sum + (card.points || 0), 0)
+
+        // Create a temporary new state
+        let tempState = {
+          ...state,
+          playerField: newPlayerField,
+          playerHand: newPlayerHand,
+          playerPoints: newPlayerPoints,
+          pendingEffect: null,
+        }
+
+        if (costType === "return") {
+          // For Crocodile, return the animal to hand
+          tempState.playerHand.push(sacrificedAnimal)
+          tempState.message = `You returned ${sacrificedAnimal.name} to your hand and played ${cardToPlay.name}.`
+        } else {
+          // For Lion and Shark, send to discard
+          tempState.sharedDiscard = [...state.sharedDiscard, sacrificedAnimal]
+          tempState.message = `You sacrificed ${sacrificedAnimal.name} to play ${cardToPlay.name}.`
+        }
+
+        // Now add the played card to the field
+        tempState.playerField = [...tempState.playerField, cardToPlay]
+        tempState.playerPoints = tempState.playerField.reduce((sum, card) => sum + (card.points || 0), 0)
+
+        // Apply the card's effect
+        if (cardToPlay.type === "animal" && cardToPlay.effect) {
+          tempState = applyAnimalEffect(tempState, cardToPlay, true)
+        }
+
+        return tempState
+      }
+      break
+
     default:
       return {
         ...state,

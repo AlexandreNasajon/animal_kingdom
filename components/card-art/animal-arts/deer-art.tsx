@@ -1,33 +1,42 @@
-import { WatercolorBackground } from "../watercolor-utils"
+"use client"
 
 export function DeerArt() {
   return (
-    <div className="relative h-full w-full overflow-hidden">
-      <WatercolorBackground baseColor="#8B4513" />
+    <div className="relative w-full h-full overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-b from-green-700/30 to-green-900/50" />
 
-      {/* Forest background */}
-      <div className="absolute bottom-0 left-0 h-1/4 w-full bg-green-800"></div>
+      {/* Ground */}
+      <div className="absolute bottom-0 left-0 right-0 h-3 bg-green-800" />
 
-      {/* Deer body */}
-      <div className="absolute bottom-1/4 left-1/2 h-1/3 w-1/2 -translate-x-1/2 rounded-t-lg bg-amber-300"></div>
+      {/* Deer Body */}
+      <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 w-14 h-8 rounded-full bg-amber-400" />
 
-      {/* Deer head */}
-      <div className="absolute bottom-[55%] left-[40%] h-1/5 w-1/5 -translate-x-1/2 rounded-lg bg-amber-300 transform -rotate-12"></div>
+      {/* Deer Neck */}
+      <div className="absolute bottom-8 left-[40%] w-3 h-8 bg-amber-400 transform rotate-[30deg]" />
 
-      {/* Deer legs */}
-      <div className="absolute bottom-0 left-[40%] h-1/4 w-1/20 -translate-x-1/2 bg-amber-400"></div>
-      <div className="absolute bottom-0 left-[45%] h-1/4 w-1/20 -translate-x-1/2 bg-amber-400"></div>
-      <div className="absolute bottom-0 left-[55%] h-1/4 w-1/20 -translate-x-1/2 bg-amber-400"></div>
-      <div className="absolute bottom-0 left-[60%] h-1/4 w-1/20 -translate-x-1/2 bg-amber-400"></div>
+      {/* Deer Head */}
+      <div className="absolute bottom-14 left-[35%] w-5 h-4 rounded-full bg-amber-500">
+        {/* Eye */}
+        <div className="absolute top-1 right-1 w-1 h-1 rounded-full bg-black" />
 
-      {/* Deer antlers */}
-      <div className="absolute bottom-[65%] left-[38%] h-1/6 w-1/20 -translate-x-1/2 bg-amber-700 transform -rotate-30"></div>
-      <div className="absolute bottom-[65%] left-[42%] h-1/6 w-1/20 -translate-x-1/2 bg-amber-700 transform rotate-30"></div>
+        {/* Ear */}
+        <div className="absolute -top-2 right-1 w-2 h-3 rounded-t-full bg-amber-400" />
 
-      {/* Deer spots */}
-      <div className="absolute bottom-[35%] left-[40%] h-1/16 w-1/16 -translate-x-1/2 rounded-full bg-white"></div>
-      <div className="absolute bottom-[40%] left-[50%] h-1/16 w-1/16 -translate-x-1/2 rounded-full bg-white"></div>
-      <div className="absolute bottom-[30%] left-[60%] h-1/16 w-1/16 -translate-x-1/2 rounded-full bg-white"></div>
+        {/* Muzzle */}
+        <div className="absolute top-2 left-0 w-3 h-2 rounded-full bg-amber-600" />
+      </div>
+
+      {/* Antlers */}
+      <div className="absolute bottom-16 left-[35%] w-1 h-4 bg-amber-800 transform rotate-[-20deg]" />
+      <div className="absolute bottom-18 left-[34%] w-3 h-1 bg-amber-800 transform rotate-[-20deg]" />
+      <div className="absolute bottom-16 left-[37%] w-1 h-4 bg-amber-800 transform rotate-[20deg]" />
+      <div className="absolute bottom-18 left-[37%] w-3 h-1 bg-amber-800 transform rotate-[20deg]" />
+
+      {/* Legs */}
+      <div className="absolute bottom-0 left-[40%] w-1 h-5 bg-amber-500" />
+      <div className="absolute bottom-0 left-[45%] w-1 h-4 bg-amber-500" />
+      <div className="absolute bottom-0 left-[55%] w-1 h-5 bg-amber-500" />
+      <div className="absolute bottom-0 left-[60%] w-1 h-4 bg-amber-500" />
     </div>
   )
 }

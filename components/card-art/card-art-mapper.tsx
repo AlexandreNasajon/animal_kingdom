@@ -24,6 +24,17 @@ import { MouseArt } from "./animal-arts/mouse-art"
 import { OctopusArt } from "./animal-arts/octopus-art"
 import { SnakeArt } from "./animal-arts/snake-art"
 import { CrocodileArt } from "./animal-arts/crocodile-art"
+import { SquirrelArt } from "./animal-arts/squirrel-art"
+import { FoxArt } from "./animal-arts/fox-art"
+import { ZebraArt } from "./animal-arts/zebra-art"
+import { DeerArt } from "./animal-arts/deer-art"
+import { WolfArt } from "./animal-arts/wolf-art"
+import { TunaArt } from "./animal-arts/tuna-art"
+import { SeahorseArt } from "./animal-arts/seahorse-art"
+import { JellyfishArt } from "./animal-arts/jellyfish-art"
+import { TurtleArt } from "./animal-arts/turtle-art"
+import { StingrayArt } from "./animal-arts/stingray-art"
+import { SharkArt } from "./animal-arts/shark-art"
 
 export function getCardArt(card: GameCard) {
   // Handle undefined or null card
@@ -82,22 +93,22 @@ export function getCardArt(card: GameCard) {
     return <MouseArt />
   }
   if (card.name === "Squirrel") {
-    return <TerrestrialArt />
+    return <SquirrelArt />
   }
   if (card.name === "Fox") {
-    return <TerrestrialArt />
+    return <FoxArt />
   }
   if (card.name === "Snake") {
     return <SnakeArt />
   }
   if (card.name === "Zebra") {
-    return <TerrestrialArt />
+    return <ZebraArt />
   }
   if (card.name === "Deer") {
-    return <TerrestrialArt />
+    return <DeerArt />
   }
   if (card.name === "Wolf") {
-    return <TerrestrialArt />
+    return <WolfArt />
   }
   if (card.name === "Lion") {
     return <LionArt />
@@ -105,16 +116,16 @@ export function getCardArt(card: GameCard) {
 
   // Animal cards - Aquatic
   if (card.name === "Tuna") {
-    return <AquaticArt />
+    return <TunaArt />
   }
   if (card.name === "Seahorse") {
-    return <AquaticArt />
+    return <SeahorseArt />
   }
   if (card.name === "Jellyfish") {
-    return <AquaticArt />
+    return <JellyfishArt />
   }
   if (card.name === "Turtle") {
-    return <AquaticArt />
+    return <TurtleArt />
   }
   if (card.name === "Dolphin") {
     return <DolphinArt />
@@ -123,10 +134,10 @@ export function getCardArt(card: GameCard) {
     return <OctopusArt />
   }
   if (card.name === "Stingray") {
-    return <AquaticArt />
+    return <StingrayArt />
   }
   if (card.name === "Shark") {
-    return <AquaticArt />
+    return <SharkArt />
   }
 
   // Animal cards - Amphibian

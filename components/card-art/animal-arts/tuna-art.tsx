@@ -1,33 +1,38 @@
-import { WatercolorBackground } from "../watercolor-utils"
+"use client"
 
 export function TunaArt() {
   return (
-    <div className="relative h-full w-full overflow-hidden">
-      <WatercolorBackground baseColor="#0077BE" />
+    <div className="relative w-full h-full overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-b from-blue-700/30 to-blue-900/50" />
 
-      {/* Ocean background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-blue-500 to-blue-900 opacity-50"></div>
+      {/* Water */}
+      <div className="absolute inset-0 bg-blue-800/30" />
 
-      {/* Tuna body */}
-      <div className="absolute top-1/2 left-1/2 h-1/4 w-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-300"></div>
+      {/* Tuna Body */}
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-14 h-8 rounded-full bg-silver-400">
+        {/* Tuna Stripes */}
+        <div className="absolute top-2 left-3 w-8 h-0.5 bg-blue-900" />
+        <div className="absolute top-3 left-3 w-8 h-0.5 bg-blue-900" />
+        <div className="absolute top-4 left-3 w-8 h-0.5 bg-blue-900" />
+        <div className="absolute top-5 left-3 w-8 h-0.5 bg-blue-900" />
 
-      {/* Tuna tail */}
-      <div className="absolute top-1/2 left-[75%] h-1/6 w-1/6 -translate-x-1/2 -translate-y-1/2 bg-blue-300">
-        <div className="absolute top-0 left-1/2 h-full w-full -translate-x-1/2 transform origin-left rotate-45 bg-blue-300"></div>
-        <div className="absolute bottom-0 left-1/2 h-full w-full -translate-x-1/2 transform origin-left -rotate-45 bg-blue-300"></div>
+        {/* Eye */}
+        <div className="absolute top-3 left-2 w-1.5 h-1.5 rounded-full bg-white">
+          <div className="absolute top-0.25 left-0.25 w-1 h-1 rounded-full bg-black" />
+        </div>
+
+        {/* Tail */}
+        <div className="absolute top-1 right-0 w-4 h-6 bg-silver-400 clip-path-triangle" />
+
+        {/* Fins */}
+        <div className="absolute top-0 left-1/2 w-4 h-2 bg-silver-400 transform -translate-x-1/2 rotate-[-10deg]" />
+        <div className="absolute bottom-0 left-1/2 w-4 h-2 bg-silver-400 transform -translate-x-1/2 rotate-[10deg]" />
       </div>
 
-      {/* Tuna fins */}
-      <div className="absolute top-[40%] left-[40%] h-1/12 w-1/12 -translate-x-1/2 transform -rotate-30 bg-blue-300"></div>
-      <div className="absolute top-[60%] left-[40%] h-1/12 w-1/12 -translate-x-1/2 transform rotate-30 bg-blue-300"></div>
-
-      {/* Tuna eye */}
-      <div className="absolute top-1/2 left-[35%] h-1/16 w-1/16 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white"></div>
-      <div className="absolute top-1/2 left-[35%] h-1/32 w-1/32 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black"></div>
-
-      {/* Tuna stripes */}
-      <div className="absolute top-[45%] left-1/2 h-1/24 w-1/3 -translate-x-1/2 bg-blue-400"></div>
-      <div className="absolute top-[55%] left-1/2 h-1/24 w-1/3 -translate-x-1/2 bg-blue-400"></div>
+      {/* Bubbles */}
+      <div className="absolute top-2 right-4 w-1 h-1 rounded-full bg-white/70" />
+      <div className="absolute top-4 right-6 w-1.5 h-1.5 rounded-full bg-white/70" />
+      <div className="absolute top-6 right-3 w-1 h-1 rounded-full bg-white/70" />
     </div>
   )
 }

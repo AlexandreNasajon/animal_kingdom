@@ -187,13 +187,16 @@ export function applyAnimalEffect(state: GameState, card: GameCard, forPlayer: b
         }
       } else if (!forPlayer && state.playerHand.length > 0) {
         // AI makes player discard a card
+        const randomIndex = Math.floor(Math.random() * state.playerHand.length)
+        const discardedCard = state.playerHand[randomIndex]
+        const newPlayerHand = [...state.playerHand]
+        newPlayerHand.splice(randomIndex, 1)
+
         newState = {
           ...newState,
-          pendingEffect: {
-            type: "deer",
-            forPlayer,
-          },
-          message: `AI played ${card.name}. Since it has 7+ points, select a card to discard.`,
+          playerHand: newPlayerHand,
+          sharedDiscard: [...state.sharedDiscard, discardedCard],
+          message: `AI played ${card.name}. Since it has 7+ points, you discarded ${discardedCard.name}.`,
         }
       }
     } else {
@@ -242,10 +245,12 @@ export function applyAnimalEffect(state: GameState, card: GameCard, forPlayer: b
       let message = `You played ${card.name}.`
       const newOpponentHand = [...state.opponentHand]
       const discardCount = Math.min(2, newOpponentHand.length)
+      const discardedCards: GameCard[] = []
 
       for (let i = 0; i < discardCount; i++) {
         const randomIndex = Math.floor(Math.random() * newOpponentHand.length)
         const discardedCard = newOpponentHand[randomIndex]
+        discardedCards.push(discardedCard)
         newOpponentHand.splice(randomIndex, 1)
         newState.sharedDiscard = [...newState.sharedDiscard, discardedCard]
       }
@@ -316,6 +321,11 @@ export function applyAnimalEffect(state: GameState, card: GameCard, forPlayer: b
         opponentField: [...state.opponentField, bestAquatic],
         opponentPoints: state.opponentPoints + (bestAquatic.points || 0),
         message: `AI played ${card.name} and played ${bestAquatic.name} from hand.`,
+      }
+
+      // Apply the effect of the played aquatic animal
+      if (bestAquatic.effect) {
+        newState = applyAnimalEffect(newState, bestAquatic, false)
       }
     }
   }
@@ -420,6 +430,11 @@ export function applyAnimalEffect(state: GameState, card: GameCard, forPlayer: b
         opponentField: [...state.opponentField, bestAnimal],
         opponentPoints: state.opponentPoints + (bestAnimal.points || 0),
         message: `AI played ${card.name} and played ${bestAnimal.name} from hand.`,
+      }
+
+      // Apply the effect of the played aquatic animal
+      if (bestAnimal.effect) {
+        newState = applyAnimalEffect(newState, bestAnimal, false)
       }
     }
   }
@@ -854,7 +869,8 @@ export function resolveAnimalEffect(state: GameState, targetIndex: number | numb
         const newPlayerHand = [...state.playerHand]
         newPlayerHand.splice(targetIndex as number, 1)
 
-        return {
+        // First add the card to the field
+        let tempState = {
           ...state,
           playerHand: newPlayerHand,
           playerField: [...state.playerField, targetCard],
@@ -862,6 +878,13 @@ export function resolveAnimalEffect(state: GameState, targetIndex: number | numb
           pendingEffect: null,
           message: `You played ${targetCard.name} from your hand.`,
         }
+
+        // Then apply the card's effect if it has one
+        if (targetCard.effect) {
+          tempState = applyAnimalEffect(tempState, targetCard, true)
+        }
+
+        return tempState
       }
       break
 
@@ -880,7 +903,8 @@ export function resolveAnimalEffect(state: GameState, targetIndex: number | numb
         const newPlayerHand = [...state.playerHand]
         newPlayerHand.splice(targetIndex as number, 1)
 
-        return {
+        // First add the card to the field
+        let tempState = {
           ...state,
           playerHand: newPlayerHand,
           playerField: [...state.playerField, targetCard],
@@ -888,6 +912,13 @@ export function resolveAnimalEffect(state: GameState, targetIndex: number | numb
           pendingEffect: null,
           message: `You played ${targetCard.name} from your hand.`,
         }
+
+        // Then apply the card's effect if it has one
+        if (targetCard.effect) {
+          tempState = applyAnimalEffect(tempState, targetCard, true)
+        }
+
+        return tempState
       }
       break
 

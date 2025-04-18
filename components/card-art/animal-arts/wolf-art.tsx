@@ -1,33 +1,46 @@
-import { WatercolorBackground } from "../watercolor-utils"
+"use client"
 
 export function WolfArt() {
   return (
-    <div className="relative h-full w-full overflow-hidden">
-      <WatercolorBackground baseColor="#2C3E50" />
+    <div className="relative w-full h-full overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-b from-gray-700/30 to-gray-900/50" />
 
-      {/* Night sky */}
-      <div className="absolute top-0 left-0 h-3/4 w-full bg-gradient-to-b from-indigo-900 to-blue-900"></div>
+      {/* Night Sky */}
+      <div className="absolute top-0 left-0 right-0 h-10 bg-indigo-900">
+        {/* Moon */}
+        <div className="absolute top-2 right-4 w-4 h-4 rounded-full bg-yellow-100" />
+        {/* Stars */}
+        <div className="absolute top-1 left-2 w-0.5 h-0.5 rounded-full bg-white" />
+        <div className="absolute top-3 left-6 w-0.5 h-0.5 rounded-full bg-white" />
+        <div className="absolute top-5 left-4 w-0.5 h-0.5 rounded-full bg-white" />
+      </div>
 
-      {/* Moon */}
-      <div className="absolute top-1/6 right-1/6 h-1/6 w-1/6 rounded-full bg-yellow-100"></div>
+      {/* Ground */}
+      <div className="absolute bottom-0 left-0 right-0 h-4 bg-gray-800" />
 
-      {/* Wolf body */}
-      <div className="absolute bottom-1/6 left-1/2 h-1/3 w-2/5 -translate-x-1/2 rounded-lg bg-gray-700"></div>
+      {/* Wolf Body */}
+      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-12 h-8 rounded-full bg-gray-600" />
 
-      {/* Wolf head */}
-      <div className="absolute bottom-[45%] left-[40%] h-1/5 w-1/5 -translate-x-1/2 rounded-lg bg-gray-700"></div>
+      {/* Wolf Head */}
+      <div className="absolute bottom-10 left-[40%] w-8 h-6 rounded-full bg-gray-700">
+        {/* Ears */}
+        <div className="absolute -top-2 left-1 w-2 h-3 rounded-t-full bg-gray-700 transform rotate-[-10deg]" />
+        <div className="absolute -top-2 right-1 w-2 h-3 rounded-t-full bg-gray-700 transform rotate-[10deg]" />
 
-      {/* Wolf ears */}
-      <div className="absolute bottom-[55%] left-[38%] h-1/12 w-1/16 -translate-x-1/2 rounded-sm bg-gray-700 transform -rotate-12"></div>
-      <div className="absolute bottom-[55%] left-[42%] h-1/12 w-1/16 -translate-x-1/2 rounded-sm bg-gray-700 transform rotate-12"></div>
+        {/* Eyes */}
+        <div className="absolute top-2 left-1.5 w-1 h-1 rounded-full bg-yellow-500" />
+        <div className="absolute top-2 right-1.5 w-1 h-1 rounded-full bg-yellow-500" />
 
-      {/* Wolf tail */}
-      <div className="absolute bottom-1/4 left-[65%] h-1/6 w-1/5 -translate-x-1/2 rounded-lg bg-gray-700 transform rotate-30"></div>
+        {/* Snout */}
+        <div className="absolute top-3 left-1/2 transform -translate-x-1/2 w-4 h-3 rounded-full bg-gray-800" />
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 w-2 h-1 rounded-full bg-black" />
+      </div>
 
-      {/* Wolf howling */}
-      <div className="absolute bottom-[60%] left-[40%] h-1/12 w-1/24 -translate-x-1/2 rounded-full bg-white opacity-70"></div>
-      <div className="absolute bottom-[65%] left-[40%] h-1/12 w-1/20 -translate-x-1/2 rounded-full bg-white opacity-50"></div>
-      <div className="absolute bottom-[70%] left-[40%] h-1/12 w-1/16 -translate-x-1/2 rounded-full bg-white opacity-30"></div>
+      {/* Tail */}
+      <div className="absolute bottom-6 right-2 w-6 h-3 rounded-full bg-gray-600 transform rotate-[-20deg]" />
+
+      {/* Howling Pose */}
+      <div className="absolute bottom-12 left-[42%] w-1 h-3 bg-gray-700 transform rotate-[-10deg]" />
     </div>
   )
 }

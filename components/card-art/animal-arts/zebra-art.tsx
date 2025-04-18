@@ -1,36 +1,46 @@
-import { WatercolorBackground } from "../watercolor-utils"
+"use client"
 
 export function ZebraArt() {
   return (
-    <div className="relative h-full w-full overflow-hidden">
-      <WatercolorBackground baseColor="#D4D4D8" />
+    <div className="relative w-full h-full overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-b from-yellow-600/30 to-yellow-800/50" />
 
-      {/* Savanna background */}
-      <div className="absolute bottom-0 left-0 h-1/4 w-full bg-amber-300"></div>
+      {/* Ground */}
+      <div className="absolute bottom-0 left-0 right-0 h-3 bg-yellow-900" />
 
-      {/* Zebra body */}
-      <div className="absolute bottom-1/4 left-1/2 h-1/3 w-1/2 -translate-x-1/2 rounded-t-lg bg-white"></div>
+      {/* Zebra Body */}
+      <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 w-14 h-10 rounded-full bg-white" />
 
-      {/* Zebra head */}
-      <div className="absolute bottom-[55%] left-[40%] h-1/4 w-1/4 -translate-x-1/2 rounded-lg bg-white transform -rotate-12"></div>
+      {/* Zebra Stripes on Body */}
+      <div className="absolute bottom-3 left-[40%] w-1.5 h-10 bg-black" />
+      <div className="absolute bottom-3 left-[50%] w-1.5 h-10 bg-black" />
+      <div className="absolute bottom-3 left-[60%] w-1.5 h-10 bg-black" />
 
-      {/* Zebra legs */}
-      <div className="absolute bottom-0 left-[40%] h-1/4 w-1/16 -translate-x-1/2 bg-white"></div>
-      <div className="absolute bottom-0 left-[45%] h-1/4 w-1/16 -translate-x-1/2 bg-white"></div>
-      <div className="absolute bottom-0 left-[55%] h-1/4 w-1/16 -translate-x-1/2 bg-white"></div>
-      <div className="absolute bottom-0 left-[60%] h-1/4 w-1/16 -translate-x-1/2 bg-white"></div>
+      {/* Zebra Neck */}
+      <div className="absolute bottom-10 left-[35%] w-4 h-10 bg-white transform rotate-[30deg]" />
 
-      {/* Zebra stripes - body */}
-      <div className="absolute bottom-[30%] left-[40%] h-1/16 w-1/2 -translate-x-1/2 bg-black"></div>
-      <div className="absolute bottom-[35%] left-[40%] h-1/16 w-1/2 -translate-x-1/2 bg-black"></div>
-      <div className="absolute bottom-[40%] left-[40%] h-1/16 w-1/2 -translate-x-1/2 bg-black"></div>
+      {/* Zebra Stripes on Neck */}
+      <div className="absolute bottom-10 left-[36%] w-0.75 h-10 bg-black transform rotate-[30deg]" />
+      <div className="absolute bottom-10 left-[38%] w-0.75 h-10 bg-black transform rotate-[30deg]" />
 
-      {/* Zebra stripes - head */}
-      <div className="absolute bottom-[60%] left-[40%] h-1/24 w-1/4 -translate-x-1/2 bg-black"></div>
-      <div className="absolute bottom-[65%] left-[40%] h-1/24 w-1/4 -translate-x-1/2 bg-black"></div>
+      {/* Zebra Head */}
+      <div className="absolute bottom-18 left-[30%] w-6 h-4 bg-white transform rotate-[10deg]">
+        {/* Ears */}
+        <div className="absolute -top-2 left-0 w-2 h-2.5 rounded-t-full bg-white" />
+        <div className="absolute -top-2 left-3 w-2 h-2.5 rounded-t-full bg-white" />
 
-      {/* Zebra mane */}
-      <div className="absolute bottom-[70%] left-[40%] h-1/12 w-1/8 -translate-x-1/2 bg-black"></div>
+        {/* Eye */}
+        <div className="absolute top-1 left-1 w-1 h-1 rounded-full bg-black" />
+
+        {/* Muzzle */}
+        <div className="absolute top-1 left-3 w-4 h-2 rounded-full bg-white transform rotate-[10deg]" />
+      </div>
+
+      {/* Legs */}
+      <div className="absolute bottom-0 left-[40%] w-1.5 h-5 bg-white" />
+      <div className="absolute bottom-0 left-[45%] w-1.5 h-4 bg-white" />
+      <div className="absolute bottom-0 left-[55%] w-1.5 h-5 bg-white" />
+      <div className="absolute bottom-0 left-[60%] w-1.5 h-4 bg-white" />
     </div>
   )
 }
