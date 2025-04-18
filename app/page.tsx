@@ -2,10 +2,21 @@
 
 import Link from "next/link"
 import "@/app/menu-styles.css"
-import { Play, Book, Images, Award } from "lucide-react"
+import { Play, Book, Images, Award, User, LogOut } from "lucide-react"
 import { MenuBackgroundAnimation } from "@/components/menu-background-animation"
+import { useAuth } from "@/contexts/auth-context"
+import { useState } from "react"
 
 export default function HomePage() {
+  const { user, signOut } = useAuth()
+  const [isSigningOut, setIsSigningOut] = useState(false)
+
+  const handleSignOut = async () => {
+    setIsSigningOut(true)
+    await signOut()
+    setIsSigningOut(false)
+  }
+
   return (
     <div className="bioquest-bg">
       <MenuBackgroundAnimation />
@@ -38,6 +49,32 @@ export default function HomePage() {
             </button>
           </Link>
         </div>
+
+        {user ? (
+          <div className="w-full flex gap-3">
+            <div className="w-1/2 text-center py-2 px-3 bg-green-800/30 border border-green-600 rounded-md">
+              <p className="text-green-300 text-sm truncate">
+                <User className="h-3 w-3 inline-block mr-1" />
+                {user.username}
+              </p>
+            </div>
+            <button
+              onClick={handleSignOut}
+              disabled={isSigningOut}
+              className="w-1/2 menu-button small-button flex items-center justify-center gap-1"
+            >
+              <LogOut className="h-3 w-3" />
+              {isSigningOut ? "Signing Out..." : "Sign Out"}
+            </button>
+          </div>
+        ) : (
+          <Link href="/auth/sign-in" className="w-full">
+            <button className="menu-button small-button w-full flex items-center justify-center gap-1 sm:gap-2">
+              <User className="h-3 w-3 sm:h-4 sm:w-4" />
+              Sign In
+            </button>
+          </Link>
+        )}
 
         <Link href="/credits" className="w-full">
           <button className="menu-button small-button w-full flex items-center justify-center gap-1 sm:gap-2">

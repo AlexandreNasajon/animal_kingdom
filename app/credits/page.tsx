@@ -5,8 +5,8 @@ import { ArrowLeft } from "lucide-react"
 
 export default function Credits() {
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-b from-green-800 to-green-950 p-4 text-white">
-      <div className="container mx-auto max-w-3xl">
+    <div className="min-h-screen h-full bg-gradient-to-b from-green-800 to-green-950 p-4 text-white overflow-auto">
+      <div className="container mx-auto max-w-3xl pb-8">
         <div className="mb-4 flex items-center">
           <Link href="/">
             <Button variant="outline" size="sm" className="flex items-center gap-1 text-green-300">
@@ -19,13 +19,13 @@ export default function Credits() {
           <CardHeader className="pb-2">
             <CardTitle className="text-2xl text-white">Credits</CardTitle>
           </CardHeader>
-          <CardContent className="prose prose-invert max-w-none p-4 text-green-100">
+          <CardContent className="prose prose-invert max-w-none p-4 text-green-100 max-h-[calc(100vh-200px)] overflow-y-auto">
             <h2 className="text-xl mt-0">Game Design & Development</h2>
             <p>
               <strong>Alexandre Nasajon</strong> - Lead Game Designer & Developer
             </p>
             <p>
-              Bioquest was designed as an educational card game to teach players about ecosystems, animal habitats, and
+              BioDuel was designed as an educational card game to teach players about ecosystems, animal habitats, and
               environmental impacts.
             </p>
 

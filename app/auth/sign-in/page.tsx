@@ -2,9 +2,13 @@
 
 import { useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import Link from "next/link"
 import { SignInForm } from "@/components/auth/sign-in-form"
 import { useAuth } from "@/contexts/auth-context"
 import { GameService } from "@/services/game-service"
+import { Button } from "@/components/ui/button"
+import { ArrowLeft } from "lucide-react"
+import { MenuBackgroundAnimation } from "@/components/menu-background-animation"
 
 export default function SignInPage() {
   const router = useRouter()
@@ -65,10 +69,25 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-md">
-      <div className="bg-black/50 p-6 rounded-lg border border-green-600 shadow-lg">
-        <h1 className="text-2xl font-bold text-green-400 mb-6 text-center">Sign In</h1>
-        <SignInForm onSuccess={handleSuccess} />
+    <div className="min-h-screen flex items-center justify-center p-4 bioquest-bg">
+      <MenuBackgroundAnimation />
+      <div className="z-10 w-full max-w-md">
+        <div className="mb-8 text-center">
+          <h1 className="text-4xl font-bold text-white mb-2 embossed-title">BioDuel</h1>
+          <p className="text-green-300">Sign in to play online</p>
+        </div>
+        <div className="bg-black/50 p-6 rounded-lg border border-green-600 shadow-lg">
+          <SignInForm onSuccess={handleSuccess} />
+        </div>
+
+        <div className="mt-6 text-center">
+          <Link href="/">
+            <Button variant="outline" className="bg-green-800/50 border-green-600 hover:bg-green-700 text-white">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Return to Main Menu
+            </Button>
+          </Link>
+        </div>
       </div>
     </div>
   )

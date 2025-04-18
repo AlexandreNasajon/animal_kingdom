@@ -45,6 +45,11 @@ import { DiscardPileGallery } from "@/components/discard-pile-gallery"
 import { createCardToDiscardAnimation } from "@/utils/animation-utils"
 import { createCardToDeckAnimation } from "@/utils/animation-utils"
 
+// Import the OpponentHandReveal component
+// Add this import near the top of the file with the other imports
+import { OpponentHandReveal } from "@/components/opponent-hand-reveal"
+import { resolveAnimalEffect } from "@/utils/game-effects"
+
 // Let's completely revise the AI card animation approach to make sure it falls onto the AI field.
 
 // 1. First, update the confettiAnimation with a much simpler animation approach:
@@ -148,6 +153,8 @@ const createParticles = (element: HTMLElement, color: string, count = 10) => {
 // Original Game Match Component
 function OriginalGameMatch() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const deckId = Number.parseInt(searchParams.get("deck") || "1")
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [showAlert, setShowAlert] = useState(false)
   const [alertMessage, setAlertMessage] = useState("")
@@ -224,6 +231,10 @@ function OriginalGameMatch() {
   // Add this ref after the other useRef declarations
   const deckPileRef = useRef<HTMLDivElement>(null)
 
+  // Add a new state for the opponent hand reveal modal
+  // Add this with the other state declarations
+  const [showOpponentHand, setShowOpponentHand] = useState(false)
+
   // First, add this effect to update the message whenever gameState changes
   useEffect(() => {
     if (gameState && gameState.message) {
@@ -254,10 +265,10 @@ function OriginalGameMatch() {
 
   // Initialize game
   useEffect(() => {
-    const newGame = initializeGame()
+    const newGame = initializeGame(deckId)
     setGameState(newGame)
     setLastGameMessage("Game started. Your turn.")
-  }, [])
+  }, [deckId])
 
   // AI turn logic
   useEffect(() => {
@@ -934,6 +945,54 @@ function OriginalGameMatch() {
         setShowTargetModal(true)
         // All cards are player's cards
         playerCardIndices = Array.from({ length: gameState.playerField.length }, (_, i) => i)
+        break
+
+      // Add this case in the switch statement that handles pendingEffect.type
+      case "octopus":
+        if (forPlayer) {
+          // Show the opponent's hand
+          setShowOpponentHand(true)
+        }
+        break
+
+      case "lion":
+        setTargetTitle("Select Target")
+        setTargetDescription("Select an animal to destroy.")
+        setTargetFilter(undefined)
+        setTargetCards(gameState.opponentField)
+        setShowTargetModal(true)
+        // All cards are opponent's cards
+        playerCardIndices = []
+        break
+
+      case "frog":
+        setTargetTitle("Select Animal")
+        setTargetDescription("Select an animal with 2 or fewer points to return to its owner's hand.")
+        setTargetFilter((card) => (card?.points || 0) <= 2)
+        setTargetCards([...gameState.playerField, ...gameState.opponentField])
+        setShowTargetModal(true)
+        // Mark player's cards
+        playerCardIndices = Array.from({ length: gameState.playerField.length }, (_, i) => i)
+        break
+
+      case "crocodile":
+        setTargetTitle("Select Animal")
+        setTargetDescription("Select an animal with 3 or fewer points to destroy.")
+        setTargetFilter((card) => (card?.points || 0) <= 3)
+        setTargetCards([...gameState.playerField, ...gameState.opponentField])
+        setShowTargetModal(true)
+        // Mark player's cards
+        playerCardIndices = Array.from({ length: gameState.playerField.length }, (_, i) => i)
+        break
+
+      case "dolphin":
+        setTargetTitle("Rearrange Cards")
+        setTargetDescription("Look at the top cards of the deck and rearrange them.")
+        setTargetFilter(undefined)
+        setTargetCards(gameState.sharedDeck.slice(0, Math.min(3, gameState.sharedDeck.length)))
+        setShowTargetModal(true)
+        // No player cards
+        playerCardIndices = []
         break
     }
 
@@ -1822,6 +1881,19 @@ function OriginalGameMatch() {
         onClose={() => setShowDiscardGallery(false)}
         cards={gameState.sharedDiscard}
       />
+      {/* Opponent Hand Reveal Modal */}
+      <OpponentHandReveal
+        open={showOpponentHand}
+        onClose={() => {
+          setShowOpponentHand(false)
+          // Resolve the octopus effect
+          if (gameState?.pendingEffect?.type === "octopus") {
+            const newState = resolveAnimalEffect(gameState, 0)
+            setGameState(newState)
+          }
+        }}
+        cards={gameState?.opponentHand || []}
+      />
     </div>
   )
 }
@@ -1830,6 +1902,7 @@ export default function MatchPage() {
   const searchParams = useSearchParams()
   const mode = searchParams.get("mode")
   const roomCode = searchParams.get("room")
+  const deckId = searchParams.get("deck")
   const { user, isLoading } = useAuth()
   const router = useRouter()
   const [isRedirecting, setIsRedirecting] = useState(false)
@@ -1841,6 +1914,14 @@ export default function MatchPage() {
       router.push("/auth/sign-in")
     }
   }, [user, isLoading, mode, router, isRedirecting])
+
+  // Redirect to deck selection if trying to play without selecting a deck
+  useEffect(() => {
+    if (mode === "ai" && !deckId && !isRedirecting) {
+      setIsRedirecting(true)
+      router.push("/game/deck-selection?mode=ai")
+    }
+  }, [mode, deckId, router, isRedirecting])
 
   // Redirect to online page if trying to play online without a room code
   useEffect(() => {

@@ -5,8 +5,8 @@ import { ArrowLeft } from "lucide-react"
 
 export default function Rules() {
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-b from-green-800 to-green-950 p-4 text-white">
-      <div className="container mx-auto max-w-3xl">
+    <div className="min-h-screen h-full bg-gradient-to-b from-green-800 to-green-950 p-4 text-white overflow-auto">
+      <div className="container mx-auto max-w-3xl pb-8">
         <div className="mb-6 flex items-center">
           <Link href="/">
             <Button variant="outline" size="sm" className="flex items-center gap-1 text-green-300">
@@ -19,11 +19,11 @@ export default function Rules() {
           <CardHeader>
             <CardTitle className="text-3xl text-white">Game Rules</CardTitle>
           </CardHeader>
-          <CardContent className="prose prose-invert max-w-none p-6 text-green-100">
+          <CardContent className="prose prose-invert max-w-none p-6 text-green-100 max-h-[calc(100vh-200px)] overflow-y-auto">
             <h2>Overview</h2>
             <p>
-              Bioquest is a strategic card game for two players. Players use animal cards to gain points and impact
-              cards to affect the game state.
+              BioDuel is a strategic card game for two players. Players use animal cards to gain points and impact cards
+              to affect the game state.
             </p>
 
             <h2>Objective</h2>

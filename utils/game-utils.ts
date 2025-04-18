@@ -1,5 +1,8 @@
 import type { GameCard, GameState } from "@/types/game"
-import { GAME_DECK } from "@/types/game"
+import { ADVANCED_DECK } from "@/types/advanced-deck"
+// Import the updateGameStateEndOfTurn function
+// Add this import at the top of the file
+import { resolveAnimalEffect, updateGameStateEndOfTurn } from "./game-effects"
 
 // Shuffle an array using Fisher-Yates algorithm
 export function shuffleArray<T>(array: T[]): T[] {
@@ -11,9 +14,20 @@ export function shuffleArray<T>(array: T[]): T[] {
   return newArray
 }
 
-// Initialize a new game
+// Get all cards for the deck
+export function getAllCards(): GameCard[] {
+  return ADVANCED_DECK
+}
+
+// Get the appropriate deck based on the deck ID
+export function getDeckById(): GameCard[] {
+  return ADVANCED_DECK
+}
+
+// Initialize a new game with the advanced deck
 export function initializeGame(): GameState {
-  const shuffledDeck = shuffleArray(GAME_DECK)
+  const deck = ADVANCED_DECK
+  const shuffledDeck = shuffleArray(deck)
 
   // First player draws 5 cards
   const playerHand = shuffledDeck.slice(0, 5)
@@ -37,6 +51,24 @@ export function initializeGame(): GameState {
     gameStatus: "playing",
     message: "Your turn. Draw cards or play a card.",
     pendingEffect: null,
+    effectsThisTurn: {
+      playerAnimalsPlayed: 0,
+      opponentAnimalsPlayed: 0,
+      playerCardsDrawn: 0,
+      opponentCardsDrawn: 0,
+      playerExtraDraws: 0,
+      opponentExtraDraws: 0,
+      playerExtraPlays: 0,
+      opponentExtraPlays: 0,
+      limitInEffect: false,
+      droughtInEffect: false,
+    },
+    persistentEffects: {
+      limitUntilTurn: undefined,
+      cageTargets: [],
+      protectedAnimals: [],
+      disabledAnimals: [],
+    },
   }
 }
 
@@ -1007,6 +1039,12 @@ export function resolveEffect(state: GameState, targetIndex: number | number[]):
 
   const { type, forPlayer } = state.pendingEffect
 
+  // Check for animal effects first
+  const animalEffects = ["lion", "snake", "dolphin", "octopus", "frog", "crocodile"]
+  if (animalEffects.includes(type)) {
+    return resolveAnimalEffect(state, targetIndex)
+  }
+
   switch (type) {
     case "hunter":
       if (forPlayer) {
@@ -1467,53 +1505,6 @@ export function resolveEffect(state: GameState, targetIndex: number | number[]):
       }
       break
 
-    case "cage":
-      // First select an animal from your field to send to the discard pile
-      if (forPlayer) {
-        if (!state.pendingEffect.firstSelection) {
-          // First selection: animal from field to send to discard pile
-          const targetCard = state.playerField[targetIndex as number]
-          if (!targetCard) return state
-
-          // Remove the card from field
-          const newField = [...state.playerField]
-          newField.splice(targetIndex as number, 1)
-
-          return {
-            ...state,
-            playerField: newField,
-            playerPoints: state.playerPoints - (targetCard.points || 0),
-            pendingEffect: {
-              type: "cage",
-              forPlayer: true,
-              firstSelection: targetCard.id,
-            },
-            sharedDiscard: [...state.sharedDiscard, targetCard], // Send to discard pile
-            message: `You sent ${targetCard.name} to the discard pile. Now select an opponent's animal to gain control of.`,
-          }
-        } else {
-          // Second selection: animal on the opponent's field to gain control of
-          const targetCard = state.opponentField[targetIndex as number]
-          if (!targetCard) return state
-
-          // Remove the card from opponent's field
-          const newOpponentField = [...state.opponentField]
-          newOpponentField.splice(targetIndex as number, 1)
-
-          // Add the card to player's field and update points
-          return {
-            ...state,
-            playerField: [...state.playerField, targetCard],
-            opponentField: newOpponentField,
-            playerPoints: state.playerPoints + (targetCard.points || 0),
-            opponentPoints: state.opponentPoints - (targetCard.points || 0),
-            pendingEffect: null,
-            message: `You caged and gained control of ${targetCard.name}.`,
-          }
-        }
-      }
-      break
-
     // Add more effect resolutions as needed
     default:
       return {
@@ -1834,11 +1825,12 @@ export function makeAIDecision(state: GameState): GameState {
 
 // Handle player's turn end and start AI turn
 export function endPlayerTurn(state: GameState): GameState {
-  let newState = {
+  // Update game state for end of turn effects
+  let newState = updateGameStateEndOfTurn({
     ...state,
     currentTurn: "opponent",
     message: "AI's turn...",
-  }
+  })
 
   // Check if game is over before AI's turn
   newState = checkGameOver(newState)
@@ -1851,18 +1843,15 @@ export function endPlayerTurn(state: GameState): GameState {
 
 // Handle AI's turn end and start player turn
 export function endAITurn(state: GameState): GameState {
-  let newState = {
+  // Update game state for end of turn effects
+  let newState = updateGameStateEndOfTurn({
     ...state,
     currentTurn: "player",
     message: "Your turn. Draw cards or play a card.",
-  }
+  })
 
   // Check if game is over before player's turn
   newState = checkGameOver(newState)
 
   return newState
-}
-
-export const getAllCards = () => {
-  return GAME_DECK
 }

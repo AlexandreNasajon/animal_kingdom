@@ -347,17 +347,24 @@ export function GameBoard({
                     <div className="w-full text-center text-[8px] sm:text-[9px] font-bold line-clamp-1">
                       {card.name}
                     </div>
-                    <div className="relative h-[50px] sm:h-[60px] w-full flex items-center justify-center">
+                    <div className="relative h-[40px] sm:h-[50px] w-full flex items-center justify-center">
                       {getCardArt(card)}
                     </div>
                     <div className="w-full text-center text-[7px] sm:text-[8px]">
                       {card.type === "animal" ? (
-                        <div className="flex items-center justify-between">
-                          <span className="bg-gray-800 px-1 rounded truncate">{card.environment}</span>
-                          <span className="bg-yellow-600 px-1 rounded">{card.points} pts</span>
+                        <div className="flex flex-col gap-0.5">
+                          <div className="flex items-center justify-between">
+                            <span className="bg-gray-800 px-1 rounded truncate">{card.environment}</span>
+                            <span className="bg-yellow-600 px-1 rounded">{card.points} pts</span>
+                          </div>
+                          {card.effect && (
+                            <div className="text-[6px] sm:text-[7px] text-gray-300 line-clamp-1 px-0.5">
+                              {card.effect}
+                            </div>
+                          )}
                         </div>
                       ) : (
-                        <div className="text-gray-300 truncate">{card.effect}</div>
+                        <div className="text-gray-300 line-clamp-1 px-0.5">{card.effect}</div>
                       )}
                     </div>
                   </div>

@@ -71,19 +71,25 @@ export function BoardCardZoomModal({ open, onClose, card, isOpponentCard = false
             <div className="absolute inset-0 border-8 border-transparent bg-gradient-to-br from-white/10 to-black/20 pointer-events-none"></div>
             <div className="absolute inset-0 border border-white/10 rounded-sm pointer-events-none"></div>
 
-            <CardContent className="flex h-full flex-col items-center space-y-2 p-1">
-              <div className="text-center text-lg font-bold text-white">{card.name}</div>
-
-              <div className="relative h-[180px] w-full flex items-center justify-center">{getCardArt(card)}</div>
+            <CardContent className="flex flex-col items-center p-1 h-full">
+              <div className="text-center font-bold text-white">{card.name}</div>
+              <div className="relative h-[140px] w-full flex items-center justify-center mt-2">{getCardArt(card)}</div>
 
               {card.type === "animal" ? (
-                <div className="flex w-full items-center justify-between mt-auto">
-                  <Badge variant="outline" className={`${getEnvironmentBadgeColor(card.environment)} text-xs`}>
-                    {card.environment}
-                  </Badge>
-                  {card.points && (
-                    <div className="absolute top-2 left-2 bg-yellow-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold">
-                      {card.points}
+                <div className="w-full mt-auto">
+                  <div className="flex w-full items-center justify-between">
+                    <Badge variant="outline" className={`${getEnvironmentBadgeColor(card.environment)} text-xs`}>
+                      {card.environment}
+                    </Badge>
+                    {card.points && (
+                      <div className="absolute top-2 left-2 bg-yellow-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold">
+                        {card.points}
+                      </div>
+                    )}
+                  </div>
+                  {card.effect && (
+                    <div className="mt-2 text-xs text-center px-1 leading-tight text-white bg-black/30 rounded p-1">
+                      {card.effect}
                     </div>
                   )}
                 </div>
@@ -92,7 +98,7 @@ export function BoardCardZoomModal({ open, onClose, card, isOpponentCard = false
                   <Badge variant="outline" className="bg-purple-900 text-white text-xs w-full justify-center">
                     Impact
                   </Badge>
-                  <div className="mt-2 text-[9px] text-center px-1 max-h-[40px] overflow-y-auto scrollbar-thin scrollbar-thumb-purple-700 scrollbar-track-purple-900 text-white">
+                  <div className="mt-2 text-xs text-center px-1 leading-tight text-white bg-black/30 rounded p-1">
                     {card.effect}
                   </div>
                 </div>

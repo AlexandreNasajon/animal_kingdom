@@ -411,16 +411,22 @@ export function PlayerHand({
               <div className="absolute inset-0 border-2 border-transparent bg-gradient-to-br from-white/10 to-black/20 pointer-events-none"></div>
               <div className="absolute inset-0 flex flex-col items-center justify-between overflow-hidden p-1">
                 <div className="w-full text-center text-[10px] sm:text-[12px] font-bold truncate">{card.name}</div>
-                <div className="relative h-[60px] sm:h-[70px] w-full flex items-center justify-center">
+                <div className="relative h-[50px] sm:h-[60px] w-full flex items-center justify-center">
                   {getCardArt(card)}
                 </div>
                 <div className="w-full text-center text-[8px] sm:text-[10px]">
                   {card.type === "animal" ? (
-                    <div className="flex items-center justify-center">
-                      <span className="bg-gray-800 px-1 rounded">{card.environment}</span>
+                    <div className="flex flex-col gap-0.5">
+                      <div className="flex items-center justify-center">
+                        <span className="bg-gray-800 px-1 rounded">{card.environment}</span>
+                        {card.points && <span className="ml-1 bg-yellow-600 px-1 rounded">{card.points} pts</span>}
+                      </div>
+                      {card.effect && (
+                        <div className="text-[7px] sm:text-[8px] text-gray-300 line-clamp-2 px-0.5">{card.effect}</div>
+                      )}
                     </div>
                   ) : (
-                    <div className="text-gray-300 truncate">{card.effect}</div>
+                    <div className="text-gray-300 line-clamp-2 px-0.5">{card.effect}</div>
                   )}
                 </div>
               </div>

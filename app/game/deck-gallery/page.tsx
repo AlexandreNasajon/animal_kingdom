@@ -4,15 +4,19 @@ import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Grid, Mountain, Droplets, Fish, Zap } from "lucide-react"
+import { ArrowLeft, Grid, Mountain, Droplets, Fish, Zap, BookOpen } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { getAllCards } from "@/utils/game-utils"
 import { getCardArt } from "@/components/card-art/card-art-mapper"
+import { ORIGINAL_DECK } from "@/types/original-deck"
+import { EXPANDED_DECK } from "@/types/expanded-deck"
 import type { GameCard } from "@/types/game"
 
 export default function DeckGallery() {
-  const allCards = getAllCards()
+  const [currentDeck, setCurrentDeck] = useState<"original" | "expanded">("original")
   const [filter, setFilter] = useState<string>("all")
+
+  // Get the appropriate deck based on selection
+  const allCards = currentDeck === "original" ? ORIGINAL_DECK : EXPANDED_DECK
 
   const filteredCards = allCards.filter((card: GameCard) => {
     if (filter === "all") return true
@@ -24,8 +28,8 @@ export default function DeckGallery() {
   })
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-800 to-green-950 p-4 text-white">
-      <div className="container mx-auto max-w-6xl">
+    <div className="min-h-screen h-full bg-gradient-to-b from-green-800 to-green-950 p-4 text-white overflow-auto">
+      <div className="container mx-auto max-w-6xl pb-8">
         <div className="mb-6 flex items-center justify-between">
           <Link href="/">
             <Button variant="outline" size="sm" className="gap-2">
@@ -37,11 +41,43 @@ export default function DeckGallery() {
           <div className="w-24"></div> {/* Spacer for alignment */}
         </div>
 
+        <Card className="border-2 border-green-700 bg-green-900/60 shadow-xl mb-6">
+          <CardHeader>
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <CardTitle className="text-2xl text-white">Select Deck</CardTitle>
+              <Tabs
+                defaultValue="original"
+                className="w-[400px] max-w-full"
+                onValueChange={(value) => setCurrentDeck(value as "original" | "expanded")}
+              >
+                <TabsList className="grid w-full grid-cols-2 gap-2 bg-green-900/40 p-1">
+                  <TabsTrigger
+                    value="original"
+                    className="bg-green-700 text-white data-[state=active]:bg-green-500 data-[state=active]:text-white"
+                    title="Original Deck"
+                  >
+                    <BookOpen className="h-5 w-5 mr-2" />
+                    Original Deck
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="expanded"
+                    className="bg-green-700 text-white data-[state=active]:bg-green-500 data-[state=active]:text-white"
+                    title="Expanded Deck"
+                  >
+                    <BookOpen className="h-5 w-5 mr-2" />
+                    Expanded Deck
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+          </CardHeader>
+        </Card>
+
         <Card className="border-2 border-green-700 bg-green-900/60 shadow-xl">
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-4">
               <CardTitle className="text-2xl text-white">Browse Cards</CardTitle>
-              <Tabs defaultValue="all" className="w-[400px]" onValueChange={setFilter}>
+              <Tabs defaultValue="all" className="w-[400px] max-w-full" onValueChange={setFilter}>
                 <TabsList className="grid w-full grid-cols-5 gap-2 bg-green-900/40 p-1">
                   <TabsTrigger
                     value="all"
@@ -82,7 +118,12 @@ export default function DeckGallery() {
               </Tabs>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="max-h-[calc(100vh-300px)] overflow-y-auto">
+            <div className="mb-4">
+              <h2 className="text-xl font-semibold text-green-300">
+                {currentDeck === "original" ? "Original Deck" : "Expanded Deck"} - {filteredCards.length} cards
+              </h2>
+            </div>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               {filteredCards.map((card) => (
                 <div key={card.id} className="relative">

@@ -18,12 +18,12 @@ import { FlourishArt } from "./impact-arts/flourish-art"
 import { EarthquakeArt } from "./impact-arts/earthquake-art"
 
 interface ImpactArtProps {
-  name: string
+  name?: string
   size?: "small" | "medium" | "large"
   isActive?: boolean
 }
 
-export function ImpactArt({ name, size = "medium", isActive = false }: ImpactArtProps) {
+export function ImpactArt({ name = "impact", size = "medium", isActive = false }: ImpactArtProps) {
   // Common animation classes for all impact arts
   const animationClass = isActive ? "animate-pulse-fast" : "animate-pulse-slow"
 
@@ -72,6 +72,7 @@ export function ImpactArt({ name, size = "medium", isActive = false }: ImpactArt
         </div>
       )
     case "confuse":
+    case "confusion": // Handle both naming variants
       return (
         <div className={wrapperClass}>
           <ConfuseArt />
@@ -120,6 +121,7 @@ export function ImpactArt({ name, size = "medium", isActive = false }: ImpactArt
         </div>
       )
     case "prey":
+    case "prey upon": // Handle both naming variants
       return (
         <div className={wrapperClass}>
           <PreyArt />

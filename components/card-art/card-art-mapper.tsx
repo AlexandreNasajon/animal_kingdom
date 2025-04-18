@@ -35,6 +35,11 @@ import { SnakeArt } from "./animal-arts/snake-art"
 import { CrocodileArt } from "./animal-arts/crocodile-art"
 
 export function getCardArt(card: GameCard) {
+  // Handle undefined or null card
+  if (!card) {
+    return <div className="flex h-full w-full items-center justify-center bg-green-900">No Card</div>
+  }
+
   // Default to environment art if no specific art is found
   if (!card.name && card.environment === "aquatic") {
     return <AquaticArt />
@@ -46,7 +51,7 @@ export function getCardArt(card: GameCard) {
     return <AmphibianArt />
   }
   if (!card.name && card.type === "impact") {
-    return <ImpactArt />
+    return <ImpactArt name="impact" />
   }
 
   // Impact cards
@@ -65,7 +70,7 @@ export function getCardArt(card: GameCard) {
   if (card.name === "Limit") {
     return <LimitArt />
   }
-  if (card.name === "Confuse") {
+  if (card.name === "Confuse" || card.name === "Confusion") {
     return <ConfuseArt />
   }
   if (card.name === "Domesticate") {
@@ -89,7 +94,7 @@ export function getCardArt(card: GameCard) {
   if (card.name === "Compete") {
     return <CompeteArt />
   }
-  if (card.name === "Prey") {
+  if (card.name === "Prey" || card.name === "Prey Upon") {
     return <PreyArt />
   }
   if (card.name === "Cage") {
@@ -148,7 +153,7 @@ export function getCardArt(card: GameCard) {
     return <AmphibianArt />
   }
   if (card.type === "impact") {
-    return <ImpactArt />
+    return <ImpactArt name={card.name || "impact"} />
   }
 
   // Fallback
