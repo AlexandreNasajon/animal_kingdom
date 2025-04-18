@@ -45,7 +45,10 @@ export function PlayerHandSelectionModal({
 
   const handleConfirm = () => {
     if (selectedIndex !== null) {
-      onSelect(selectedIndex)
+      // Find the original index of the card in the unfiltered array
+      const originalCardId = filteredCards[selectedIndex].id
+      const originalIndex = cards.findIndex((card) => card.id === originalCardId)
+      onSelect(originalIndex)
       setSelectedIndex(null)
     }
   }

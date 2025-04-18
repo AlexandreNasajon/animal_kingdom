@@ -646,13 +646,12 @@ export function playImpactCard(state: GameState, cardIndex: number, forPlayer: b
         if (newState.playerHand.length <= 2) {
           const cardsToDraw = 6 - newState.playerHand.length
           if (state.sharedDeck.length >= cardsToDraw) {
-            const maxDraw = Math.min(cardsToDraw, state.sharedDeck.length)
-            const drawnCards = state.sharedDeck.slice(0, maxDraw)
+            const drawnCards = state.sharedDeck.slice(0, cardsToDraw)
             return {
               ...newState,
               playerHand: [...newState.playerHand, ...drawnCards],
-              sharedDeck: state.sharedDeck.slice(maxDraw),
-              message: `You played Flourish and drew ${maxDraw} cards.`,
+              sharedDeck: state.sharedDeck.slice(cardsToDraw),
+              message: `You played Flourish and drew ${cardsToDraw} cards.`,
             }
           } else {
             return {
@@ -1000,9 +999,68 @@ export function makeAIDecision(state: GameState): GameState {
     return playAnimalCard(state, winningAnimalIndex, false)
   }
 
-  // Add more AI decision logic here...
+  // Check if there are any playable animal cards
+  const playableAnimalCards = state.opponentHand
+    .map((card, index) => ({ card, index }))
+    .filter((item) => item.card.type === "animal")
 
-  // If no good moves, draw
+  if (playableAnimalCards.length > 0) {
+    // Sort by points (highest first)
+    playableAnimalCards.sort((a, b) => (b.card.points || 0) - (a.card.points || 0))
+
+    // 70% chance to play an animal card if we have one
+    if (Math.random() < 0.7) {
+      // Play the highest value animal card
+      return playAnimalCard(state, playableAnimalCards[0].index, false)
+    }
+  }
+
+  // Check if there are any playable impact cards with valid targets
+  const playableImpactCards = state.opponentHand
+    .map((card, index) => ({ card, index }))
+    .filter((item) => item.card.type === "impact" && isImpactCardWithValidTargets(item.card, state, false))
+
+  if (playableImpactCards.length > 0) {
+    // 60% chance to play an impact card if we have one with valid targets
+    if (Math.random() < 0.6) {
+      // Play a random impact card
+      const randomIndex = Math.floor(Math.random() * playableImpactCards.length)
+      return playImpactCard(state, playableImpactCards[randomIndex].index, false)
+    }
+  }
+
+  // Check if AI needs to discard before drawing
+  if (state.opponentHand.length >= 5) {
+    // Choose cards to discard
+    const discardIndices: number[] = []
+    const sortedCards = [...state.opponentHand]
+      .map((card, index) => ({ card, index }))
+      .sort((a, b) => {
+        if (a.card.type === "animal" && b.card.type === "animal") {
+          return (a.card.points || 0) - (b.card.points || 0)
+        }
+        return a.card.type === "impact" ? -1 : 1
+      })
+
+    // Determine how many cards to discard
+    // If hand is full (6 cards), discard 2 cards
+    // If hand has 5 cards, discard 1 card
+    const discardCount = state.opponentHand.length === 6 ? 2 : 1
+
+    for (let i = 0; i < discardCount; i++) {
+      if (i < sortedCards.length) {
+        discardIndices.push(sortedCards[i].index)
+      }
+    }
+
+    // Send cards to bottom
+    const afterDiscard = sendCardsToBottom(state, discardIndices, false)
+
+    // Draw cards
+    return drawCards(afterDiscard, 2, false)
+  }
+
+  // If no good moves and hand isn't full, draw
   return drawCards(state, 2, false)
 }
 

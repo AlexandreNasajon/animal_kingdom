@@ -328,32 +328,23 @@ export function applyAnimalEffect(state: GameState, card: GameCard, forPlayer: b
       : state.effectsThisTurn.opponentAnimalsPlayed + 1 // +1 for the Seahorse itself
 
     if (animalCount > 0 && state.sharedDeck.length > 0) {
-      const handSize = forPlayer ? state.playerHand.length : state.opponentHand.length
-      const maxDraw = Math.min(animalCount, state.sharedDeck.length, 6 - handSize)
-
-      if (maxDraw <= 0) {
-        return {
-          ...state,
-          message: `${forPlayer ? "You" : "AI"} played ${card.name}, but your hand is already full (maximum 6 cards).`,
-        }
-      }
-
+      const cardsToDraw = Math.min(animalCount, state.sharedDeck.length)
       const newDeck = [...state.sharedDeck]
-      const drawnCards = newDeck.splice(0, maxDraw)
+      const drawnCards = newDeck.splice(0, cardsToDraw)
 
       if (forPlayer) {
         newState = {
           ...newState,
           playerHand: [...state.playerHand, ...drawnCards],
           sharedDeck: newDeck,
-          message: `You played ${card.name} and drew ${maxDraw} card${maxDraw > 1 ? "s" : ""} (one for each animal you played this turn${maxDraw < animalCount ? ", up to the hand limit of 6" : ""}).`,
+          message: `You played ${card.name} and drew ${cardsToDraw} card${cardsToDraw > 1 ? "s" : ""} (one for each animal you played this turn).`,
         }
       } else {
         newState = {
           ...newState,
           opponentHand: [...state.opponentHand, ...drawnCards],
           sharedDeck: newDeck,
-          message: `AI played ${card.name} and drew ${maxDraw} card${maxDraw > 1 ? "s" : ""}.`,
+          message: `AI played ${card.name} and drew ${cardsToDraw} card${cardsToDraw > 1 ? "s" : ""}.`,
         }
       }
     } else {
@@ -367,15 +358,6 @@ export function applyAnimalEffect(state: GameState, card: GameCard, forPlayer: b
   // Jellyfish: "On play, draw 1 card."
   else if (card.name === "Jellyfish") {
     if (state.sharedDeck.length > 0) {
-      const handSize = forPlayer ? state.playerHand.length : state.opponentHand.length
-
-      if (handSize >= 6) {
-        return {
-          ...state,
-          message: `${forPlayer ? "You" : "AI"} played ${card.name}, but your hand is already full (maximum 6 cards).`,
-        }
-      }
-
       const newDeck = [...state.sharedDeck]
       const drawnCard = newDeck.shift()!
 
@@ -454,38 +436,30 @@ export function applyAnimalEffect(state: GameState, card: GameCard, forPlayer: b
         message: `You played ${card.name}. You may send 1 card from hand to deck bottom to draw 1 card.`,
       }
     } else if (!forPlayer && state.opponentHand.length > 0 && state.sharedDeck.length > 0) {
-      // Check if AI's hand is full
-      if (state.opponentHand.length >= 6) {
-        newState = {
-          ...newState,
-          message: `AI played ${card.name}, but its hand is already full (maximum 6 cards).`,
-        }
-      } else {
-        // AI automatically selects the least valuable card
-        const cardIndex = state.opponentHand
-          .map((c, i) => ({ card: c, index: i }))
-          .sort((a, b) => {
-            if (a.card.type === "animal" && b.card.type === "animal") {
-              return (a.card.points || 0) - (b.card.points || 0)
-            }
-            return a.card.type === "impact" ? -1 : 1
-          })[0].index
+      // AI automatically selects the least valuable card
+      const cardIndex = state.opponentHand
+        .map((c, i) => ({ card: c, index: i }))
+        .sort((a, b) => {
+          if (a.card.type === "animal" && b.card.type === "animal") {
+            return (a.card.points || 0) - (b.card.points || 0)
+          }
+          return a.card.type === "impact" ? -1 : 1
+        })[0].index
 
-        const cardToSend = state.opponentHand[cardIndex]
-        const newOpponentHand = [...state.opponentHand]
-        newOpponentHand.splice(cardIndex, 1)
+      const cardToSend = state.opponentHand[cardIndex]
+      const newOpponentHand = [...state.opponentHand]
+      newOpponentHand.splice(cardIndex, 1)
 
-        // Draw a card
-        const newDeck = [...state.sharedDeck]
-        const drawnCard = newDeck.shift()!
-        newDeck.push(cardToSend)
+      // Draw a card
+      const newDeck = [...state.sharedDeck]
+      const drawnCard = newDeck.shift()!
+      newDeck.push(cardToSend)
 
-        newState = {
-          ...newState,
-          opponentHand: [...newOpponentHand, drawnCard],
-          sharedDeck: newDeck,
-          message: `AI played ${card.name} and sent a card to the bottom of the deck to draw a card.`,
-        }
+      newState = {
+        ...newState,
+        opponentHand: [...newOpponentHand, drawnCard],
+        sharedDeck: newDeck,
+        message: `AI played ${card.name} and sent a card to the bottom of the deck to draw a card.`,
       }
     }
   }
@@ -519,15 +493,6 @@ export function applyAnimalEffect(state: GameState, card: GameCard, forPlayer: b
     const points = forPlayer ? state.playerPoints : state.opponentPoints
 
     if (points >= 7 && state.sharedDeck.length > 0) {
-      const handSize = forPlayer ? state.playerHand.length : state.opponentHand.length
-
-      if (handSize >= 6) {
-        return {
-          ...state,
-          message: `${forPlayer ? "You" : "AI"} played ${card.name}, but your hand is already full (maximum 6 cards).`,
-        }
-      }
-
       const newDeck = [...state.sharedDeck]
       const drawnCard = newDeck.shift()!
 
@@ -583,7 +548,7 @@ export function applyAnimalEffect(state: GameState, card: GameCard, forPlayer: b
     } else {
       newState = {
         ...newState,
-        message: `${forPlayer ? "You" : "AI"} played ${card.name}, but already has ${handSize >= 4 ? "4 or more cards" : "a full hand"}.`,
+        message: `${forPlayer ? "You" : "AI"} played ${card.name}, but already has 4 or more cards.`,
       }
     }
   }
@@ -847,11 +812,11 @@ export function resolveAnimalEffect(state: GameState, targetIndex: number | numb
 
     case "zebra":
       if (forPlayer) {
-        // Return the state with pendingEffect still active so the UI can display the opponent's hand
-        // The actual resolution will happen when the modal is closed
+        // Just close the effect, the UI should have shown the opponent's hand
         return {
           ...state,
-          message: `You're viewing your opponent's hand.`,
+          pendingEffect: null,
+          message: `You've seen your opponent's hand.`,
         }
       }
       break
@@ -934,15 +899,6 @@ export function resolveAnimalEffect(state: GameState, targetIndex: number | numb
 
         const newPlayerHand = [...state.playerHand]
         newPlayerHand.splice(targetIndex as number, 1)
-
-        // Check if player's hand would be full (should never happen but good to check)
-        if (newPlayerHand.length >= 6) {
-          return {
-            ...state,
-            pendingEffect: null,
-            message: `You cannot draw a card because your hand is full (maximum 6 cards).`,
-          }
-        }
 
         // Draw a card if there are cards in the deck
         let drawnCard = null
