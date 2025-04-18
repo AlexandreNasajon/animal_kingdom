@@ -332,8 +332,43 @@ export function applyAnimalEffect(state: GameState, card: GameCard, forPlayer: b
 
   // Seahorse: "On play, draw 1 card for every animal you played this turn."
   else if (card.name === "Seahorse") {
+    // Count animals played this turn, NOT including the Seahorse itself
+    let animalCount = forPlayer
+      ? state.effectsThisTurn.playerAnimalsPlayed
+      : state.effectsThisTurn.opponentAnimalsPlayed
+
+    // If no other animals were played this turn, draw exactly 1 card
+    if (animalCount === 0) {
+      if (state.sharedDeck.length > 0) {
+        const newDeck = [...state.sharedDeck]
+        const drawnCard = newDeck.shift()!
+
+        if (forPlayer) {
+          newState = {
+            ...newState,
+            playerHand: [...state.playerHand, drawnCard],
+            sharedDeck: newDeck,
+            message: `You played ${card.name} and drew 1 card.`,
+          }
+        } else {
+          newState = {
+            ...newState,
+            opponentHand: [...state.opponentHand, drawnCard],
+            sharedDeck: newDeck,
+            message: `AI played ${card.name} and drew 1 card.`,
+          }
+        }
+      } else {
+        newState = {
+          ...newState,
+          message: `${forPlayer ? "You" : "AI"} played ${card.name}, but couldn't draw any cards.`,
+        }
+      }
+      return newState
+    }
+
     // Count animals played this turn, including the Seahorse itself
-    const animalCount = forPlayer
+    animalCount = forPlayer
       ? state.effectsThisTurn.playerAnimalsPlayed + 1 // +1 for the Seahorse itself
       : state.effectsThisTurn.opponentAnimalsPlayed + 1 // +1 for the Seahorse itself
 
@@ -866,6 +901,33 @@ export function resolveAnimalEffect(state: GameState, targetIndex: number | numb
         )
           return state
 
+        // Check if the card requires a cost (Lion, Shark, Crocodile)
+        if (["Lion", "Shark", "Crocodile"].includes(targetCard.name)) {
+          // If player has no animals on field, can't play the card
+          if (state.playerField.length === 0) {
+            return {
+              ...state,
+              pendingEffect: null,
+              message: `You need an animal on your field to play ${targetCard.name}.`,
+            }
+          }
+
+          // Set up a new pending effect to pay the cost
+          const costType = targetCard.name === "Crocodile" ? "return" : "sacrifice"
+          return {
+            ...state,
+            pendingEffect: {
+              type: "payCost",
+              forPlayer: true,
+              targetCardId: targetCard.id,
+              costType: costType,
+              selectedCard: targetIndex,
+              sourceEffect: "tuna",
+            },
+            message: `Select an animal to ${costType === "return" ? "return to your hand" : "sacrifice"} to play ${targetCard.name}.`,
+          }
+        }
+
         const newPlayerHand = [...state.playerHand]
         newPlayerHand.splice(targetIndex as number, 1)
 
@@ -899,6 +961,33 @@ export function resolveAnimalEffect(state: GameState, targetIndex: number | numb
           (targetCard.points || 0) > 2
         )
           return state
+
+        // Check if the card requires a cost (Lion, Shark, Crocodile)
+        if (["Lion", "Shark", "Crocodile"].includes(targetCard.name)) {
+          // If player has no animals on field, can't play the card
+          if (state.playerField.length === 0) {
+            return {
+              ...state,
+              pendingEffect: null,
+              message: `You need an animal on your field to play ${targetCard.name}.`,
+            }
+          }
+
+          // Set up a new pending effect to pay the cost
+          const costType = targetCard.name === "Crocodile" ? "return" : "sacrifice"
+          return {
+            ...state,
+            pendingEffect: {
+              type: "payCost",
+              forPlayer: true,
+              targetCardId: targetCard.id,
+              costType: costType,
+              selectedCard: targetIndex,
+              sourceEffect: "turtle",
+            },
+            message: `Select an animal to ${costType === "return" ? "return to your hand" : "sacrifice"} to play ${targetCard.name}.`,
+          }
+        }
 
         const newPlayerHand = [...state.playerHand]
         newPlayerHand.splice(targetIndex as number, 1)

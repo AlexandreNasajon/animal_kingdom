@@ -104,10 +104,11 @@ export function PlayerHand({
   // Create drag image once on component mount
   useEffect(() => {
     const image = document.createElement("div")
-    image.className = "fixed opacity-0 pointer-events-none"
+    image.className = "fixed pointer-events-none"
     image.style.width = "80px"
     image.style.height = "120px"
     image.style.zIndex = "9999"
+    image.style.opacity = "0" // Start invisible, will be made visible during drag
     document.body.appendChild(image)
     setDragImage(image)
 
@@ -148,6 +149,8 @@ export function PlayerHand({
     if (dragImage) {
       const card = cards[index]
       dragImage.innerHTML = ""
+      dragImage.style.opacity = "1" // Make the drag image visible
+      dragImage.style.pointerEvents = "none"
 
       // Create a visual clone of the card
       const cardClone = document.createElement("div")
@@ -208,6 +211,15 @@ export function PlayerHand({
     }, 500) // 500ms for long press
   }
 
+  // First, add a new state to track the dragged card position on mobile
+  // Add this with the other state declarations:
+
+  const [touchDragPosition, setTouchDragPosition] = useState<{ x: number; y: number } | null>(null)
+  const [touchDragCard, setTouchDragCard] = useState<GameCard | null>(null)
+
+  // Update the handleTouchMove function to track the dragged card position
+  // Replace the existing handleTouchMove function with this:
+
   const handleTouchMove = (event: React.TouchEvent) => {
     if (disabled || !touchStartRef.current || touchCardIndexRef.current === null) return
 
@@ -226,12 +238,20 @@ export function PlayerHand({
     if (distance > touchMoveThreshold) {
       setIsDragging(true)
 
+      // Set the dragged card for visual feedback
+      if (!touchDragCard && touchCardIndexRef.current !== null) {
+        setTouchDragCard(cards[touchCardIndexRef.current])
+      }
+
+      // Update the drag position
+      setTouchDragPosition({ x: touch.clientX, y: touch.clientY })
+
       // Find the card element
       const cardElement = cardRefs.current.get(touchCardIndexRef.current)
       if (cardElement) {
         // Create visual feedback for dragging
-        cardElement.style.opacity = "0.7"
-        cardElement.style.transform = "scale(1.05)"
+        cardElement.style.opacity = "0.5"
+        cardElement.style.transform = "scale(0.95)"
 
         // Check if we're over a drop target
         const elementsUnderTouch = document.elementsFromPoint(touch.clientX, touch.clientY)
@@ -251,6 +271,9 @@ export function PlayerHand({
       }
     }
   }
+
+  // Update the handleTouchEnd function to clear the dragged card
+  // Replace the existing handleTouchEnd function with this:
 
   const handleTouchEnd = (event: React.TouchEvent) => {
     // Clear long press timeout
@@ -298,6 +321,8 @@ export function PlayerHand({
     touchStartRef.current = null
     touchCardIndexRef.current = null
     setIsDragging(false)
+    setTouchDragCard(null)
+    setTouchDragPosition(null)
   }
 
   // Save card element references
@@ -480,6 +505,51 @@ export function PlayerHand({
           </div>
         )
       })}
+
+      {/* Touch drag visual feedback */}
+      {touchDragCard && touchDragPosition && (
+        <div
+          className="fixed z-50 pointer-events-none"
+          style={{
+            left: touchDragPosition.x - 40,
+            top: touchDragPosition.y - 60,
+            width: "80px",
+            height: "120px",
+          }}
+        >
+          <Card
+            className={`h-full w-full border-2 ${
+              touchDragCard.type === "animal"
+                ? touchDragCard.environment === "terrestrial"
+                  ? "border-red-600 bg-red-900"
+                  : touchDragCard.environment === "aquatic"
+                    ? "border-blue-600 bg-blue-900"
+                    : "border-green-600 bg-green-900"
+                : "border-purple-600 bg-purple-900"
+            } shadow-lg opacity-90`}
+          >
+            <div className="absolute inset-0 border-2 border-transparent bg-gradient-to-br from-white/10 to-black/20 pointer-events-none"></div>
+            <div className="absolute inset-0 flex flex-col items-center justify-between overflow-hidden p-1">
+              <div className="w-full text-center text-[10px] font-bold truncate">{touchDragCard.name}</div>
+              <div className="relative h-[60px] w-full flex items-center justify-center">
+                {getCardArt(touchDragCard)}
+              </div>
+              <div className="w-full text-center text-[8px]">
+                {touchDragCard.type === "animal" ? (
+                  <div className="flex items-center justify-center gap-1">
+                    <span className="bg-gray-800 px-1 rounded">{touchDragCard.environment}</span>
+                    {touchDragCard.points && (
+                      <span className="bg-yellow-600 px-1 rounded">{touchDragCard.points} pts</span>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-gray-300 line-clamp-1">{touchDragCard.effect}</div>
+                )}
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   )
 }

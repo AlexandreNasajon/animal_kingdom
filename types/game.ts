@@ -35,6 +35,10 @@ export interface PendingEffect {
   // Add more properties as needed for different effects
   targetCardId?: number // For effects that target specific cards
   effectDuration?: number // For effects that last multiple turns
+  selectedCard?: number // For effects that need to track a selected card
+  costType?: string // For effects that require a cost
+  targetIndex?: number // For effects that need to track a target index
+  sourceEffect?: string // For tracking which effect triggered this one
 }
 
 export interface GameState {

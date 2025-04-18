@@ -42,11 +42,7 @@ import {
 import { DiscardPileGallery } from "@/components/discard-pile-gallery"
 
 // Import the new animation function
-import { createCardToDiscardAnimation } from "@/utils/animation-utils"
-import { createCardToDeckAnimation } from "@/utils/animation-utils"
-
-// Import the OpponentHandReveal component
-import { OpponentHandReveal } from "@/components/opponent-hand-reveal"
+import { createCardToDiscardAnimation, createCardToDeckAnimation } from "@/utils/animation-utils"
 import { resolveAnimalEffect, applyAnimalEffect } from "@/utils/game-effects"
 
 // Import our modal components
@@ -55,6 +51,9 @@ import { PlayerHandSelectionModal } from "@/components/player-hand-selection-mod
 
 // First, import the new DeckTopCardsModal component
 import { DeckTopCardsModal } from "@/components/deck-top-cards-modal"
+
+// Import the OpponentHandReveal component
+import { OpponentHandReveal } from "@/components/opponent-hand-reveal"
 
 // Let's completely revise the AI card animation approach to make sure it falls onto the AI field.
 
@@ -137,6 +136,8 @@ const getExchangeAnimation = (isPlayerCard: boolean) => {
 
 // Helper function to create particles
 const createParticles = (element: HTMLElement, color: string, count = 10) => {
+  if (!element) return
+
   for (let i = 0; i < count; i++) {
     const particle = document.createElement("div")
     particle.className = "particle"
@@ -256,6 +257,9 @@ function OriginalGameMatch() {
   // Add a state to track the Zebra effect
   const [showZebraModal, setShowZebraModal] = useState(false)
 
+  // Add a state to track animation errors
+  const [animationError, setAnimationError] = useState<string | null>(null)
+
   // First, add this effect to update the message whenever gameState changes
   useEffect(() => {
     if (gameState && gameState.message) {
@@ -276,12 +280,22 @@ function OriginalGameMatch() {
   }, [gameState?.gameStatus, router])
 
   // Helper function to add particle effects
-  const addParticleEffect = (cardId: number, color: string) => {
+  const addParticleEffect = (cardId: number | undefined, color: string) => {
+    if (!cardId) return
+
     // Find the card element
     const cardElement = document.querySelector(`[data-card-id="${cardId}"]`)
     if (cardElement instanceof HTMLElement) {
       createParticles(cardElement, color, 15)
     }
+  }
+
+  // Helper function to safely get a card by index
+  const safeGetCard = (cards: GameCard[] | undefined, index: number): GameCard | null => {
+    if (!cards || index < 0 || index >= cards.length) {
+      return null
+    }
+    return cards[index]
   }
 
   // Initialize game
@@ -313,51 +327,68 @@ function OriginalGameMatch() {
         setAnimationQueue((prev) => [
           ...prev,
           async () => {
-            setAiDiscardingCards(true)
+            try {
+              setAiDiscardingCards(true)
 
-            // Determine how many cards to discard
-            const discardCount = gameState.opponentHand.length === 5 ? 1 : 2
+              // Determine how many cards to discard
+              const discardCount = gameState.opponentHand.length === 5 ? 1 : 2
 
-            // Choose cards to discard
-            const discardIndices: number[] = []
-            const sortedCards = [...gameState.opponentHand]
-              .map((card, index) => ({ card, index }))
-              .sort((a, b) => {
-                if (a.card.type === "animal" && b.card.type === "animal") {
-                  return (a.card.points || 0) - (b.card.points || 0)
-                }
-                return a.card.type === "impact" ? -1 : 1
-              })
+              // Choose cards to discard
+              const discardIndices: number[] = []
+              const sortedCards = [...gameState.opponentHand]
+                .map((card, index) => ({ card, index }))
+                .sort((a, b) => {
+                  if (a.card.type === "animal" && b.card.type === "animal") {
+                    return (a.card.points || 0) - (b.card.points || 0)
+                  }
+                  return a.card.type === "impact" ? -1 : 1
+                })
 
-            for (let i = 0; i < discardCount; i++) {
-              discardIndices.push(sortedCards[i].index)
+              for (let i = 0; i < discardCount && i < sortedCards.length; i++) {
+                discardIndices.push(sortedCards[i].index)
+              }
+
+              // Get the IDs of cards being discarded for animation
+              const discardedCardIds = discardIndices
+                .filter((index) => index >= 0 && index < gameState.opponentHand.length)
+                .map((index) => {
+                  const card = gameState.opponentHand[index]
+                  return card?.id || 0
+                })
+                .filter((id) => id > 0)
+
+              setAiDiscardedCardIds(discardedCardIds)
+
+              // Allow discard animation to run
+              await new Promise((resolve) => setTimeout(resolve, 1200))
+
+              const afterDiscard = sendCardsToBottom(gameState, discardIndices, false)
+              console.log(`AI sent ${discardCount} card(s) to the bottom of the deck.`)
+
+              setAiDiscardingCards(false)
+              setAiDrawingCards(true)
+              setAiDrawnCardCount(2)
+
+              // Allow draw animation to run
+              await new Promise((resolve) => setTimeout(resolve, 800))
+
+              const afterDraw = drawCards(afterDiscard, 2, false)
+              console.log(`AI drew 2 cards.`)
+
+              // End AI turn after animation completes
+              await new Promise((resolve) => setTimeout(resolve, 500))
+
+              setAiDrawingCards(false)
+              setGameState(endAITurn(afterDraw))
+            } catch (error) {
+              console.error("AI discard/draw animation error:", error)
+              // Reset animation states
+              setAiDiscardingCards(false)
+              setAiDrawingCards(false)
+              // End AI turn anyway
+              const afterDraw = drawCards(gameState, 2, false)
+              setGameState(endAITurn(afterDraw))
             }
-
-            // Get the IDs of cards being discarded for animation
-            const discardedCardIds = discardIndices.map((index) => gameState.opponentHand[index].id)
-            setAiDiscardedCardIds(discardedCardIds)
-
-            // Allow discard animation to run
-            await new Promise((resolve) => setTimeout(resolve, 1200))
-
-            const afterDiscard = sendCardsToBottom(gameState, discardIndices, false)
-            console.log(`AI sent ${discardCount} card(s) to the bottom of the deck.`)
-
-            setAiDiscardingCards(false)
-            setAiDrawingCards(true)
-            setAiDrawnCardCount(2)
-
-            // Allow draw animation to run
-            await new Promise((resolve) => setTimeout(resolve, 800))
-
-            const afterDraw = drawCards(afterDiscard, 2, false)
-            console.log(`AI drew 2 cards.`)
-
-            // End AI turn after animation completes
-            await new Promise((resolve) => setTimeout(resolve, 500))
-
-            setAiDrawingCards(false)
-            setGameState(endAITurn(afterDraw))
           },
         ])
 
@@ -373,18 +404,26 @@ function OriginalGameMatch() {
         setAnimationQueue((prev) => [
           ...prev,
           async () => {
-            setAiDrawingCards(true)
-            setAiDrawnCardCount(afterAIMove.opponentHand.length - currentOpponentHandLength)
-            console.log(`AI drew ${afterAIMove.opponentHand.length - currentOpponentHandLength} cards.`)
+            try {
+              setAiDrawingCards(true)
+              setAiDrawnCardCount(afterAIMove.opponentHand.length - currentOpponentHandLength)
+              console.log(`AI drew ${afterAIMove.opponentHand.length - currentOpponentHandLength} cards.`)
 
-            // End AI thinking state
-            setIsAIThinking(false)
+              // End AI thinking state
+              setIsAIThinking(false)
 
-            // Allow draw animation to complete
-            await new Promise((resolve) => setTimeout(resolve, 600))
+              // Allow draw animation to complete
+              await new Promise((resolve) => setTimeout(resolve, 600))
 
-            setAiDrawingCards(false)
-            setGameState(endAITurn(afterAIMove))
+              setAiDrawingCards(false)
+              setGameState(endAITurn(afterAIMove))
+            } catch (error) {
+              console.error("AI draw animation error:", error)
+              // Reset animation states
+              setAiDrawingCards(false)
+              // End AI turn anyway
+              setGameState(endAITurn(afterAIMove))
+            }
           },
         ])
 
@@ -397,144 +436,162 @@ function OriginalGameMatch() {
         (afterAIMove.sharedDiscard.length > gameState.sharedDiscard.length && afterAIMove.message.includes("AI played"))
       ) {
         // Get the newly played card - either from field or from discard
-        let newCard
+        let newCard: GameCard | undefined
         let isImpactCard = false
 
         if (afterAIMove.opponentField.length > currentOpponentFieldLength) {
           // Animal card was played to the field
           newCard = afterAIMove.opponentField[afterAIMove.opponentField.length - 1]
-        } else {
+        } else if (afterAIMove.sharedDiscard.length > gameState.sharedDiscard.length) {
           // Impact card was played - find it in the discard pile
           // Get the most recently added card to the discard pile
           newCard = afterAIMove.sharedDiscard[afterAIMove.sharedDiscard.length - 1]
-          isImpactCard = newCard.type === "impact"
+          isImpactCard = newCard?.type === "impact"
         }
 
-        // Update the AI card play animation section
-        setAnimationQueue((prev) => [
-          ...prev,
-          async () => {
-            // Set the playing card ID for hand animation
-            setAiPlayingCardId(1) // Just use 1 as a dummy ID
+        // Only proceed if we found a valid card
+        if (newCard) {
+          // Update the AI card play animation section
+          setAnimationQueue((prev) => [
+            ...prev,
+            async () => {
+              try {
+                // Set the playing card ID for hand animation
+                setAiPlayingCardId(1) // Just use 1 as a dummy ID
 
-            // Show the AI card play animation
-            setAiPlayedCard(newCard)
-            setAiCardAnimationPhase("flip")
-            setShowAiCardAnimation(true)
+                // Show the AI card play animation
+                setAiPlayedCard(newCard)
+                setAiCardAnimationPhase("flip")
+                setShowAiCardAnimation(true)
 
-            // Log AI's action
-            if (afterAIMove.message !== gameState.message) {
-              console.log(afterAIMove.message)
-            }
+                // Log AI's action
+                if (afterAIMove.message !== gameState.message) {
+                  console.log(afterAIMove.message)
+                }
 
-            // Wait for the flip animation to complete
-            await new Promise((resolve) => setTimeout(resolve, 1500))
+                // Wait for the flip animation to complete
+                await new Promise((resolve) => setTimeout(resolve, 1500))
 
-            // Set animation phase to move card to field position
-            setAiCardAnimationPhase("toField")
+                // Set animation phase to move card to field position
+                setAiCardAnimationPhase("toField")
 
-            // Wait for card to fall to field
-            await new Promise((resolve) => setTimeout(resolve, 1000))
+                // Wait for card to fall to field
+                await new Promise((resolve) => setTimeout(resolve, 1000))
 
-            // Hide the animation overlay
-            setShowAiCardAnimation(false)
-            setAiPlayingCardId(null)
+                // Hide the animation overlay
+                setShowAiCardAnimation(false)
+                setAiPlayingCardId(null)
 
-            if (!isImpactCard) {
-              // For animal cards, show on the field
-              setNewOpponentFieldCardId(newCard.id)
+                if (!isImpactCard && newCard.id) {
+                  // For animal cards, show on the field
+                  setNewOpponentFieldCardId(newCard.id)
 
-              // Add particle effect based on card type
-              let particleColor = "#ff6666" // Default red for terrestrial
-              if (newCard.environment === "aquatic") particleColor = "#6666ff"
-              else if (newCard.environment === "amphibian") particleColor = "#66ff66"
+                  // Add particle effect based on card type
+                  let particleColor = "#ff6666" // Default red for terrestrial
+                  if (newCard.environment === "aquatic") particleColor = "#6666ff"
+                  else if (newCard.environment === "amphibian") particleColor = "#66ff66"
 
-              // Wait a moment for the card to appear on the board
-              setTimeout(() => {
-                addParticleEffect(newCard.id, particleColor)
-              }, 100)
-            } else {
-              // For impact cards, add an animation to the discard pile
-              if (discardPileRef.current) {
-                // Create temporary div that looks like the impact card
-                const tempCard = document.createElement("div")
-                tempCard.className = "fixed pointer-events-none z-50 transition-all duration-1000"
-                tempCard.style.width = "140px"
-                tempCard.style.height = "200px"
-                tempCard.style.left = "50%"
-                tempCard.style.top = "15%"
-                tempCard.style.transform = "translate(-50%, -50%) scale(0.4)"
+                  // Wait a moment for the card to appear on the board
+                  setTimeout(() => {
+                    if (newCard && newCard.id) {
+                      addParticleEffect(newCard.id, particleColor)
+                    }
+                  }, 100)
+                } else if (isImpactCard) {
+                  // For impact cards, add an animation to the discard pile
+                  if (discardPileRef.current && newCard) {
+                    // Create temporary div that looks like the impact card
+                    const tempCard = document.createElement("div")
+                    tempCard.className = "fixed pointer-events-none z-50 transition-all duration-1000"
+                    tempCard.style.width = "140px"
+                    tempCard.style.height = "200px"
+                    tempCard.style.left = "50%"
+                    tempCard.style.top = "15%"
+                    tempCard.style.transform = "translate(-50%, -50%) scale(0.4)"
 
-                // Create card content
-                const cardContent = document.createElement("div")
-                cardContent.className = "h-full w-full rounded-md shadow-lg border-2 border-purple-600 bg-purple-900"
+                    // Create card content
+                    const cardContent = document.createElement("div")
+                    cardContent.className =
+                      "h-full w-full rounded-md shadow-lg border-2 border-purple-600 bg-purple-900"
 
-                // Add card name
-                const nameDiv = document.createElement("div")
-                nameDiv.className = "text-center text-white text-xs font-bold mt-2"
-                nameDiv.textContent = newCard.name
-                cardContent.appendChild(nameDiv)
+                    // Add card name
+                    const nameDiv = document.createElement("div")
+                    nameDiv.className = "text-center text-white text-xs font-bold mt-2"
+                    nameDiv.textContent = newCard.name || "Impact Card"
+                    cardContent.appendChild(nameDiv)
 
-                tempCard.appendChild(cardContent)
-                document.body.appendChild(tempCard)
+                    tempCard.appendChild(cardContent)
+                    document.body.appendChild(tempCard)
 
-                // Add purple particle effect for impact cards
-                setTimeout(() => {
-                  const rect = tempCard.getBoundingClientRect()
-                  for (let i = 0; i < 15; i++) {
-                    const particle = document.createElement("div")
-                    particle.className = "particle"
-                    particle.style.backgroundColor = "#aa66ff"
-                    particle.style.left = `${rect.left + rect.width / 2 + (Math.random() - 0.5) * 100}px`
-                    particle.style.top = `${rect.top + rect.height / 2 + (Math.random() - 0.5) * 100}px`
-                    document.body.appendChild(particle)
-
-                    // Remove particle after animation
+                    // Add purple particle effect for impact cards
                     setTimeout(() => {
-                      if (document.body.contains(particle)) {
-                        document.body.removeChild(particle)
+                      const rect = tempCard.getBoundingClientRect()
+                      for (let i = 0; i < 15; i++) {
+                        const particle = document.createElement("div")
+                        particle.className = "particle"
+                        particle.style.backgroundColor = "#aa66ff"
+                        particle.style.left = `${rect.left + rect.width / 2 + (Math.random() - 0.5) * 100}px`
+                        particle.style.top = `${rect.top + rect.height / 2 + (Math.random() - 0.5) * 100}px`
+                        document.body.appendChild(particle)
+
+                        // Remove particle after animation
+                        setTimeout(() => {
+                          if (document.body.contains(particle)) {
+                            document.body.removeChild(particle)
+                          }
+                        }, 1000)
+                      }
+                    }, 100)
+
+                    // Wait briefly to show the impact in place
+                    await new Promise((resolve) => setTimeout(resolve, 800))
+
+                    // Now animate to discard pile
+                    const targetRect = discardPileRef.current.getBoundingClientRect()
+                    tempCard.style.transform = "translate(0, 0) scale(0.7) rotate(10deg)"
+                    tempCard.style.left = `${targetRect.left + targetRect.width / 2 - 35}px`
+                    tempCard.style.top = `${targetRect.top + targetRect.height / 2 - 50}px`
+                    tempCard.style.opacity = "0.7"
+
+                    // Add highlight to discard pile
+                    discardPileRef.current.classList.add("discard-highlight")
+
+                    // Remove temporary card after animation
+                    setTimeout(() => {
+                      if (document.body.contains(tempCard)) {
+                        document.body.removeChild(tempCard)
+                      }
+
+                      // Remove highlight from discard pile
+                      if (discardPileRef.current) {
+                        discardPileRef.current.classList.remove("discard-highlight")
                       }
                     }, 1000)
+
+                    // Wait for animation to complete
+                    await new Promise((resolve) => setTimeout(resolve, 1000))
                   }
-                }, 100)
+                }
 
-                // Wait briefly to show the impact in place
-                await new Promise((resolve) => setTimeout(resolve, 800))
+                // Allow field animation to complete
+                await new Promise((resolve) => setTimeout(resolve, 600))
 
-                // Now animate to discard pile
-                const targetRect = discardPileRef.current.getBoundingClientRect()
-                tempCard.style.transform = "translate(0, 0) scale(0.7) rotate(10deg)"
-                tempCard.style.left = `${targetRect.left + targetRect.width / 2 - 35}px`
-                tempCard.style.top = `${targetRect.top + targetRect.height / 2 - 50}px`
-                tempCard.style.opacity = "0.7"
-
-                // Add highlight to discard pile
-                discardPileRef.current.classList.add("discard-highlight")
-
-                // Remove temporary card after animation
-                setTimeout(() => {
-                  if (document.body.contains(tempCard)) {
-                    document.body.removeChild(tempCard)
-                  }
-
-                  // Remove highlight from discard pile
-                  discardPileRef.current.classList.remove("discard-highlight")
-                }, 1000)
-
-                // Wait for animation to complete
-                await new Promise((resolve) => setTimeout(resolve, 1000))
+                setNewOpponentFieldCardId(null)
+                setGameState(endAITurn(afterAIMove))
+              } catch (error) {
+                console.error("AI card play animation error:", error)
+                // Reset animation states
+                setShowAiCardAnimation(false)
+                setAiPlayingCardId(null)
+                setNewOpponentFieldCardId(null)
+                // End AI turn anyway
+                setGameState(endAITurn(afterAIMove))
               }
-            }
+            },
+          ])
 
-            // Allow field animation to complete
-            await new Promise((resolve) => setTimeout(resolve, 600))
-
-            setNewOpponentFieldCardId(null)
-            setGameState(endAITurn(afterAIMove))
-          },
-        ])
-
-        return
+          return
+        }
       }
 
       // Check if AI played Trap card
@@ -641,6 +698,16 @@ function OriginalGameMatch() {
           await nextAnimation()
         } catch (error) {
           console.error("Animation error:", error)
+          setAnimationError(`Animation error: ${error instanceof Error ? error.message : "Unknown error"}`)
+
+          // When an error occurs, clear the animation states to avoid UI getting stuck
+          setDiscardingCardId(null)
+          setReturningToDeckCardId(null)
+          setNewPlayerFieldCardId(null)
+          setAiPlayingCardId(null)
+          setPlayingCardId(null)
+          setNewCardIds([])
+          setShowAiCardAnimation(false)
         } finally {
           // Remove the processed animation from queue
           setAnimationQueue((prev) => prev.slice(1))
@@ -741,35 +808,49 @@ function OriginalGameMatch() {
     setAnimationQueue((prev) => [
       ...prev,
       async () => {
-        // Show discard animation for the selected card
-        const cardId = gameState.playerField[targetIndex as number].id
-        const card = gameState.playerField[targetIndex as number]
-        setDiscardingCardId(cardId)
+        try {
+          // Show discard animation for the selected card - add null checking
+          const idx = targetIndex as number
+          if (idx >= 0 && idx < gameState.playerField.length) {
+            const card = gameState.playerField[idx]
+            if (card && card.id) {
+              setDiscardingCardId(card.id)
 
-        // Find the card element and use our new animation
-        const cardElement = document.querySelector(`[data-card-id="${cardId}"]`)
-        if (cardElement instanceof HTMLElement && discardPileRef.current) {
-          // Use our new animation function
-          createCardToDiscardAnimation(card, cardElement, discardPileRef.current)
+              // Find the card element and use our new animation
+              const cardElement = document.querySelector(`[data-card-id="${card.id}"]`)
+              if (cardElement instanceof HTMLElement && discardPileRef.current) {
+                // Use our new animation function
+                createCardToDiscardAnimation(card, cardElement, discardPileRef.current)
+              }
+            }
+          }
+
+          // Allow animation to play
+          await new Promise((resolve) => setTimeout(resolve, 800))
+
+          // Resolve the trap effect
+          const newState = resolveEffect(gameState, targetIndex as number)
+
+          // Log the effect resolution
+          if (newState.message !== gameState.message) {
+            console.log(newState.message)
+          }
+
+          // Clear the animation state
+          setDiscardingCardId(null)
+
+          // End AI's turn
+          setGameState(endAITurn(newState))
+          setShowAITrapModal(false)
+        } catch (error) {
+          console.error("AI trap selection error:", error)
+          // Reset animation states
+          setDiscardingCardId(null)
+          // End AI's turn anyway
+          const newState = resolveEffect(gameState, targetIndex as number)
+          setGameState(endAITurn(newState))
+          setShowAITrapModal(false)
         }
-
-        // Allow animation to play
-        await new Promise((resolve) => setTimeout(resolve, 800))
-
-        // Resolve the trap effect
-        const newState = resolveEffect(gameState, targetIndex as number)
-
-        // Log the effect resolution
-        if (newState.message !== gameState.message) {
-          console.log(newState.message)
-        }
-
-        // Clear the animation state
-        setDiscardingCardId(null)
-
-        // End AI's turn
-        setGameState(endAITurn(newState))
-        setShowAITrapModal(false)
       },
     ])
   }
@@ -783,27 +864,46 @@ function OriginalGameMatch() {
     setAnimationQueue((prev) => [
       ...prev,
       async () => {
-        // Get the card being discarded
-        const targetCard = gameState.opponentHand[targetIndex]
+        try {
+          // Validate the index
+          if (targetIndex < 0 || targetIndex >= gameState.opponentHand.length) {
+            throw new Error("Invalid card index for Squirrel effect")
+          }
 
-        // Create a new state with the card discarded
-        const newOpponentHand = [...gameState.opponentHand]
-        newOpponentHand.splice(targetIndex, 1)
+          // Get the card being discarded
+          const targetCard = gameState.opponentHand[targetIndex]
+          if (!targetCard) {
+            throw new Error("Card not found for Squirrel effect")
+          }
 
-        const newState = {
-          ...gameState,
-          opponentHand: newOpponentHand,
-          sharedDiscard: [...gameState.sharedDiscard, targetCard],
-          pendingEffect: null,
-          message: `You made the opponent discard ${targetCard.name}.`,
+          // Create a new state with the card discarded
+          const newOpponentHand = [...gameState.opponentHand]
+          newOpponentHand.splice(targetIndex, 1)
+
+          const newState = {
+            ...gameState,
+            opponentHand: newOpponentHand,
+            sharedDiscard: [...gameState.sharedDiscard, targetCard],
+            pendingEffect: null,
+            message: `You made the opponent discard ${targetCard.name}.`,
+          }
+
+          // Log the effect resolution
+          console.log(newState.message)
+
+          // End player's turn
+          setGameState(endPlayerTurn(newState))
+          setShowSquirrelModal(false)
+        } catch (error) {
+          console.error("Squirrel effect error:", error)
+          // Clear the pending effect and continue
+          setGameState({
+            ...gameState,
+            pendingEffect: null,
+            message: "Squirrel effect failed. Your turn continues.",
+          })
+          setShowSquirrelModal(false)
         }
-
-        // Log the effect resolution
-        console.log(newState.message)
-
-        // End player's turn
-        setGameState(endPlayerTurn(newState))
-        setShowSquirrelModal(false)
       },
     ])
   }
@@ -816,19 +916,30 @@ function OriginalGameMatch() {
     setAnimationQueue((prev) => [
       ...prev,
       async () => {
-        // Create a new state resolving the Zebra effect
-        const newState = {
-          ...gameState,
-          pendingEffect: null,
-          message: "You've seen your opponent's hand.",
+        try {
+          // Create a new state resolving the Zebra effect
+          const newState = {
+            ...gameState,
+            pendingEffect: null,
+            message: "You've seen your opponent's hand.",
+          }
+
+          // Log the effect resolution
+          console.log(newState.message)
+
+          // End player's turn
+          setGameState(endPlayerTurn(newState))
+          setShowZebraModal(false)
+        } catch (error) {
+          console.error("Zebra effect error:", error)
+          // Clear the pending effect and continue
+          setGameState({
+            ...gameState,
+            pendingEffect: null,
+            message: "Zebra effect completed. Your turn ends.",
+          })
+          setShowZebraModal(false)
         }
-
-        // Log the effect resolution
-        console.log(newState.message)
-
-        // End player's turn
-        setGameState(endPlayerTurn(newState))
-        setShowZebraModal(false)
       },
     ])
   }
@@ -842,46 +953,78 @@ function OriginalGameMatch() {
     setAnimationQueue((prev) => [
       ...prev,
       async () => {
-        // Get the card being played
-        const targetCard = gameState.playerHand[targetIndex]
+        try {
+          // First, get the filtered cards that match the Tuna criteria
+          const filteredCards = gameState.playerHand.filter(
+            (card) => card.type === "animal" && (card.environment === "aquatic" || card.environment === "amphibian"),
+          )
 
-        // Create a new state with the card played
-        const newPlayerHand = [...gameState.playerHand]
-        newPlayerHand.splice(targetIndex, 1)
+          // Validate the index
+          if (targetIndex < 0 || targetIndex >= filteredCards.length) {
+            throw new Error("Invalid card index for Tuna effect")
+          }
 
-        // First, add the card to the field
-        let tempState = {
-          ...gameState,
-          playerHand: newPlayerHand,
-          playerField: [...gameState.playerField, targetCard],
-          playerPoints: gameState.playerPoints + (targetCard.points || 0),
-          pendingEffect: null,
-          message: `You played ${targetCard.name} from your hand.`,
-        }
+          // Get the actual card from the filtered list
+          const targetCard = filteredCards[targetIndex]
+          if (!targetCard || !targetCard.id) {
+            throw new Error("Card not found for Tuna effect")
+          }
 
-        // Now apply the card's effect, if it has one
-        if (targetCard.type === "animal" && targetCard.effect) {
-          tempState = applyAnimalEffect(tempState, targetCard, true)
-        }
+          // Find the index of this card in the original hand
+          const originalHandIndex = gameState.playerHand.findIndex((card) => card.id === targetCard.id)
+          if (originalHandIndex === -1) {
+            throw new Error("Card not found in player's hand")
+          }
 
-        // Log the effect resolution
-        console.log(tempState.message)
+          // Create a new state with the card played
+          const newPlayerHand = [...gameState.playerHand]
+          newPlayerHand.splice(originalHandIndex, 1)
 
-        // Set the new card ID for field animation
-        setNewPlayerFieldCardId(targetCard.id)
+          // First, add the card to the field
+          let tempState = {
+            ...gameState,
+            playerHand: newPlayerHand,
+            playerField: [...gameState.playerField, targetCard],
+            playerPoints: gameState.playerPoints + (targetCard.points || 0),
+            pendingEffect: null,
+            message: `You played ${targetCard.name} from your hand.`,
+          }
 
-        // Add particle effect based on environment
-        setTimeout(() => {
-          let particleColor = "#ff6666" // Default red for terrestrial
-          if (targetCard.environment === "aquatic") particleColor = "#6666ff"
-          else if (targetCard.environment === "amphibian") particleColor = "#66ff66"
+          // Now apply the card's effect, if it has one
+          if (targetCard.type === "animal" && targetCard.effect) {
+            tempState = applyAnimalEffect(tempState, targetCard, true)
+          }
 
-          addParticleEffect(targetCard.id, particleColor)
-        }, 400)
+          // Log the effect resolution
+          console.log(tempState.message)
 
-        // If there's a pending effect from the played card, don't end the turn yet
-        if (tempState.pendingEffect) {
-          setGameState(tempState)
+          // Set the new card ID for field animation
+          setNewPlayerFieldCardId(targetCard.id)
+
+          // Add particle effect based on environment
+          setTimeout(() => {
+            let particleColor = "#ff6666" // Default red for terrestrial
+            if (targetCard.environment === "aquatic") particleColor = "#6666ff"
+            else if (targetCard.environment === "amphibian") particleColor = "#66ff66"
+
+            addParticleEffect(targetCard.id, particleColor)
+          }, 400)
+
+          // If there's a pending effect from the played card, don't end the turn yet
+          if (tempState.pendingEffect) {
+            setGameState(tempState)
+            setShowTunaModal(false)
+
+            // Wait for field animation to complete
+            await new Promise((resolve) => setTimeout(resolve, 800))
+
+            // Clear animation states
+            setNewPlayerFieldCardId(null)
+            return
+          }
+
+          // End player's turn if no pending effect
+          setGameState(endPlayerTurn(tempState))
           setShowTunaModal(false)
 
           // Wait for field animation to complete
@@ -889,21 +1032,23 @@ function OriginalGameMatch() {
 
           // Clear animation states
           setNewPlayerFieldCardId(null)
-          return
+        } catch (error) {
+          console.error("Tuna effect error:", error)
+          // Reset animation states
+          setNewPlayerFieldCardId(null)
+          // Clear the pending effect and continue
+          setGameState({
+            ...gameState,
+            pendingEffect: null,
+            message: "Tuna effect failed. Your turn continues.",
+          })
+          setShowTunaModal(false)
         }
-
-        // End player's turn if no pending effect
-        setGameState(endPlayerTurn(tempState))
-        setShowTunaModal(false)
-
-        // Wait for field animation to complete
-        await new Promise((resolve) => setTimeout(resolve, 800))
-
-        // Clear animation states
-        setNewPlayerFieldCardId(null)
       },
     ])
   }
+
+  // Find the handleTurtleSelection function and replace it with this corrected version:
 
   const handleTurtleSelection = (targetIndex: number) => {
     if (!gameState || !gameState.pendingEffect) return
@@ -912,46 +1057,86 @@ function OriginalGameMatch() {
     setAnimationQueue((prev) => [
       ...prev,
       async () => {
-        // Get the card being played
-        const targetCard = gameState.playerHand[targetIndex]
+        try {
+          // First, get the filtered cards that match the Turtle criteria
+          const filteredCards = gameState.playerHand.filter(
+            (card) =>
+              card.type === "animal" &&
+              (card.environment === "aquatic" || card.environment === "amphibian") &&
+              (card.points || 0) <= 2,
+          )
 
-        // Create a new state with the card played
-        const newPlayerHand = [...gameState.playerHand]
-        newPlayerHand.splice(targetIndex, 1)
+          // Log for debugging
+          console.log("Turtle effect - filtered cards:", filteredCards.length, "selected index:", targetIndex)
 
-        // First, add the card to the field
-        let tempState = {
-          ...gameState,
-          playerHand: newPlayerHand,
-          playerField: [...gameState.playerField, targetCard],
-          playerPoints: gameState.playerPoints + (targetCard.points || 0),
-          pendingEffect: null,
-          message: `You played ${targetCard.name} from your hand.`,
-        }
+          // Validate the index
+          if (targetIndex < 0 || targetIndex >= filteredCards.length) {
+            throw new Error(
+              `Invalid card index for Turtle effect: ${targetIndex} (filtered cards: ${filteredCards.length})`,
+            )
+          }
 
-        // Now apply the card's effect, if it has one
-        if (targetCard.type === "animal" && targetCard.effect) {
-          tempState = applyAnimalEffect(tempState, targetCard, true)
-        }
+          // Get the actual card from the filtered list
+          const targetCard = filteredCards[targetIndex]
+          if (!targetCard || !targetCard.id) {
+            throw new Error("Card not found for Turtle effect")
+          }
 
-        // Log the effect resolution
-        console.log(tempState.message)
+          // Find the index of this card in the original hand
+          const originalHandIndex = gameState.playerHand.findIndex((card) => card.id === targetCard.id)
+          if (originalHandIndex === -1) {
+            throw new Error("Card not found in player's hand")
+          }
 
-        // Set the new card ID for field animation
-        setNewPlayerFieldCardId(targetCard.id)
+          // Create a new state with the card played
+          const newPlayerHand = [...gameState.playerHand]
+          newPlayerHand.splice(originalHandIndex, 1)
 
-        // Add particle effect based on environment
-        setTimeout(() => {
-          let particleColor = "#ff6666" // Default red for terrestrial
-          if (targetCard.environment === "aquatic") particleColor = "#6666ff"
-          else if (targetCard.environment === "amphibian") particleColor = "#66ff66"
+          // First, add the card to the field
+          let tempState = {
+            ...gameState,
+            playerHand: newPlayerHand,
+            playerField: [...gameState.playerField, targetCard],
+            playerPoints: gameState.playerPoints + (targetCard.points || 0),
+            pendingEffect: null,
+            message: `You played ${targetCard.name} from your hand.`,
+          }
 
-          addParticleEffect(targetCard.id, particleColor)
-        }, 400)
+          // Now apply the card's effect, if it has one
+          if (targetCard.type === "animal" && targetCard.effect) {
+            tempState = applyAnimalEffect(tempState, targetCard, true)
+          }
 
-        // If there's a pending effect from the played card, don't end the turn yet
-        if (tempState.pendingEffect) {
-          setGameState(tempState)
+          // Log the effect resolution
+          console.log(tempState.message)
+
+          // Set the new card ID for field animation
+          setNewPlayerFieldCardId(targetCard.id)
+
+          // Add particle effect based on environment
+          setTimeout(() => {
+            let particleColor = "#ff6666" // Default red for terrestrial
+            if (targetCard.environment === "aquatic") particleColor = "#6666ff"
+            else if (targetCard.environment === "amphibian") particleColor = "#66ff66"
+
+            addParticleEffect(targetCard.id, particleColor)
+          }, 400)
+
+          // If there's a pending effect from the played card, don't end the turn yet
+          if (tempState.pendingEffect) {
+            setGameState(tempState)
+            setShowTurtleModal(false)
+
+            // Wait for field animation to complete
+            await new Promise((resolve) => setTimeout(resolve, 800))
+
+            // Clear animation states
+            setNewPlayerFieldCardId(null)
+            return
+          }
+
+          // End player's turn if no pending effect
+          setGameState(endPlayerTurn(tempState))
           setShowTurtleModal(false)
 
           // Wait for field animation to complete
@@ -959,18 +1144,18 @@ function OriginalGameMatch() {
 
           // Clear animation states
           setNewPlayerFieldCardId(null)
-          return
+        } catch (error) {
+          console.error("Turtle effect error:", error)
+          // Reset animation states
+          setNewPlayerFieldCardId(null)
+          // Clear the pending effect and continue
+          setGameState({
+            ...gameState,
+            pendingEffect: null,
+            message: "Turtle effect failed. Your turn continues.",
+          })
+          setShowTurtleModal(false)
         }
-
-        // End player's turn if no pending effect
-        setGameState(endPlayerTurn(tempState))
-        setShowTurtleModal(false)
-
-        // Wait for field animation to complete
-        await new Promise((resolve) => setTimeout(resolve, 800))
-
-        // Clear animation states
-        setNewPlayerFieldCardId(null)
       },
     ])
   }
@@ -984,28 +1169,63 @@ function OriginalGameMatch() {
     setAnimationQueue((prev) => [
       ...prev,
       async () => {
-        // Get the selected card and the other card
-        const topCards = gameState.sharedDeck.slice(0, 2)
-        const selectedCard = topCards[selectedIndex]
-        const otherCard = topCards[1 - selectedIndex]
+        try {
+          // Get the selected card and the other card
+          const topCards = gameState.sharedDeck.slice(0, 2)
 
-        // Create a new state with the selected card added to hand and the other sent to bottom
-        const newDeck = [...gameState.sharedDeck.slice(2), otherCard]
+          // Validate the index
+          if (selectedIndex < 0 || selectedIndex >= topCards.length) {
+            throw new Error("Invalid card index for Crab effect")
+          }
 
-        const newState = {
-          ...gameState,
-          playerHand: [...gameState.playerHand, selectedCard],
-          sharedDeck: newDeck,
-          pendingEffect: null,
-          message: `You added ${selectedCard.name} to your hand and sent ${otherCard.name} to the bottom of the deck.`,
+          const selectedCard = topCards[selectedIndex]
+          const otherCard = topCards[1 - selectedIndex]
+
+          if (!selectedCard || !otherCard) {
+            throw new Error("Cards not found for Crab effect")
+          }
+
+          // Create a new state with the selected card added to hand and the other sent to bottom
+          const newDeck = [...gameState.sharedDeck.slice(2), otherCard]
+
+          const newState = {
+            ...gameState,
+            playerHand: [...gameState.playerHand, selectedCard],
+            sharedDeck: newDeck,
+            pendingEffect: null,
+            message: `You added ${selectedCard.name} to your hand and sent ${otherCard.name} to the bottom of the deck.`,
+          }
+
+          // Log the effect resolution
+          console.log(newState.message)
+
+          // End player's turn
+          setGameState(endPlayerTurn(newState))
+          setShowCrabModal(false)
+        } catch (error) {
+          console.error("Crab effect error:", error)
+          // If there's an error, just draw the top card
+          if (gameState.sharedDeck.length > 0) {
+            const topCard = gameState.sharedDeck[0]
+            const newDeck = gameState.sharedDeck.slice(1)
+            const newState = {
+              ...gameState,
+              playerHand: [...gameState.playerHand, topCard],
+              sharedDeck: newDeck,
+              pendingEffect: null,
+              message: `Crab effect: You drew ${topCard.name}.`,
+            }
+            setGameState(endPlayerTurn(newState))
+          } else {
+            // If deck is empty, just end the turn
+            setGameState({
+              ...gameState,
+              pendingEffect: null,
+              message: "Crab effect failed. Your turn ends.",
+            })
+          }
+          setShowCrabModal(false)
         }
-
-        // Log the effect resolution
-        console.log(newState.message)
-
-        // End player's turn
-        setGameState(endPlayerTurn(newState))
-        setShowCrabModal(false)
       },
     ])
   }
@@ -1028,9 +1248,27 @@ function OriginalGameMatch() {
       ...prev,
       async () => {
         try {
+          // Validate the indices first
+          if (
+            playerIdx < 0 ||
+            playerIdx >= gameState.playerField.length ||
+            opponentIdx < 0 ||
+            opponentIdx >= gameState.opponentField.length
+          ) {
+            throw new Error("Invalid card indices for Confuse effect")
+          }
+
+          // Get the cards and validate they exist
+          const playerCard = gameState.playerField[playerIdx]
+          const opponentCard = gameState.opponentField[opponentIdx]
+
+          if (!playerCard || !opponentCard || !playerCard.id || !opponentCard.id) {
+            throw new Error("Invalid cards for Confuse effect")
+          }
+
           // Get the card IDs
-          const playerCardId = gameState.playerField[playerIdx].id
-          const opponentCardId = gameState.opponentField[opponentIdx].id
+          const playerCardId = playerCard.id
+          const opponentCardId = opponentCard.id
 
           // Add animation classes for zone transfer
           const playerCardElement = document.querySelector(`[data-card-id="${playerCardId}"]`)
@@ -1056,10 +1294,6 @@ function OriginalGameMatch() {
 
           // Delay the effect resolution to allow animation to complete
           await new Promise((resolve) => setTimeout(resolve, 800))
-
-          // Directly exchange the cards without using resolveEffect
-          const playerCard = gameState.playerField[playerIdx]
-          const opponentCard = gameState.opponentField[opponentIdx]
 
           // Create new arrays with the cards exchanged
           const newPlayerField = [...gameState.playerField]
@@ -1096,6 +1330,15 @@ function OriginalGameMatch() {
 
           // End player's turn
           setGameState(endPlayerTurn(newState))
+        } catch (error) {
+          console.error("Error in Confuse effect:", error)
+
+          // Reset the game state without the pending effect
+          setGameState({
+            ...gameState,
+            pendingEffect: null,
+            message: "Confuse effect failed. Your turn continues.",
+          })
         } finally {
           // Reset the flags after the animation is complete
           setIsHandlingConfuse(false)
@@ -1404,7 +1647,7 @@ function OriginalGameMatch() {
     // Check if player needs to discard first
     if (gameState.playerHand.length >= 5) {
       // If hand is full (6 cards), player must discard 2 cards
-      // If hand has 5 cards, player must discard 1 card
+      // If hand has 5 cards, player must discard 2 cards
       setDiscardCount(gameState.playerHand.length === 6 ? 2 : 1)
       setShowDiscardModal(true)
       return
@@ -1414,26 +1657,38 @@ function OriginalGameMatch() {
     setAnimationQueue((prev) => [
       ...prev,
       async () => {
-        // Store current hand length to detect new cards
-        const currentHandLength = gameState.playerHand.length
-        const maxDraw = Math.min(2, 6 - currentHandLength)
+        try {
+          // Store current hand length to detect new cards
+          const currentHandLength = gameState.playerHand.length
+          const maxDraw = Math.min(2, 6 - currentHandLength)
 
-        // Draw cards (up to 6 total in hand)
-        const newState = drawCards(gameState, maxDraw, true)
-        console.log(`You drew ${maxDraw} card${maxDraw !== 1 ? "s" : ""}.`)
+          // Draw cards (up to 6 total in hand)
+          const newState = drawCards(gameState, maxDraw, true)
+          console.log(`You drew ${maxDraw} card${maxDraw !== 1 ? "s" : ""}.`)
 
-        // Get IDs of newly drawn cards for animation
-        const drawnCardIds = newState.playerHand.slice(currentHandLength).map((card) => card.id)
+          // Get IDs of newly drawn cards for animation
+          const drawnCardIds = newState.playerHand
+            .slice(currentHandLength)
+            .map((card) => card?.id || 0)
+            .filter((id) => id > 0)
 
-        setNewCardIds(drawnCardIds)
+          setNewCardIds(drawnCardIds)
 
-        // End player's turn
-        setGameState(endPlayerTurn(newState))
+          // End player's turn
+          setGameState(endPlayerTurn(newState))
 
-        // Clear animation state after a delay
-        await new Promise((resolve) => setTimeout(resolve, 1000))
+          // Clear animation state after a delay
+          await new Promise((resolve) => setTimeout(resolve, 1000))
 
-        setNewCardIds([])
+          setNewCardIds([])
+        } catch (error) {
+          console.error("Draw cards error:", error)
+          // Reset animation states
+          setNewCardIds([])
+          // End player's turn anyway
+          const newState = drawCards(gameState, 1, true)
+          setGameState(endPlayerTurn(newState))
+        }
       },
     ])
   }
@@ -1498,84 +1753,97 @@ function OriginalGameMatch() {
     setAnimationQueue((prev) => [
       ...prev,
       async () => {
-        // Set the playing card ID for animation
-        setPlayingCardId(card.id)
+        try {
+          // Set the playing card ID for animation
+          if (card.id) {
+            setPlayingCardId(card.id)
+          }
 
-        // Delay the actual card play to allow animation to start
-        await new Promise((resolve) => setTimeout(resolve, 300))
+          // Delay the actual card play to allow animation to start
+          await new Promise((resolve) => setTimeout(resolve, 300))
 
-        let newState
+          let newState
 
-        if (card.type === "animal") {
-          newState = playAnimalCard(gameState, selectedCardIndex, true)
-          console.log(`You played ${card.name} (${card.points} points).`)
+          if (card.type === "animal") {
+            newState = playAnimalCard(gameState, selectedCardIndex, true)
+            console.log(`You played ${card.name} (${card.points} points).`)
 
-          // Set the new card ID for field animation
-          setNewPlayerFieldCardId(card.id)
+            // Set the new card ID for field animation
+            if (card.id) {
+              setNewPlayerFieldCardId(card.id)
 
-          // Add particle effect based on environment
-          setTimeout(() => {
-            let particleColor = "#ff6666" // Default red for terrestrial
-            if (card.environment === "aquatic") particleColor = "#6666ff"
-            else if (card.environment === "amphibian") particleColor = "#66ff66"
+              // Add particle effect based on environment
+              setTimeout(() => {
+                let particleColor = "#ff6666" // Default red for terrestrial
+                if (card.environment === "aquatic") particleColor = "#6666ff"
+                else if (card.environment === "amphibian") particleColor = "#66ff66"
 
-            addParticleEffect(card.id, particleColor)
-            particleColor = "#66ff66"
-
-            addParticleEffect(card.id, particleColor)
-          }, 400)
-        } else {
-          newState = playImpactCard(gameState, selectedCardIndex, true)
-
-          // Store the card for potential cancellation
-          lastPlayedCardRef.current = card
-
-          // Check if the card was successfully played by looking at the message
-          const cardPlayFailed =
-            newState.message.includes("cannot play") || newState.message.includes("no valid targets")
-
-          if (!cardPlayFailed) {
-            console.log(`You played ${card.name}: ${card.effect}`)
-
-            // Add purple particle effect for impact cards
-            setTimeout(() => {
-              addParticleEffect(card.id, "#aa66ff")
-            }, 400)
+                addParticleEffect(card.id, particleColor)
+              }, 400)
+            }
           } else {
-            // If card play failed, update the action message
-            console.log(newState.message)
+            newState = playImpactCard(gameState, selectedCardIndex, true)
 
-            // Clear animation states
-            setPlayingCardId(null)
+            // Store the card for potential cancellation
+            lastPlayedCardRef.current = card
 
-            // Update game state but don't end turn
+            // Check if the card was successfully played by looking at the message
+            const cardPlayFailed =
+              newState.message.includes("cannot play") || newState.message.includes("no valid targets")
+
+            if (!cardPlayFailed) {
+              console.log(`You played ${card.name}: ${card.effect}`)
+
+              // Add purple particle effect for impact cards
+              if (card.id) {
+                setTimeout(() => {
+                  addParticleEffect(card.id, "#aa66ff")
+                }, 400)
+              }
+            } else {
+              // If card play failed, update the action message
+              console.log(newState.message)
+
+              // Clear animation states
+              setPlayingCardId(null)
+
+              // Update game state but don't end turn
+              setGameState(newState)
+              setShowCardDetail(false)
+              setSelectedCardIndex(null)
+              return
+            }
+          }
+
+          // Close the card detail view
+          setShowCardDetail(false)
+          setSelectedCardIndex(null)
+
+          // If there's a pending effect, don't end turn yet
+          if (newState && newState.pendingEffect) {
             setGameState(newState)
-            setShowCardDetail(false)
-            setSelectedCardIndex(null)
+            setPlayingCardId(null)
             return
           }
-        }
 
-        // Close the card detail view
-        setShowCardDetail(false)
-        setSelectedCardIndex(null)
+          // End player's turn
+          setGameState(endPlayerTurn(newState))
 
-        // If there's a pending effect, don't end turn yet
-        if (newState && newState.pendingEffect) {
-          setGameState(newState)
+          // Wait for field animation to complete
+          await new Promise((resolve) => setTimeout(resolve, 800))
+
+          // Clear animation states
+          setNewPlayerFieldCardId(null)
           setPlayingCardId(null)
-          return
+        } catch (error) {
+          console.error("Play card error:", error)
+          // Reset animation states
+          setPlayingCardId(null)
+          setNewPlayerFieldCardId(null)
+          // Close the card detail view
+          setShowCardDetail(false)
+          setSelectedCardIndex(null)
         }
-
-        // End player's turn
-        setGameState(endPlayerTurn(newState))
-
-        // Wait for field animation to complete
-        await new Promise((resolve) => setTimeout(resolve, 800))
-
-        // Clear animation states
-        setNewPlayerFieldCardId(null)
-        setPlayingCardId(null)
       },
     ])
   }
@@ -1635,75 +1903,88 @@ function OriginalGameMatch() {
     setAnimationQueue((prev) => [
       ...prev,
       async () => {
-        // Set the playing card ID for animation
-        setPlayingCardId(card.id)
+        try {
+          // Set the playing card ID for animation
+          if (card.id) {
+            setPlayingCardId(card.id)
+          }
 
-        // Wait for the card play animation
-        await new Promise((resolve) => setTimeout(resolve, 300))
+          // Wait for the card play animation
+          await new Promise((resolve) => setTimeout(resolve, 300))
 
-        let newState
+          let newState
 
-        if (card.type === "animal") {
-          newState = playAnimalCard(gameState, cardIndex, true)
-          console.log(`You played ${card.name} (${card.points} points).`)
+          if (card.type === "animal") {
+            newState = playAnimalCard(gameState, cardIndex, true)
+            console.log(`You played ${card.name} (${card.points} points).`)
 
-          // Set the new card ID for field animation
-          setNewPlayerFieldCardId(card.id)
+            // Set the new card ID for field animation
+            if (card.id) {
+              setNewPlayerFieldCardId(card.id)
 
-          // Add particle effect based on environment
-          setTimeout(() => {
-            let particleColor = "#ff6666" // Default red for terrestrial
-            if (card.environment === "aquatic") particleColor = "#6666ff"
-            else if (card.environment === "amphibian") particleColor = "#66ff66"
+              // Add particle effect based on environment
+              setTimeout(() => {
+                let particleColor = "#ff6666" // Default red for terrestrial
+                if (card.environment === "aquatic") particleColor = "#6666ff"
+                else if (card.environment === "amphibian") particleColor = "#66ff66"
 
-            addParticleEffect(card.id, particleColor)
-          }, 400)
-        } else {
-          newState = playImpactCard(gameState, cardIndex, true)
-
-          // Store the card for potential cancellation
-          lastPlayedCardRef.current = card
-
-          // Check if the card was successfully played by looking at the message
-          const cardPlayFailed =
-            newState.message.includes("cannot play") || newState.message.includes("no valid targets")
-
-          if (!cardPlayFailed) {
-            console.log(`You played ${card.name}: ${card.effect}`)
-
-            // Add purple particle effect for impact cards
-            setTimeout(() => {
-              addParticleEffect(card.id, "#aa66ff")
-            }, 400)
+                addParticleEffect(card.id, particleColor)
+              }, 400)
+            }
           } else {
-            // If card play failed, update the action message
-            console.log(newState.message)
+            newState = playImpactCard(gameState, cardIndex, true)
 
-            // Clear animation states
-            setPlayingCardId(null)
+            // Store the card for potential cancellation
+            lastPlayedCardRef.current = card
 
-            // Update game state but don't end turn
+            // Check if the card was successfully played by looking at the message
+            const cardPlayFailed =
+              newState.message.includes("cannot play") || newState.message.includes("no valid targets")
+
+            if (!cardPlayFailed) {
+              console.log(`You played ${card.name}: ${card.effect}`)
+
+              // Add purple particle effect for impact cards
+              if (card.id) {
+                setTimeout(() => {
+                  addParticleEffect(card.id, "#aa66ff")
+                }, 400)
+              }
+            } else {
+              // If card play failed, update the action message
+              console.log(newState.message)
+
+              // Clear animation states
+              setPlayingCardId(null)
+
+              // Update game state but don't end turn
+              setGameState(newState)
+              return
+            }
+          }
+
+          // If there's a pending effect, don't end turn yet
+          if (newState && newState.pendingEffect) {
             setGameState(newState)
+            setPlayingCardId(null)
             return
           }
-        }
 
-        // If there's a pending effect, don't end turn yet
-        if (newState && newState.pendingEffect) {
-          setGameState(newState)
+          // End player's turn
+          setGameState(endPlayerTurn(newState))
+
+          // Wait for field animation to complete
+          await new Promise((resolve) => setTimeout(resolve, 800))
+
+          // Clear animation states
+          setNewPlayerFieldCardId(null)
           setPlayingCardId(null)
-          return
+        } catch (error) {
+          console.error("Card drop error:", error)
+          // Reset animation states
+          setPlayingCardId(null)
+          setNewPlayerFieldCardId(null)
         }
-
-        // End player's turn
-        setGameState(endPlayerTurn(newState))
-
-        // Wait for field animation to complete
-        await new Promise((resolve) => setTimeout(resolve, 800))
-
-        // Clear animation states
-        setNewPlayerFieldCardId(null)
-        setPlayingCardId(null)
       },
     ])
   }
@@ -1716,41 +1997,66 @@ function OriginalGameMatch() {
     setAnimationQueue((prev) => [
       ...prev,
       async () => {
-        // Get the cards being discarded for animation
-        const discardedCardIds = selectedIndices.map((index) => gameState.playerHand[index].id)
+        try {
+          // Validate indices
+          const validIndices = selectedIndices.filter((idx) => idx >= 0 && idx < gameState.playerHand.length)
+          if (validIndices.length === 0) {
+            throw new Error("No valid cards selected for discard")
+          }
 
-        // Set animation state for discarded cards
-        setPlayingCardId(discardedCardIds[0]) // Just animate the first one for simplicity
+          // Get the cards being discarded for animation
+          const discardedCardIds = validIndices
+            .map((index) => gameState.playerHand[index]?.id || 0)
+            .filter((id) => id > 0)
 
-        // Allow animation to start
-        await new Promise((resolve) => setTimeout(resolve, 300))
+          // Set animation state for discarded cards
+          if (discardedCardIds.length > 0) {
+            setPlayingCardId(discardedCardIds[0]) // Just animate the first one for simplicity
+          }
 
-        // Send selected cards to bottom of deck
-        const newState = sendCardsToBottom(gameState, selectedIndices, true)
-        console.log(`You sent ${selectedIndices.length} card(s) to the bottom of the deck.`)
+          // Allow animation to start
+          await new Promise((resolve) => setTimeout(resolve, 300))
 
-        // Store current hand length to detect new cards
-        const currentHandLength = newState.playerHand.length
-        const maxDraw = Math.min(2, 6 - currentHandLength)
+          // Send selected cards to bottom of deck
+          const newState = sendCardsToBottom(gameState, validIndices, true)
+          console.log(`You sent ${validIndices.length} card(s) to the bottom of the deck.`)
 
-        // Draw cards (up to 6 total in hand)
-        const afterDraw = drawCards(newState, maxDraw, true)
-        console.log(`You drew ${maxDraw} card${maxDraw !== 1 ? "s" : ""}.`)
+          // Store current hand length to detect new cards
+          const currentHandLength = newState.playerHand.length
+          const maxDraw = Math.min(2, 6 - currentHandLength)
 
-        // Get IDs of newly drawn cards for animation
-        const drawnCardIds = afterDraw.playerHand.slice(currentHandLength).map((card) => card.id)
+          // Draw cards (up to 6 total in hand)
+          const afterDraw = drawCards(newState, maxDraw, true)
+          console.log(`You drew ${maxDraw} card${maxDraw !== 1 ? "s" : ""}.`)
 
-        setNewCardIds(drawnCardIds)
+          // Get IDs of newly drawn cards for animation
+          const drawnCardIds = afterDraw.playerHand
+            .slice(currentHandLength)
+            .map((card) => card?.id || 0)
+            .filter((id) => id > 0)
 
-        // End player's turn
-        setGameState(endPlayerTurn(afterDraw))
-        setShowDiscardModal(false)
+          setNewCardIds(drawnCardIds)
 
-        // Clear animation states after a delay
-        await new Promise((resolve) => setTimeout(resolve, 1000))
+          // End player's turn
+          setGameState(endPlayerTurn(afterDraw))
+          setShowDiscardModal(false)
 
-        setNewCardIds([])
-        setPlayingCardId(null)
+          // Clear animation states after a delay
+          await new Promise((resolve) => setTimeout(resolve, 1000))
+
+          setNewCardIds([])
+          setPlayingCardId(null)
+        } catch (error) {
+          console.error("Discard confirm error:", error)
+          // Reset animation states
+          setPlayingCardId(null)
+          setNewCardIds([])
+          // Close the modal
+          setShowDiscardModal(false)
+          // End player's turn anyway
+          const newState = drawCards(gameState, 1, true)
+          setGameState(endPlayerTurn(newState))
+        }
       },
     ])
   }
@@ -1769,135 +2075,193 @@ function OriginalGameMatch() {
     setAnimationQueue((prev) => [
       ...prev,
       async () => {
-        // Show appropriate animation based on the effect type
-        if (gameState.pendingEffect) {
-          const { type } = gameState.pendingEffect
+        try {
+          // Show appropriate animation based on the effect type
+          if (gameState.pendingEffect) {
+            const { type } = gameState.pendingEffect
 
-          // For effects that discard cards
-          if (["hunter", "fisher", "limit"].includes(type)) {
-            // Get the card ID for animation
-            const idx = targetIndex as number
-            const cardId = gameState.opponentField[idx].id
-            const card = gameState.opponentField[idx]
-            setDiscardingCardId(cardId)
+            // For effects that discard cards
+            if (["hunter", "fisher", "limit"].includes(type)) {
+              // Get the card ID for animation - add null checking
+              const idx = targetIndex as number
+              if (idx >= 0 && idx < gameState.opponentField.length) {
+                const card = gameState.opponentField[idx]
+                if (card && card.id) {
+                  setDiscardingCardId(card.id)
 
-            // Find the card element
-            const cardElement = document.querySelector(`[data-card-id="${cardId}"]`)
-            if (cardElement instanceof HTMLElement && discardPileRef.current) {
-              // Use our new animation function
-              createCardToDiscardAnimation(card, cardElement, discardPileRef.current)
-            }
-          }
-
-          // For effects that return cards to deck
-          else if (["scare", "epidemic", "compete", "prey"].includes(type)) {
-            // Handle single index or array of indices
-            if (typeof targetIndex === "number") {
-              let cardId, card
-              if (type === "epidemic") {
-                // For epidemic, we're only selecting from player field
-                cardId = gameState.playerField[targetIndex].id
-                card = gameState.playerField[targetIndex]
-              } else if (type === "compete" || type === "prey") {
-                // For compete, we're selecting from player hand or field
-                cardId = gameState.playerHand[targetIndex].id
-                card = gameState.playerHand[targetIndex]
-              } else {
-                // For scare, we need to check if it's player or opponent field
-                const playerFieldLength = gameState.playerField.length
-                if (targetIndex < playerFieldLength) {
-                  cardId = gameState.playerField[targetIndex].id
-                  card = gameState.playerField[targetIndex]
-                } else {
-                  cardId = gameState.opponentField[targetIndex - playerFieldLength].id
-                  card = gameState.opponentField[targetIndex - playerFieldLength]
+                  // Find the card element
+                  const cardElement = document.querySelector(`[data-card-id="${card.id}"]`)
+                  if (cardElement instanceof HTMLElement && discardPileRef.current) {
+                    // Use our new animation function
+                    createCardToDiscardAnimation(card, cardElement, discardPileRef.current)
+                  }
                 }
               }
-              setReturningToDeckCardId(cardId)
+            }
 
-              // Find card element and use our deck ref for animation
-              const cardElement = document.querySelector(`[data-card-id="${cardId}"]`)
+            // For effects that return cards to deck
+            else if (["scare", "epidemic", "compete", "prey"].includes(type)) {
+              // Handle single index or array of indices with better error checking
+              if (typeof targetIndex === "number") {
+                let cardId, card
 
-              if (cardElement instanceof HTMLElement && deckPileRef.current) {
-                // Use our new animation function
-                createCardToDeckAnimation(card, cardElement, deckPileRef.current)
+                // For epidemic - selecting from player field
+                if (type === "epidemic" && targetIndex >= 0 && targetIndex < gameState.playerField.length) {
+                  card = gameState.playerField[targetIndex]
+                  if (card && card.id) {
+                    cardId = card.id
+                    setReturningToDeckCardId(cardId)
+
+                    // Find card element and use our deck ref for animation
+                    const cardElement = document.querySelector(`[data-card-id="${cardId}"]`)
+                    if (cardElement instanceof HTMLElement && deckPileRef.current) {
+                      createCardToDeckAnimation(card, cardElement, deckPileRef.current)
+                    }
+                  }
+                }
+                // For compete/prey - selecting from player hand
+                else if (
+                  (type === "compete" || type === "prey") &&
+                  targetIndex >= 0 &&
+                  targetIndex < gameState.playerHand.length
+                ) {
+                  card = gameState.playerHand[targetIndex]
+                  if (card && card.id) {
+                    cardId = card.id
+                    setReturningToDeckCardId(cardId)
+
+                    // Find card element and use our deck ref for animation
+                    const cardElement = document.querySelector(`[data-card-id="${cardId}"]`)
+                    if (cardElement instanceof HTMLElement && deckPileRef.current) {
+                      createCardToDeckAnimation(card, cardElement, deckPileRef.current)
+                    }
+                  }
+                }
+                // For scare - checking if player or opponent field
+                else if (type === "scare") {
+                  const playerFieldLength = gameState.playerField.length
+                  if (targetIndex < playerFieldLength && targetIndex >= 0) {
+                    card = gameState.playerField[targetIndex]
+                  } else if (
+                    targetIndex >= playerFieldLength &&
+                    targetIndex < playerFieldLength + gameState.opponentField.length
+                  ) {
+                    card = gameState.opponentField[targetIndex - playerFieldLength]
+                  }
+
+                  if (card && card.id) {
+                    cardId = card.id
+                    setReturningToDeckCardId(cardId)
+
+                    // Find card element and use our deck ref for animation
+                    const cardElement = document.querySelector(`[data-card-id="${cardId}"]`)
+                    if (cardElement instanceof HTMLElement && deckPileRef.current) {
+                      createCardToDeckAnimation(card, cardElement, deckPileRef.current)
+                    }
+                  }
+                }
+              }
+            }
+            // Add animation for Cage card's first selection (sending to discard)
+            else if (type === "cage" && !gameState.pendingEffect.firstSelection) {
+              const idx = targetIndex as number
+              if (idx >= 0 && idx < gameState.playerField.length) {
+                const card = gameState.playerField[idx]
+                if (card && card.id) {
+                  setDiscardingCardId(card.id)
+
+                  // Find the card element
+                  const cardElement = document.querySelector(`[data-card-id="${card.id}"]`)
+                  if (cardElement instanceof HTMLElement && discardPileRef.current) {
+                    createCardToDiscardAnimation(card, cardElement, discardPileRef.current)
+                  }
+                }
+              }
+            }
+            // Add animation for Cage card's second selection (gaining control)
+            else if (type === "cage" && gameState.pendingEffect.firstSelection) {
+              const idx = targetIndex as number
+              if (idx >= 0 && idx < gameState.opponentField.length) {
+                const card = gameState.opponentField[idx]
+                if (card && card.id) {
+                  // Use a different animation for gaining control
+                  setNewPlayerFieldCardId(card.id)
+
+                  // Add animation class for zone transfer
+                  const cardElement = document.querySelector(`[data-card-id="${card.id}"]`)
+                  if (cardElement) {
+                    cardElement.classList.add(getZoneTransferAnimation("field", "opponent-field"))
+
+                    // Add particle effect
+                    setTimeout(() => {
+                      addParticleEffect(card.id, "#ffff00") // Yellow particles for control change
+                    }, 100)
+                  }
+                }
+              }
+            }
+            // Add animation for Trap card (when AI plays it and player selects)
+            else if (type === "trap" && !gameState.pendingEffect.forPlayer) {
+              const idx = targetIndex as number
+              if (idx >= 0 && idx < gameState.playerField.length) {
+                const card = gameState.playerField[idx]
+                if (card && card.id) {
+                  setDiscardingCardId(card.id)
+
+                  // Find the card element
+                  const cardElement = document.querySelector(`[data-card-id="${card.id}"]`)
+                  if (cardElement instanceof HTMLElement && discardPileRef.current) {
+                    createCardToDiscardAnimation(card, cardElement, discardPileRef.current)
+                  }
+                }
               }
             }
           }
-          // Add animation for Cage card's first selection (sending to discard)
-          else if (type === "cage" && !gameState.pendingEffect.firstSelection) {
-            const cardId = gameState.playerField[targetIndex as number].id
-            const card = gameState.playerField[targetIndex as number]
-            setDiscardingCardId(cardId)
 
-            // Find the card element
-            const cardElement = document.querySelector(`[data-card-id="${cardId}"]`)
-            if (cardElement instanceof HTMLElement && discardPileRef.current) {
-              // Use our new animation function
-              createCardToDiscardAnimation(card, cardElement, discardPileRef.current)
-            }
+          // Delay the effect resolution to allow animation to complete
+          await new Promise((resolve) => setTimeout(resolve, 800))
+
+          // Resolve the effect
+          const newState = resolveEffect(gameState, targetIndex)
+
+          // Log the effect resolution
+          if (newState.message !== gameState.message) {
+            console.log(newState.message)
           }
-          // Add animation for Cage card's second selection (gaining control)
-          else if (type === "cage" && gameState.pendingEffect.firstSelection) {
-            const cardId = gameState.opponentField[targetIndex as number].id
-            // Use a different animation for gaining control
-            setNewPlayerFieldCardId(cardId)
 
-            // Add animation class for zone transfer
-            const cardElement = document.querySelector(`[data-card-id="${cardId}"]`)
-            if (cardElement) {
-              cardElement.classList.add(getZoneTransferAnimation("field", "opponent-field"))
+          // Clear animation states
+          setDiscardingCardId(null)
+          setReturningToDeckCardId(null)
+          setNewPlayerFieldCardId(null)
 
-              // Add particle effect
-              setTimeout(() => {
-                addParticleEffect(cardId, "#ffff00") // Yellow particles for control change
-              }, 100)
-            }
+          // Clear the last played card reference since the effect has been resolved
+          lastPlayedCardRef.current = null
+
+          // If there's still a pending effect, don't end turn yet
+          if (newState.pendingEffect) {
+            setGameState(newState)
+            setShowTargetModal(false)
+            return
           }
-          // Add animation for Trap card (when AI plays it and player selects)
-          else if (type === "trap" && !gameState.pendingEffect.forPlayer) {
-            const cardId = gameState.playerField[targetIndex as number].id
-            const card = gameState.playerField[targetIndex as number]
-            setDiscardingCardId(cardId)
 
-            // Find the card element
-            const cardElement = document.querySelector(`[data-card-id="${cardId}"]`)
-            if (cardElement instanceof HTMLElement && discardPileRef.current) {
-              // Use our new animation function
-              createCardToDiscardAnimation(card, cardElement, discardPileRef.current)
-            }
-          }
-        }
-
-        // Delay the effect resolution to allow animation to complete
-        await new Promise((resolve) => setTimeout(resolve, 800))
-
-        // Resolve the effect
-        const newState = resolveEffect(gameState, targetIndex)
-
-        // Log the effect resolution
-        if (newState.message !== gameState.message) {
-          console.log(newState.message)
-        }
-
-        // Clear animation states
-        setDiscardingCardId(null)
-        setReturningToDeckCardId(null)
-        setNewPlayerFieldCardId(null)
-
-        // Clear the last played card reference since the effect has been resolved
-        lastPlayedCardRef.current = null
-
-        // If there's still a pending effect, don't end turn yet
-        if (newState.pendingEffect) {
-          setGameState(newState)
+          // End player's turn
+          setGameState(endPlayerTurn(newState))
           setShowTargetModal(false)
-          return
+        } catch (error) {
+          console.error("Target confirm error:", error)
+          // Reset animation states
+          setDiscardingCardId(null)
+          setReturningToDeckCardId(null)
+          setNewPlayerFieldCardId(null)
+          // Close the modal
+          setShowTargetModal(false)
+          // Clear the pending effect and continue
+          setGameState({
+            ...gameState,
+            pendingEffect: null,
+            message: "Effect failed. Your turn continues.",
+          })
         }
-
-        // End player's turn
-        setGameState(endPlayerTurn(newState))
-        setShowTargetModal(false)
       },
     ])
   }
@@ -1907,6 +2271,11 @@ function OriginalGameMatch() {
     const newGame = initializeGame()
     setGameState(newGame)
     setShowAlert(false)
+  }
+
+  // Handle animation error dismissal
+  const handleDismissError = () => {
+    setAnimationError(null)
   }
 
   if (!gameState) {
@@ -2121,6 +2490,18 @@ function OriginalGameMatch() {
         />
       </div>
 
+      {/* Animation error message */}
+      {animationError && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-800/90 text-white px-4 py-2 rounded-md z-50 text-sm">
+          <div className="flex items-center gap-2">
+            <span>{animationError}</span>
+            <button onClick={handleDismissError} className="text-xs bg-red-700 hover:bg-red-600 px-2 py-1 rounded">
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Card Detail Modal */}
       <CardDetailModal
         open={showCardDetail}
@@ -2213,7 +2594,7 @@ function OriginalGameMatch() {
                 }}
               >
                 <Card className="h-[200px] w-[140px] border-4 border-red-700 bg-red-900 shadow-xl">
-                  <div className="absolute inset-0 border-8 border-transparent bg-gradient-to-br from-red-800/20 to-black/30"></div>
+                  <div className="absolute inset-0 border-8 border-transparent bg-gradient-to-br from-red-800/20 to black/30"></div>
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="card-back-pattern"></div>
                     <div className="absolute inset-0 flex items-center justify-center">

@@ -76,7 +76,14 @@ export function PlayerHandSelectionModal({
                 className={`relative cursor-pointer h-[120px] w-[80px] sm:h-[150px] sm:w-[100px] transform transition-all ${
                   selectedIndex === index ? "border-2 border-yellow-400 scale-105" : ""
                 } hover:scale-105`}
-                onClick={() => handleCardClick(index)}
+                onClick={() => {
+                  // Ensure the index is valid before calling onSelect
+                  if (index >= 0 && index < filteredCards.length) {
+                    onSelect(index)
+                  } else {
+                    console.error(`Invalid index: ${index}, filtered cards length: ${filteredCards.length}`)
+                  }
+                }}
               >
                 <Card
                   className={`relative h-full w-full ${
