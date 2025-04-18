@@ -322,6 +322,13 @@ export function AnimationStyles() {
         100% { box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.2); }
       }
 
+      /* New deck highlight animation */
+      @keyframes deck-highlight {
+        0% { box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2); }
+        50% { box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.5); }
+        100% { box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2); }
+      }
+
       /* Animation classes */
       .animate-draw {
         animation: draw 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
@@ -427,6 +434,11 @@ export function AnimationStyles() {
       /* New discard pile highlight animation class */
       .animate-discard-highlight {
         animation: discard-highlight 0.8s ease-in-out;
+      }
+
+      /* New deck highlight animation */
+      .animate-deck-highlight {
+        animation: deck-highlight 0.8s ease-in-out;
       }
 
       /* Card zoom effect */

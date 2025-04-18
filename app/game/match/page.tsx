@@ -43,6 +43,7 @@ import { DiscardPileGallery } from "@/components/discard-pile-gallery"
 
 // Import the new animation function
 import { createCardToDiscardAnimation } from "@/utils/animation-utils"
+import { createCardToDeckAnimation } from "@/utils/animation-utils"
 
 // Let's completely revise the AI card animation approach to make sure it falls onto the AI field.
 
@@ -192,6 +193,9 @@ function OriginalGameMatch() {
 
   // Add a ref for the discard pile element
   const discardPileRef = useRef<HTMLDivElement>(null)
+
+  // Add this ref after the other useRef declarations
+  const deckPileRef = useRef<HTMLDivElement>(null)
 
   // First, add this effect to update the message whenever gameState changes
   useEffect(() => {
@@ -1166,15 +1170,12 @@ function OriginalGameMatch() {
               }
               setReturningToDeckCardId(cardId)
 
-              // Add animation class for zone transfer
+              // Find card element and use our deck ref for animation
               const cardElement = document.querySelector(`[data-card-id="${cardId}"]`)
-              if (cardElement instanceof HTMLElement) {
-                cardElement.classList.add(getZoneTransferAnimation("field", "deck"))
 
-                // Add particle effect
-                setTimeout(() => {
-                  addParticleEffect(cardId, "#00ffff") // Cyan particles for return to deck
-                }, 100)
+              if (cardElement instanceof HTMLElement && deckPileRef.current) {
+                // Use our new animation function
+                createCardToDeckAnimation(card, cardElement, deckPileRef.current)
               }
             }
           }
@@ -1423,6 +1424,7 @@ function OriginalGameMatch() {
             {/* Deck on the right */}
             <div className="w-[70px] flex-shrink-0">
               <Card
+                ref={deckPileRef}
                 className={`h-[100px] w-[65px] ${
                   gameState.currentTurn === "player" && gameState.gameStatus === "playing" && !gameState.pendingEffect
                     ? "cursor-pointer hover:scale-105 transition-transform"

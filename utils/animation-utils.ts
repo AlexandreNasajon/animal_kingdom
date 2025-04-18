@@ -189,3 +189,124 @@ export function createCardToDiscardAnimation(
     }, 700)
   }, 50)
 }
+
+// Add this new function after the createCardToDiscardAnimation function
+
+// Create animation for card moving to deck
+export function createCardToDeckAnimation(card: GameCard, sourceElement: HTMLElement, deckElement: HTMLElement): void {
+  // Get positions
+  const sourceRect = sourceElement.getBoundingClientRect()
+  const targetRect = deckElement.getBoundingClientRect()
+
+  // Create clone of the card for animation
+  const clone = document.createElement("div")
+  clone.className = "fixed pointer-events-none z-50 transition-all duration-700"
+  clone.style.width = `${sourceRect.width}px`
+  clone.style.height = `${sourceRect.height}px`
+  clone.style.left = `${sourceRect.left}px`
+  clone.style.top = `${sourceRect.top}px`
+
+  // Create card content
+  const cardContent = document.createElement("div")
+  cardContent.className = `h-full w-full rounded-md shadow-lg border-2 ${
+    card.type === "animal"
+      ? card.environment === "terrestrial"
+        ? "border-red-600 bg-red-900"
+        : card.environment === "aquatic"
+          ? "border-blue-600 bg-blue-900"
+          : "border-green-600 bg-green-900"
+      : "border-purple-600 bg-purple-900"
+  }`
+
+  // Add card name
+  const nameDiv = document.createElement("div")
+  nameDiv.className = "text-center text-white text-xs font-bold mt-1"
+  nameDiv.textContent = card.name
+  cardContent.appendChild(nameDiv)
+
+  clone.appendChild(cardContent)
+  document.body.appendChild(clone)
+
+  // Add environment-specific particle effect
+  if (card.type === "animal") {
+    let particleColor = "#ff6666" // Default red for terrestrial
+    if (card.environment === "aquatic") particleColor = "#6666ff"
+    else if (card.environment === "amphibian") particleColor = "#66ff66"
+
+    // Create particles along the path
+    setTimeout(() => {
+      createPathParticles(sourceRect, targetRect, particleColor)
+    }, 100)
+  } else {
+    // Impact card particles
+    setTimeout(() => {
+      createPathParticles(sourceRect, targetRect, "#aa66ff")
+    }, 100)
+  }
+
+  // Start animation after a small delay
+  setTimeout(() => {
+    clone.style.transform = "translateY(-50px) scale(0.7)"
+    clone.style.opacity = "0.7"
+    clone.style.left = `${targetRect.left + targetRect.width / 2 - sourceRect.width / 2}px`
+    clone.style.top = `${targetRect.top + targetRect.height / 2 - sourceRect.height / 2}px`
+
+    // Add highlight to deck
+    deckElement.classList.add("animate-deck-highlight")
+
+    // Remove clone after animation completes
+    setTimeout(() => {
+      if (document.body.contains(clone)) {
+        document.body.removeChild(clone)
+      }
+
+      // Remove highlight from deck
+      deckElement.classList.remove("animate-deck-highlight")
+    }, 700)
+  }, 50)
+}
+
+// Helper function to create particles along a path
+function createPathParticles(sourceRect: DOMRect, targetRect: DOMRect, color: string, count = 12): void {
+  const startX = sourceRect.left + sourceRect.width / 2
+  const startY = sourceRect.top + sourceRect.height / 2
+  const endX = targetRect.left + targetRect.width / 2
+  const endY = targetRect.top + targetRect.height / 2
+
+  for (let i = 0; i < count; i++) {
+    // Create particle at a point along the path
+    const particle = document.createElement("div")
+    particle.className = "particle"
+
+    // Position along the path based on index
+    const ratio = i / (count - 1)
+    const x = startX + (endX - startX) * ratio
+    const y = startY + (endY - startY) * ratio + Math.sin(ratio * Math.PI) * -20 // Arc upward
+
+    particle.style.backgroundColor = color
+    particle.style.left = `${x}px`
+    particle.style.top = `${y}px`
+    particle.style.opacity = "0"
+
+    // Add to document
+    document.body.appendChild(particle)
+
+    // Animate with varying delays
+    setTimeout(() => {
+      particle.style.opacity = "0.8"
+      // Add a small random offset for more natural movement
+      const offset = (Math.random() - 0.5) * 10
+      particle.style.setProperty("--x-offset", `${offset}px`)
+
+      // Fade out and remove
+      setTimeout(() => {
+        particle.style.opacity = "0"
+        setTimeout(() => {
+          if (document.body.contains(particle)) {
+            document.body.removeChild(particle)
+          }
+        }, 300)
+      }, 400)
+    }, i * 50)
+  }
+}
