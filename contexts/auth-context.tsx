@@ -4,8 +4,8 @@ import type React from "react"
 
 import { createContext, useContext, useEffect, useState } from "react"
 import { getSupabaseClient } from "@/lib/supabase"
-import { ensureUserRegistered } from "@/lib/utils"
 import type { Session, User } from "@supabase/supabase-js"
+import { registerUser } from "@/app/actions/user-actions"
 
 type AuthContextType = {
   user: {
@@ -23,6 +23,23 @@ type AuthContextType = {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+// Client-side function to ensure user is registered via server action
+const ensureUserRegisteredClient = async (
+  userId: string,
+  userData: { username: string; avatar_url?: string | null },
+) => {
+  try {
+    const result = await registerUser(userId, userData.username, userData.avatar_url || null)
+    if (!result.success) {
+      console.error("Failed to register user:", result.error)
+    }
+    return result.success
+  } catch (error) {
+    console.error("Error registering user:", error)
+    return false
+  }
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<{
@@ -43,9 +60,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (data.session) {
         const supabaseUser = data.session.user
 
-        // Ensure user is registered in the database
-        await ensureUserRegistered(supabaseUser.id, {
-          username: supabaseUser.email || "Anonymous Player",
+        // Ensure user is registered in the database using server action
+        await ensureUserRegisteredClient(supabaseUser.id, {
+          username: supabaseUser.user_metadata?.username || supabaseUser.email || "Anonymous Player",
           avatar_url: supabaseUser.user_metadata?.avatar_url,
         })
 
@@ -55,6 +72,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           username: supabaseUser.user_metadata?.username || supabaseUser.email?.split("@")[0] || "Anonymous",
           avatar_url: supabaseUser.user_metadata?.avatar_url || null,
         })
+
+        setSession(data.session)
+        setIsEmailVerified(supabaseUser.email_confirmed_at != null)
       }
 
       setIsLoading(false)
@@ -67,9 +87,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session?.user) {
         const supabaseUser = session.user
 
-        // Ensure user is registered in the database
-        await ensureUserRegistered(supabaseUser.id, {
-          username: supabaseUser.email || "Anonymous Player",
+        // Ensure user is registered in the database using server action
+        await ensureUserRegisteredClient(supabaseUser.id, {
+          username: supabaseUser.user_metadata?.username || supabaseUser.email || "Anonymous Player",
           avatar_url: supabaseUser.user_metadata?.avatar_url,
         })
 
@@ -79,8 +99,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           username: supabaseUser.user_metadata?.username || supabaseUser.email?.split("@")[0] || "Anonymous",
           avatar_url: supabaseUser.user_metadata?.avatar_url || null,
         })
+
+        setSession(session)
+        setIsEmailVerified(supabaseUser.email_confirmed_at != null)
       } else {
         setUser(null)
+        setSession(null)
+        setIsEmailVerified(false)
       }
     })
 
@@ -105,8 +130,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
 
     if (!error && data.user) {
-      // Create user profile
-      await ensureUserRegistered(data.user.id, { username })
+      // Create user profile using server action
+      await ensureUserRegisteredClient(data.user.id, { username })
     }
 
     return { error, user: data.user }

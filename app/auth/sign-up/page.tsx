@@ -13,7 +13,9 @@ export default function SignUpPage() {
           <h1 className="text-4xl font-bold text-white mb-2 embossed-title">Bioquest</h1>
           <p className="text-green-300">Create an account to play online</p>
         </div>
-        <SignUpForm />
+        <div className="bg-black/50 p-6 rounded-lg border border-green-600">
+          <SignUpForm showLinks={true} />
+        </div>
 
         <div className="mt-6 text-center">
           <Link href="/">

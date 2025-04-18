@@ -8,9 +8,13 @@ import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { AlertCircle, CheckCircle, Loader2 } from "lucide-react"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 
-export function SignUpForm() {
+interface SignUpFormProps {
+  onSuccess?: () => void
+  showLinks?: boolean
+}
+
+export function SignUpForm({ onSuccess, showLinks = true }: SignUpFormProps) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [username, setUsername] = useState("")
@@ -37,32 +41,10 @@ export function SignUpForm() {
       setIsSuccess(true)
       setIsLoading(false)
 
-      // Add code to ensure user is registered after sign-up
-      // After successful authentication and sign-up:
-      const supabase = createClientComponentClient()
-      const { data } = await supabase.auth.getUser()
-
-      async function ensureUserRegistered(userId: string, userData: { username: string; avatar_url?: string | null }) {
-        const supabase = createClientComponentClient()
-        const { data: existingUser } = await supabase.from("users").select("*").eq("id", userId).single()
-
-        if (!existingUser) {
-          await supabase.from("users").insert([
-            {
-              id: userId,
-              username: userData.username,
-              avatar_url: userData.avatar_url || null,
-            },
-          ])
-        }
-      }
-
-      if (data.user) {
-        // Ensure the user is registered in the users table
-        await ensureUserRegistered(data.user.id, {
-          username: username || data.user.email || "Anonymous Player",
-          avatar_url: null, // If you collect this during sign-up
-        })
+      if (onSuccess) {
+        setTimeout(() => {
+          onSuccess()
+        }, 2000)
       }
     } catch (err: any) {
       setError(err.message || "An error occurred during sign up")
@@ -72,7 +54,7 @@ export function SignUpForm() {
 
   if (isSuccess) {
     return (
-      <div className="bg-black/50 p-6 rounded-lg border border-green-600 text-center">
+      <div className="bg-black/50 p-0 rounded-lg text-center">
         <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
         <h2 className="text-xl font-semibold text-white mb-2">Verification Email Sent!</h2>
         <p className="text-green-300 mb-6">
@@ -80,22 +62,24 @@ export function SignUpForm() {
           complete your registration.
         </p>
         <p className="text-green-200 mb-6 text-sm">If you don't see the email, check your spam folder.</p>
-        <div className="flex gap-4 justify-center">
-          <Link href="/auth/sign-in">
-            <Button variant="outline" className="border-green-600 hover:bg-green-700/50 text-white">
-              Sign In
-            </Button>
-          </Link>
-          <Link href="/">
-            <Button className="bg-green-700 hover:bg-green-600 text-white">Return to Main Menu</Button>
-          </Link>
-        </div>
+        {showLinks && (
+          <div className="flex gap-4 justify-center">
+            <Link href="/auth/sign-in">
+              <Button variant="outline" className="border-green-600 hover:bg-green-700/50 text-white">
+                Sign In
+              </Button>
+            </Link>
+            <Link href="/">
+              <Button className="bg-green-700 hover:bg-green-600 text-white">Return to Main Menu</Button>
+            </Link>
+          </div>
+        )}
       </div>
     )
   }
 
   return (
-    <div className="bg-black/50 p-6 rounded-lg border border-green-600">
+    <div className="bg-black/50 p-0 rounded-lg">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="username" className="block text-sm font-medium text-green-300 mb-1">
@@ -163,14 +147,16 @@ export function SignUpForm() {
         </div>
       </form>
 
-      <div className="mt-4 text-center">
-        <p className="text-green-300">
-          Already have an account?{" "}
-          <Link href="/auth/sign-in" className="text-green-400 hover:underline">
-            Sign In
-          </Link>
-        </p>
-      </div>
+      {showLinks && (
+        <div className="mt-4 text-center">
+          <p className="text-green-300">
+            Already have an account?{" "}
+            <Link href="/auth/sign-in" className="text-green-400 hover:underline">
+              Sign In
+            </Link>
+          </p>
+        </div>
+      )}
     </div>
   )
 }

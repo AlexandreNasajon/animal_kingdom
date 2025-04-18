@@ -11,7 +11,12 @@ import { AlertCircle, Loader2, Mail } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { ensureUserRegistered } from "@/lib/utils"
 
-export function SignInForm() {
+interface SignInFormProps {
+  onSuccess?: () => void
+  showLinks?: boolean
+}
+
+export function SignInForm({ onSuccess, showLinks = true }: SignInFormProps) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
@@ -50,7 +55,11 @@ export function SignInForm() {
         })
       }
 
-      router.push("/")
+      if (onSuccess) {
+        onSuccess()
+      } else {
+        router.push("/")
+      }
     } catch (err: any) {
       setError(err.message || "An error occurred during sign in")
       setIsLoading(false)
@@ -58,7 +67,7 @@ export function SignInForm() {
   }
 
   return (
-    <div className="bg-black/50 p-6 rounded-lg border border-green-600">
+    <div className="bg-black/50 p-0 rounded-lg">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-green-300 mb-1">
@@ -112,31 +121,35 @@ export function SignInForm() {
         </div>
       </form>
 
-      <div className="mt-4 text-center">
-        <p className="text-green-300">
-          Don't have an account?{" "}
-          <Link href="/auth/sign-up" className="text-green-400 hover:underline">
-            Sign Up
-          </Link>
-        </p>
-      </div>
+      {showLinks && (
+        <>
+          <div className="mt-4 text-center">
+            <p className="text-green-300">
+              Don't have an account?{" "}
+              <Link href="/auth/sign-up" className="text-green-400 hover:underline">
+                Sign Up
+              </Link>
+            </p>
+          </div>
 
-      <div className="mt-4 pt-4 border-t border-green-800/50 text-center">
-        <p className="text-green-300 text-sm mb-2">
-          <Mail className="inline-block mr-1 h-4 w-4" />
-          Didn't receive verification email?
-        </p>
-        <Button
-          variant="outline"
-          className="text-sm border-green-600 hover:bg-green-700/50 text-white"
-          onClick={() => {
-            // This would typically trigger a resend verification email function
-            alert("Verification email resend functionality would go here")
-          }}
-        >
-          Resend Verification Email
-        </Button>
-      </div>
+          <div className="mt-4 pt-4 border-t border-green-800/50 text-center">
+            <p className="text-green-300 text-sm mb-2">
+              <Mail className="inline-block mr-1 h-4 w-4" />
+              Didn't receive verification email?
+            </p>
+            <Button
+              variant="outline"
+              className="text-sm border-green-600 hover:bg-green-700/50 text-white"
+              onClick={() => {
+                // This would typically trigger a resend verification email function
+                alert("Verification email resend functionality would go here")
+              }}
+            >
+              Resend Verification Email
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   )
 }

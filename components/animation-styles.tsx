@@ -604,6 +604,26 @@ export function AnimationStyles() {
 
       /* Discard pile highlight */
 
+      /* Impact card specific animations */
+      @keyframes impact-glow {
+        0% { box-shadow: 0 0 5px rgba(147, 51, 234, 0.5); }
+        50% { box-shadow: 0 0 15px rgba(147, 51, 234, 0.8); }
+        100% { box-shadow: 0 0 5px rgba(147, 51, 234, 0.5); }
+      }
+
+      @keyframes impact-to-discard {
+        0% { transform: translateY(0) scale(1); opacity: 1; }
+        50% { transform: translateY(-20px) scale(1.1); opacity: 0.9; }
+        100% { transform: translateY(50px) scale(0.7) rotate(10deg); opacity: 0; }
+      }
+
+      .impact-play-effect {
+        animation: impact-glow 1.5s ease-in-out;
+      }
+
+      .impact-to-discard {
+        animation: impact-to-discard 1s ease-in-out forwards;
+      }
     `}</style>
   )
 }

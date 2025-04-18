@@ -1,35 +1,27 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { useAuth } from "@/contexts/auth-context"
+import { Button } from "@/components/ui/button"
 import { GameService } from "@/services/game-service"
-import { MenuBackgroundAnimation } from "@/components/menu-background-animation"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import "../menu-styles.css"
+import { AuthModal } from "@/components/auth/auth-modal"
+import Link from "next/link"
 
-export default function OnlinePlay() {
-  const router = useRouter()
-  const { user, isLoading } = useAuth()
-  const [mode, setMode] = useState<"main" | "host" | "join">("main")
-  const [roomCode, setRoomCode] = useState("")
-  const [error, setError] = useState<string | null>(null)
+export default function OnlinePage() {
+  const [gameId, setGameId] = useState("")
   const [isCreating, setIsCreating] = useState(false)
   const [isJoining, setIsJoining] = useState(false)
-
-  // Redirect to sign in if not authenticated
-  useEffect(() => {
-    if (!isLoading && !user) {
-      router.push("/auth/sign-in")
-    }
-  }, [user, isLoading, router])
+  const [error, setError] = useState<string | null>(null)
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [authAction, setAuthAction] = useState<"host" | "join">("host")
+  const { user, isLoading } = useAuth()
+  const router = useRouter()
 
   const handleHostGame = async () => {
     if (!user) {
-      setError("You must be signed in to host a game")
+      setAuthAction("host")
+      setShowAuthModal(true)
       return
     }
 
@@ -37,17 +29,24 @@ export default function OnlinePlay() {
     setError(null)
 
     try {
-      const gameSession = await GameService.createGameSession(user.id)
-      router.push(`/game/match?mode=host&room=${gameSession.room_code}`)
+      const gameSession = await GameService.createGameSession(user.id!)
+      router.push(`/game/match?id=${gameSession.id}`)
     } catch (err: any) {
+      console.error("Error creating game:", err)
       setError(err.message || "Failed to create game")
       setIsCreating(false)
     }
   }
 
   const handleJoinGame = async () => {
+    if (!gameId.trim()) {
+      setError("Please enter a game ID")
+      return
+    }
+
     if (!user) {
-      setError("You must be signed in to join a game")
+      setAuthAction("join")
+      setShowAuthModal(true)
       return
     }
 
@@ -55,116 +54,86 @@ export default function OnlinePlay() {
     setError(null)
 
     try {
-      await GameService.joinGameSession(roomCode, user.id)
-      router.push(`/game/match?mode=join&room=${roomCode}`)
+      await GameService.joinGameSession(gameId, user.id!)
+      router.push(`/game/match?id=${gameId}`)
     } catch (err: any) {
+      console.error("Error joining game:", err)
       setError(err.message || "Failed to join game")
       setIsJoining(false)
     }
   }
 
-  const handlePlayAI = () => {
-    router.push(`/game/match?mode=ai`)
-  }
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bioquest-bg">
-        <div className="text-white text-center">
-          <div className="animate-spin h-8 w-8 border-4 border-green-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p>Loading...</p>
-        </div>
-      </div>
-    )
+  const handleAuthSuccess = () => {
+    setShowAuthModal(false)
+    // After successful auth, try the action again
+    if (authAction === "host") {
+      setTimeout(() => handleHostGame(), 500)
+    } else {
+      setTimeout(() => handleJoinGame(), 500)
+    }
   }
 
   return (
-    <div className="bioquest-bg p-2 min-h-screen">
-      <MenuBackgroundAnimation />
-      <div className="relative z-10">
-        <div className="mb-2 text-center">
-          <h1 className="mb-0 text-5xl font-bold tracking-tight embossed-title">Bioquest</h1>
-          <p className="text-2xl embossed-title">Online Play</p>
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-b from-green-900/20 to-black">
+      <div className="w-full max-w-md bg-black/50 p-6 rounded-lg border border-green-600 shadow-lg">
+        <h1 className="text-2xl font-bold text-green-400 mb-6 text-center">Online Play</h1>
+
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-lg font-semibold text-green-300 mb-2">Host a Game</h2>
+            <p className="text-green-200 mb-4 text-sm">Create a new game and invite a friend to join.</p>
+            <Button
+              onClick={handleHostGame}
+              disabled={isCreating || isLoading}
+              className="w-full bg-green-700 hover:bg-green-600 text-white"
+            >
+              {isCreating ? "Creating Game..." : "Host Game"}
+            </Button>
+          </div>
+
+          <div className="border-t border-green-800 pt-6">
+            <h2 className="text-lg font-semibold text-green-300 mb-2">Join a Game</h2>
+            <p className="text-green-200 mb-4 text-sm">Enter the game ID provided by your friend.</p>
+            <div className="space-y-4">
+              <input
+                type="text"
+                value={gameId}
+                onChange={(e) => setGameId(e.target.value)}
+                placeholder="Enter Game ID"
+                className="w-full px-3 py-2 bg-black/50 border border-green-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+              <Button
+                onClick={handleJoinGame}
+                disabled={isJoining || isLoading}
+                className="w-full bg-green-700 hover:bg-green-600 text-white"
+              >
+                {isJoining ? "Joining Game..." : "Join Game"}
+              </Button>
+            </div>
+          </div>
+
+          {error && (
+            <div className="bg-red-900/50 border border-red-500 rounded-md p-3 mt-4">
+              <p className="text-red-300 text-sm">{error}</p>
+            </div>
+          )}
         </div>
 
-        {error && (
-          <Alert variant="destructive" className="mb-4 bg-red-900 border-red-700 max-w-md mx-auto">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        {mode === "main" && (
-          <div className="flex flex-col gap-1 w-full max-w-md mx-auto">
-            <button className="menu-button primary-button" onClick={handlePlayAI}>
-              Play Against AI
-            </button>
-
-            <button className="menu-button primary-button" onClick={() => setMode("host")}>
-              Host Online Game
-            </button>
-
-            <button className="menu-button primary-button" onClick={() => setMode("join")}>
-              Join Online Game
-            </button>
-
-            <Link href="/game/play-options" className="w-full">
-              <button className="menu-button small-button w-full">Back</button>
-            </Link>
-          </div>
-        )}
-
-        {mode === "host" && (
-          <div className="flex flex-col gap-2 w-full max-w-md mx-auto bg-[#2a5e2a]/80 p-3 rounded-2xl shadow-lg">
-            <h2 className="text-2xl embossed-title mb-0">Host Game</h2>
-
-            <p className="text-[#c8f5c8] my-0">You'll be hosting a game with the standard Bioquest deck.</p>
-
-            <div className="flex flex-col gap-1 mt-1">
-              <button className="menu-button primary-button" onClick={handleHostGame} disabled={isCreating}>
-                {isCreating ? "Creating Room..." : "Create Room"}
-              </button>
-
-              <button className="menu-button small-button" onClick={() => setMode("main")}>
-                Back
-              </button>
-            </div>
-          </div>
-        )}
-
-        {mode === "join" && (
-          <div className="flex flex-col gap-2 w-full max-w-md mx-auto bg-[#2a5e2a]/80 p-3 rounded-2xl shadow-lg">
-            <h2 className="text-2xl embossed-title mb-0">Join Game</h2>
-
-            <div className="space-y-0">
-              <Label htmlFor="roomCode" className="text-[#c8f5c8] text-lg">
-                Room Code
-              </Label>
-              <Input
-                id="roomCode"
-                placeholder="Enter room code"
-                value={roomCode}
-                onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-                className="border-[#1a3a1a] bg-[#1a3a1a]/70 text-[#c8f5c8] placeholder:text-[#8ab88a] h-10 text-lg"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1 mt-1">
-              <button
-                className="menu-button primary-button"
-                onClick={handleJoinGame}
-                disabled={!roomCode || isJoining}
-                style={{ opacity: !roomCode ? 0.7 : 1 }}
-              >
-                {isJoining ? "Joining Game..." : "Join Room"}
-              </button>
-
-              <button className="menu-button small-button" onClick={() => setMode("main")}>
-                Back
-              </button>
-            </div>
-          </div>
-        )}
+        <div className="mt-6 text-center">
+          <Link href="/game/play-options">
+            <Button variant="outline" className="border-green-600 hover:bg-green-700/50 text-white">
+              Back to Play Options
+            </Button>
+          </Link>
+        </div>
       </div>
+
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        initialTab="signin"
+        onSuccess={handleAuthSuccess}
+      />
     </div>
   )
 }

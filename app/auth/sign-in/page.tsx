@@ -13,7 +13,9 @@ export default function SignInPage() {
           <h1 className="text-4xl font-bold text-white mb-2 embossed-title">Bioquest</h1>
           <p className="text-green-300">Sign in to play online</p>
         </div>
-        <SignInForm />
+        <div className="bg-black/50 p-6 rounded-lg border border-green-600">
+          <SignInForm showLinks={true} />
+        </div>
 
         <div className="mt-6 text-center">
           <Link href="/">

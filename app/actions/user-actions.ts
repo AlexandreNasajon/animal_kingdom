@@ -1,18 +1,8 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
-
-// Add any other utility functions here
-export const cn = (...inputs: ClassValue[]) => {
-  return twMerge(clsx(inputs))
-}
-
-export const cn2 = (...classes: (string | boolean | undefined)[]) => {
-  return classes.filter(Boolean).join(" ")
-}
+"use server"
 
 import { createServerSupabaseClient } from "@/lib/supabase"
 
-export async function ensureUserRegistered(userId: string, userData: { username: string; avatar_url?: string | null }) {
+export async function registerUser(userId: string, username: string, avatarUrl: string | null = null) {
   try {
     const supabase = createServerSupabaseClient()
 
@@ -33,8 +23,8 @@ export async function ensureUserRegistered(userId: string, userData: { username:
     if (!existingUser) {
       const { error: insertError } = await supabase.from("users").insert({
         id: userId,
-        username: userData.username,
-        avatar_url: userData.avatar_url,
+        username,
+        avatar_url: avatarUrl,
       })
 
       if (insertError) {

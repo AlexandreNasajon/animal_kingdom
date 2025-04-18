@@ -85,6 +85,33 @@ const confettiAnimation = `
 .fall-to-field {
   animation: fall-to-field 1s ease-in-out forwards;
 }
+
+/* Add these new styles for discard highlight and impact effects */
+.discard-highlight {
+  animation: pulse-highlight 0.8s ease-in-out;
+  box-shadow: 0 0 15px rgba(147, 51, 234, 0.7);
+}
+
+@keyframes pulse-highlight {
+  0% { box-shadow: 0 0 5px rgba(147, 51, 234, 0.5); }
+  50% { box-shadow: 0 0 20px rgba(147, 51, 234, 0.8); }
+  100% { box-shadow: 0 0 5px rgba(147, 51, 234, 0.5); }
+}
+
+.particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0.8;
+  animation: particle-float 1s ease-out forwards;
+}
+
+@keyframes particle-float {
+  0% { transform: translateY(0) translateX(0); opacity: 0.8; }
+  100% { transform: translateY(-20px) translateX(var(--x-offset, 0)); opacity: 0; }
+}
 `
 
 // Helper function to generate zone transfer animation class
@@ -333,17 +360,30 @@ function OriginalGameMatch() {
       }
 
       // Check if a new card was played to the field
-      if (afterAIMove.opponentField.length > currentOpponentFieldLength) {
-        // Get the newly played card
-        const newCard = afterAIMove.opponentField[afterAIMove.opponentField.length - 1]
+      if (
+        afterAIMove.opponentField.length > currentOpponentFieldLength ||
+        (afterAIMove.sharedDiscard.length > gameState.sharedDiscard.length && afterAIMove.message.includes("AI played"))
+      ) {
+        // Get the newly played card - either from field or from discard
+        let newCard
+        let isImpactCard = false
+
+        if (afterAIMove.opponentField.length > currentOpponentFieldLength) {
+          // Animal card was played to the field
+          newCard = afterAIMove.opponentField[afterAIMove.opponentField.length - 1]
+        } else {
+          // Impact card was played - find it in the discard pile
+          // Get the most recently added card to the discard pile
+          newCard = afterAIMove.sharedDiscard[afterAIMove.sharedDiscard.length - 1]
+          isImpactCard = newCard.type === "impact"
+        }
 
         // Update the AI card play animation section
-        // Find the setAnimationQueue where AI plays a card (look for newOpponentFieldCardId)
         setAnimationQueue((prev) => [
           ...prev,
           async () => {
             // Set the playing card ID for hand animation
-            setAiPlayingCardId(1) // Just use 1 as a dummy ID since we don't know which card in hand was played
+            setAiPlayingCardId(1) // Just use 1 as a dummy ID
 
             // Show the AI card play animation
             setAiPlayedCard(newCard)
@@ -364,16 +404,15 @@ function OriginalGameMatch() {
             // Wait for card to fall to field
             await new Promise((resolve) => setTimeout(resolve, 1000))
 
-            // Hide the animation overlay and show the card on the field
+            // Hide the animation overlay
             setShowAiCardAnimation(false)
             setAiPlayingCardId(null)
-            setNewOpponentFieldCardId(newCard.id)
 
-            // End AI thinking state
-            setIsAIThinking(false)
+            if (!isImpactCard) {
+              // For animal cards, show on the field
+              setNewOpponentFieldCardId(newCard.id)
 
-            // Add particle effect based on card type
-            if (newCard.type === "animal") {
+              // Add particle effect based on card type
               let particleColor = "#ff6666" // Default red for terrestrial
               if (newCard.environment === "aquatic") particleColor = "#6666ff"
               else if (newCard.environment === "amphibian") particleColor = "#66ff66"
@@ -383,10 +422,76 @@ function OriginalGameMatch() {
                 addParticleEffect(newCard.id, particleColor)
               }, 100)
             } else {
-              // Impact card
-              setTimeout(() => {
-                addParticleEffect(newCard.id, "#aa66ff")
-              }, 100)
+              // For impact cards, add an animation to the discard pile
+              if (discardPileRef.current) {
+                // Create temporary div that looks like the impact card
+                const tempCard = document.createElement("div")
+                tempCard.className = "fixed pointer-events-none z-50 transition-all duration-1000"
+                tempCard.style.width = "140px"
+                tempCard.style.height = "200px"
+                tempCard.style.left = "50%"
+                tempCard.style.top = "15%"
+                tempCard.style.transform = "translate(-50%, -50%) scale(0.4)"
+
+                // Create card content
+                const cardContent = document.createElement("div")
+                cardContent.className = "h-full w-full rounded-md shadow-lg border-2 border-purple-600 bg-purple-900"
+
+                // Add card name
+                const nameDiv = document.createElement("div")
+                nameDiv.className = "text-center text-white text-xs font-bold mt-2"
+                nameDiv.textContent = newCard.name
+                cardContent.appendChild(nameDiv)
+
+                tempCard.appendChild(cardContent)
+                document.body.appendChild(tempCard)
+
+                // Add purple particle effect for impact cards
+                setTimeout(() => {
+                  const rect = tempCard.getBoundingClientRect()
+                  for (let i = 0; i < 15; i++) {
+                    const particle = document.createElement("div")
+                    particle.className = "particle"
+                    particle.style.backgroundColor = "#aa66ff"
+                    particle.style.left = `${rect.left + rect.width / 2 + (Math.random() - 0.5) * 100}px`
+                    particle.style.top = `${rect.top + rect.height / 2 + (Math.random() - 0.5) * 100}px`
+                    document.body.appendChild(particle)
+
+                    // Remove particle after animation
+                    setTimeout(() => {
+                      if (document.body.contains(particle)) {
+                        document.body.removeChild(particle)
+                      }
+                    }, 1000)
+                  }
+                }, 100)
+
+                // Wait briefly to show the impact in place
+                await new Promise((resolve) => setTimeout(resolve, 800))
+
+                // Now animate to discard pile
+                const targetRect = discardPileRef.current.getBoundingClientRect()
+                tempCard.style.transform = "translate(0, 0) scale(0.7) rotate(10deg)"
+                tempCard.style.left = `${targetRect.left + targetRect.width / 2 - 35}px`
+                tempCard.style.top = `${targetRect.top + targetRect.height / 2 - 50}px`
+                tempCard.style.opacity = "0.7"
+
+                // Add highlight to discard pile
+                discardPileRef.current.classList.add("discard-highlight")
+
+                // Remove temporary card after animation
+                setTimeout(() => {
+                  if (document.body.contains(tempCard)) {
+                    document.body.removeChild(tempCard)
+                  }
+
+                  // Remove highlight from discard pile
+                  discardPileRef.current.classList.remove("discard-highlight")
+                }, 1000)
+
+                // Wait for animation to complete
+                await new Promise((resolve) => setTimeout(resolve, 1000))
+              }
             }
 
             // Allow field animation to complete
