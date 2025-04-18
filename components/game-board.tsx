@@ -17,7 +17,7 @@ interface GameBoardProps {
   returningToDeckCardId?: number | null // ID of card returning to deck
   exchangingCardId?: number | null // ID of card being exchanged
   targetingCardId?: number | null // ID of card being targeted
-  onCardDrop?: (card: GameCard) => void // New prop for drag and drop
+  onCardDrop?: (card: number) => void // Changed to accept card index
 }
 
 // Helper function to get environment color
@@ -74,36 +74,6 @@ const getImpactAnimation = (id?: number) => {
   return animations[(id || 0) % 3]
 }
 
-// Helper function for zone transfer animations
-const getZoneTransferAnimation = (sourceZone: string, targetZone: string) => {
-  // Different animations based on source and target zones
-  if (sourceZone === "hand" && targetZone === "field") {
-    return "animate-hand-to-field"
-  } else if (sourceZone === "field" && targetZone === "discard") {
-    return "animate-field-to-discard"
-  } else if (sourceZone === "field" && targetZone === "deck") {
-    return "animate-field-to-deck"
-  } else if (sourceZone === "deck" && targetZone === "hand") {
-    return "animate-deck-to-hand"
-  } else if (sourceZone === "discard" && targetZone === "hand") {
-    return "animate-discard-to-hand"
-  } else if (sourceZone === "discard" && targetZone === "deck") {
-    return "animate-discard-to-deck"
-  } else {
-    return "animate-zone-transfer" // Generic fallback
-  }
-}
-
-// Helper function for exchange animations
-const getExchangeAnimation = (isSource: boolean) => {
-  return isSource ? "animate-exchange-out" : "animate-exchange-in"
-}
-
-// Helper function for targeting animations
-const getTargetingAnimation = () => {
-  return "animate-being-targeted"
-}
-
 export function GameBoard({
   cards,
   isOpponent,
@@ -124,6 +94,7 @@ export function GameBoard({
   const cardRefs = useRef<Map<number, HTMLDivElement>>(new Map())
   const [activeAnimations, setActiveAnimations] = useState<Set<number>>(new Set())
   const [viewportWidth, setViewportWidth] = useState(0)
+  const boardRef = useRef<HTMLDivElement>(null)
 
   // Track viewport size for responsive adjustments
   useEffect(() => {
@@ -235,18 +206,25 @@ export function GameBoard({
     }
   }
 
-  // Drag and drop handlers
+  // Drag and drop handlers - completely rewritten
   const handleDragOver = (e: React.DragEvent) => {
     // Only allow dropping on player's field, not opponent's
     if (isOpponent) return
 
     e.preventDefault()
     e.dataTransfer.dropEffect = "move"
-    setDropHighlight(true)
+
+    // Add highlight effect
+    if (!dropHighlight) {
+      setDropHighlight(true)
+    }
   }
 
-  const handleDragLeave = () => {
-    setDropHighlight(false)
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Make sure we're actually leaving the board, not just moving between child elements
+    if (boardRef.current && !boardRef.current.contains(e.relatedTarget as Node)) {
+      setDropHighlight(false)
+    }
   }
 
   const handleDrop = (e: React.DragEvent) => {
@@ -261,7 +239,7 @@ export function GameBoard({
 
     if (cardIndex && onCardDrop) {
       // Notify parent component about the drop
-      onCardDrop(Number.parseInt(cardIndex))
+      onCardDrop(Number.parseInt(cardIndex, 10))
     }
   }
 
@@ -290,12 +268,13 @@ export function GameBoard({
   return (
     <>
       <div
+        ref={boardRef}
         className={`flex ${isOpponent ? "min-h-[100px] sm:min-h-[120px] max-w-[95%] mx-auto" : "min-h-[110px] sm:min-h-[130px]"} items-center justify-center gap-1 sm:gap-2 rounded-lg border ${
           isWinning
             ? `${isOpponent ? "border-yellow-500" : "border-yellow-500"} bg-yellow-900 shadow-inner shadow-yellow-500/30`
             : `${isOpponent ? "border-red-700" : "border-blue-700"} bg-green-950`
         } p-1 transition-all duration-300 ${
-          dropHighlight && !isOpponent ? "ring-2 ring-green-400 bg-green-900/50" : ""
+          dropHighlight && !isOpponent ? "ring-4 ring-green-400 bg-green-900/50" : ""
         }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -349,8 +328,6 @@ export function GameBoard({
                 }}
                 key={card.id}
                 data-card-id={card.id}
-                onDragOver={isOpponent ? undefined : handleDragOver}
-                onDrop={isOpponent ? undefined : handleDrop}
                 onClick={() => handleCardClick(card)}
                 ref={(el) => setCardRef(el, card.id)}
               >

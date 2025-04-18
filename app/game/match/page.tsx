@@ -815,6 +815,17 @@ function OriginalGameMatch() {
         break
 
       // Add more cases as needed
+      case "epidemic":
+        setTargetTitle("Select Animal")
+        setTargetDescription(
+          "Select one of your animals. All animals of the same environment will be sent to the bottom of the deck.",
+        )
+        setTargetFilter((card) => card?.type === "animal")
+        setTargetCards(gameState.playerField)
+        setShowTargetModal(true)
+        // All cards are player's cards
+        playerCardIndices = Array.from({ length: gameState.playerField.length }, (_, i) => i)
+        break
     }
 
     // Store the player card indices
@@ -1263,7 +1274,7 @@ function OriginalGameMatch() {
   // Update the main layout to be more compact and remove the game log
   return (
     <div
-      className="flex flex-col bg-gradient-to-b from-green-800 to-green-950 p-0 text-white w-full h-screen overflow-hidden"
+      className="flex flex-col bg-gradient-to-b from-green-800 to-green-950 p-0 text-white w-full h-screen overflow-hidden relative"
       ref={gameBoardRef}
     >
       <AnimationStyles />
@@ -1295,7 +1306,7 @@ function OriginalGameMatch() {
       </div>
 
       {/* Main game content - use flex-1 to take remaining space */}
-      <div className="flex flex-col px-2 flex-1 overflow-hidden">
+      <div className="flex flex-col px-2 flex-1 overflow-hidden pb-20">
         {/* AI Hand (face down) */}
         <div className="mb-0">
           <OpponentHand
@@ -1449,8 +1460,8 @@ function OriginalGameMatch() {
         </div>
       </div>
 
-      {/* Player hand - fixed at bottom of screen */}
-      <div className="w-full px-2 pb-1 pt-0 bg-green-950/80 border-t border-green-800">
+      {/* Player hand - positioned higher on screen */}
+      <div className="w-full px-2 pb-1 pt-0 bg-green-950/80 border-t border-green-800 absolute bottom-16 left-0 right-0">
         <PlayerHand
           cards={gameState.playerHand}
           onSelectCard={handleSelectCard}

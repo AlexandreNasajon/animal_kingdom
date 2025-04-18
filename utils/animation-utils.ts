@@ -1,22 +1,21 @@
 import type { GameCard } from "@/types/game"
 
-// Helper function to get the appropriate animation class for a card
-export const getCardAnimation = (card: GameCard): string => {
-  // If it's an impact card, use the impact animation
-  if (card.type === "impact") {
-    return "animate-impact-play"
-  }
-
-  // For animal cards, use environment-specific animations
-  switch (card.environment) {
-    case "terrestrial":
-      return "animate-play-terrestrial"
-    case "aquatic":
-      return "animate-play-aquatic"
-    case "amphibian":
-      return "animate-play-amphibian"
-    default:
-      return "animate-hand-to-field"
+// Get card animation based on type and environment
+export function getCardAnimation(card: GameCard): string {
+  if (card.type === "animal") {
+    switch (card.environment) {
+      case "terrestrial":
+        return "animate-terrestrial"
+      case "aquatic":
+        return "animate-aquatic"
+      case "amphibian":
+        return "animate-amphibian"
+      default:
+        return "animate-breathe"
+    }
+  } else {
+    // Impact cards
+    return "animate-pulse-slow"
   }
 }
 
@@ -71,102 +70,122 @@ export const createEnvironmentParticles = (card: GameCard): void => {
   }
 }
 
-// New function to create a card trail effect from field to discard pile
-export const createCardToDiscardAnimation = (
-  card: GameCard,
-  startElement: HTMLElement,
-  discardPileElement: HTMLElement,
-): void => {
-  // Get the positions of the start element and discard pile
-  const startRect = startElement.getBoundingClientRect()
-  const discardRect = discardPileElement.getBoundingClientRect()
+// Create a card trail effect during drag operations
+export function createCardTrail(event: MouseEvent | TouchEvent, card: GameCard): void {
+  // Only create trails occasionally to avoid performance issues
+  if (Math.random() > 0.3) return
 
-  // Create a clone of the card to animate
-  const cardClone = document.createElement("div")
+  // Get position
+  let clientX: number, clientY: number
 
-  // Set initial position and style
-  cardClone.className = "card-trail"
-  cardClone.style.width = `${startRect.width}px`
-  cardClone.style.height = `${startRect.height}px`
-  cardClone.style.left = `${startRect.left}px`
-  cardClone.style.top = `${startRect.top}px`
-  cardClone.style.position = "fixed"
-  cardClone.style.zIndex = "1000"
-  cardClone.style.pointerEvents = "none"
+  if ("touches" in event) {
+    // Touch event
+    clientX = event.touches[0].clientX
+    clientY = event.touches[0].clientY
+  } else {
+    // Mouse event
+    clientX = event.clientX
+    clientY = event.clientY
+  }
 
-  // Set background color based on card type/environment
+  // Create trail element
+  const trail = document.createElement("div")
+  trail.className = "card-trail"
+
+  // Set position
+  trail.style.left = `${clientX - 20}px`
+  trail.style.top = `${clientY - 30}px`
+  trail.style.width = "40px"
+  trail.style.height = "60px"
+
+  // Set color based on card type
   if (card.type === "animal") {
     switch (card.environment) {
       case "terrestrial":
-        cardClone.style.backgroundColor = "rgba(255, 100, 100, 0.7)"
-        cardClone.style.borderColor = "rgba(255, 50, 50, 0.8)"
+        trail.style.backgroundColor = "rgba(220, 38, 38, 0.3)"
         break
       case "aquatic":
-        cardClone.style.backgroundColor = "rgba(100, 100, 255, 0.7)"
-        cardClone.style.borderColor = "rgba(50, 50, 255, 0.8)"
+        trail.style.backgroundColor = "rgba(37, 99, 235, 0.3)"
         break
       case "amphibian":
-        cardClone.style.backgroundColor = "rgba(100, 255, 100, 0.7)"
-        cardClone.style.borderColor = "rgba(50, 255, 50, 0.8)"
+        trail.style.backgroundColor = "rgba(22, 163, 74, 0.3)"
         break
       default:
-        cardClone.style.backgroundColor = "rgba(200, 200, 200, 0.7)"
-        cardClone.style.borderColor = "rgba(150, 150, 150, 0.8)"
+        trail.style.backgroundColor = "rgba(100, 100, 100, 0.3)"
     }
   } else {
-    cardClone.style.backgroundColor = "rgba(147, 51, 234, 0.7)"
-    cardClone.style.borderColor = "rgba(147, 51, 234, 0.8)"
+    // Impact card
+    trail.style.backgroundColor = "rgba(147, 51, 234, 0.3)"
   }
 
-  cardClone.style.borderWidth = "2px"
-  cardClone.style.borderStyle = "solid"
-  cardClone.style.borderRadius = "8px"
-  cardClone.style.boxShadow = "0 0 10px rgba(0, 0, 0, 0.5)"
-
-  // Add card content (simplified version)
-  cardClone.innerHTML = `
-    <div style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; font-size: 10px; text-align: center; padding: 5px;">
-      <div style="font-weight: bold; margin-bottom: 5px;">${card.name}</div>
-    </div>
-  `
-
-  // Add to DOM
-  document.body.appendChild(cardClone)
-
-  // Force a reflow to ensure the initial position is applied
-  void cardClone.offsetWidth
-
-  // Animate to discard pile position
-  cardClone.style.transition = "all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1)"
-  cardClone.style.left = `${discardRect.left + discardRect.width / 2 - startRect.width / 2}px`
-  cardClone.style.top = `${discardRect.top + discardRect.height / 2 - startRect.height / 2}px`
-  cardClone.style.transform = "scale(0.7) rotate(-15deg)"
-  cardClone.style.opacity = "0"
-
-  // Create particles at the start position
-  createParticles(
-    startElement,
-    10,
-    card.type === "impact"
-      ? "rgba(147, 51, 234, 0.8)"
-      : card.environment === "terrestrial"
-        ? "rgba(255, 100, 100, 0.8)"
-        : card.environment === "aquatic"
-          ? "rgba(100, 100, 255, 0.8)"
-          : "rgba(100, 255, 100, 0.8)",
-  )
+  // Add to document
+  document.body.appendChild(trail)
 
   // Remove after animation completes
   setTimeout(() => {
-    document.body.removeChild(cardClone)
+    if (document.body.contains(trail)) {
+      document.body.removeChild(trail)
+    }
+  }, 500)
+}
 
-    // Create particles at the discard pile
-    createParticles(discardPileElement, 5, "rgba(0, 200, 0, 0.5)")
+// Create animation for card moving to discard pile
+export function createCardToDiscardAnimation(
+  card: GameCard,
+  sourceElement: HTMLElement,
+  discardPileElement: HTMLElement,
+): void {
+  // Get positions
+  const sourceRect = sourceElement.getBoundingClientRect()
+  const targetRect = discardPileElement.getBoundingClientRect()
 
-    // Highlight the discard pile
-    discardPileElement.classList.add("animate-discard-highlight")
+  // Create clone of the card for animation
+  const clone = document.createElement("div")
+  clone.className = "fixed pointer-events-none z-50 transition-all duration-700"
+  clone.style.width = `${sourceRect.width}px`
+  clone.style.height = `${sourceRect.height}px`
+  clone.style.left = `${sourceRect.left}px`
+  clone.style.top = `${sourceRect.top}px`
+
+  // Create card content
+  const cardContent = document.createElement("div")
+  cardContent.className = `h-full w-full rounded-md shadow-lg border-2 ${
+    card.type === "animal"
+      ? card.environment === "terrestrial"
+        ? "border-red-600 bg-red-900"
+        : card.environment === "aquatic"
+          ? "border-blue-600 bg-blue-900"
+          : "border-green-600 bg-green-900"
+      : "border-purple-600 bg-purple-900"
+  }`
+
+  // Add card name
+  const nameDiv = document.createElement("div")
+  nameDiv.className = "text-center text-white text-xs font-bold mt-1"
+  nameDiv.textContent = card.name
+  cardContent.appendChild(nameDiv)
+
+  clone.appendChild(cardContent)
+  document.body.appendChild(clone)
+
+  // Start animation after a small delay
+  setTimeout(() => {
+    clone.style.transform = "rotate(10deg) scale(0.7)"
+    clone.style.opacity = "0.7"
+    clone.style.left = `${targetRect.left + targetRect.width / 2 - sourceRect.width / 2}px`
+    clone.style.top = `${targetRect.top + targetRect.height / 2 - sourceRect.height / 2}px`
+
+    // Add highlight to discard pile
+    discardPileElement.classList.add("discard-highlight")
+
+    // Remove clone after animation completes
     setTimeout(() => {
-      discardPileElement.classList.remove("animate-discard-highlight")
-    }, 500)
-  }, 800)
+      if (document.body.contains(clone)) {
+        document.body.removeChild(clone)
+      }
+
+      // Remove highlight from discard pile
+      discardPileElement.classList.remove("discard-highlight")
+    }, 700)
+  }, 50)
 }

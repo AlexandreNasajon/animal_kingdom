@@ -17,8 +17,12 @@ export function AnimationStyles() {
 
       @keyframes hand-to-field {
         0% {
-          transform: translateY(-20px) scale(0.9);
-          opacity: 0.8;
+          transform: translateY(50px) scale(0.9);
+          opacity: 0.7;
+        }
+        70% {
+          transform: translateY(-10px) scale(1.05);
+          opacity: 1;
         }
         100% {
           transform: translateY(0) scale(1);
@@ -28,15 +32,11 @@ export function AnimationStyles() {
 
       @keyframes field-to-discard {
         0% {
-          transform: scale(1);
+          transform: translateY(0) rotate(0deg) scale(1);
           opacity: 1;
         }
-        50% {
-          transform: translateY(25px) rotate(10deg) scale(0.9);
-          opacity: 0.7;
-        }
         100% {
-          transform: translateY(50px) rotate(25deg) scale(0.7);
+          transform: translateY(100px) rotate(10deg) scale(0.7);
           opacity: 0;
         }
       }
@@ -208,43 +208,37 @@ export function AnimationStyles() {
 
       @keyframes sway {
         0% {
-          transform: skewX(0deg);
+          transform: translateX(0);
         }
-        25% {
-          transform: skewX(1deg);
-        }
-        75% {
-          transform: skewX(-1deg);
+        50% {
+          transform: translateX(2px);
         }
         100% {
-          transform: skewX(0deg);
+          transform: translateX(0);
         }
       }
 
       @keyframes pulse-slow {
         0% {
-          opacity: 0.8;
-          transform: scale(1);
+          opacity: 0.9;
         }
         50% {
           opacity: 1;
-          transform: scale(1.03);
         }
         100% {
-          opacity: 0.8;
-          transform: scale(1);
+          opacity: 0.9;
         }
       }
 
       @keyframes glow {
         0% {
-          box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+          box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
         }
         50% {
-          box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+          box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
         }
         100% {
-          box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+          box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
         }
       }
 
@@ -253,7 +247,7 @@ export function AnimationStyles() {
           transform: rotate(0deg);
         }
         100% {
-          transform: rotate(360deg);
+          transform: rotate(1deg);
         }
       }
 
@@ -323,18 +317,9 @@ export function AnimationStyles() {
 
       /* New discard pile highlight animation */
       @keyframes discard-highlight {
-        0% {
-          box-shadow: 0 0 0 0 rgba(0, 200, 0, 0.7);
-          transform: scale(1);
-        }
-        50% {
-          box-shadow: 0 0 15px 5px rgba(0, 200, 0, 0.5);
-          transform: scale(1.05);
-        }
-        100% {
-          box-shadow: 0 0 0 0 rgba(0, 200, 0, 0);
-          transform: scale(1);
-        }
+        0% { box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.2); }
+        50% { box-shadow: 0 0 0 4px rgba(74, 222, 128, 0.5); }
+        100% { box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.2); }
       }
 
       /* Animation classes */
@@ -343,12 +328,12 @@ export function AnimationStyles() {
       }
 
       .animate-hand-to-field {
-        animation: hand-to-field 0.6s ease-in forwards;
+        animation: hand-to-field 0.8s ease-out;
         z-index: 10;
       }
 
       .animate-field-to-discard {
-        animation: field-to-discard 0.8s ease-in forwards;
+        animation: field-to-discard 0.8s ease-in-out forwards;
         z-index: 10;
       }
 
@@ -388,11 +373,11 @@ export function AnimationStyles() {
 
       /* Environment animation classes */
       .animate-breathe {
-        animation: breathe 4s ease-in-out infinite;
+        animation: breathe 3s ease-in-out infinite;
       }
 
       .animate-wiggle {
-        animation: wiggle 3s ease-in-out infinite;
+        animation: wiggle 2.5s ease-in-out infinite;
       }
 
       .animate-bounce-slow {
@@ -404,7 +389,7 @@ export function AnimationStyles() {
       }
 
       .animate-pulse-slow {
-        animation: pulse-slow 3s ease-in-out infinite;
+        animation: pulse-slow 2s ease-in-out infinite;
       }
 
       .animate-glow {
@@ -412,7 +397,7 @@ export function AnimationStyles() {
       }
 
       .animate-rotate-slow {
-        animation: rotate-slow 20s linear infinite;
+        animation: rotate-slow 3s alternate infinite ease-in-out;
       }
 
       .animate-flash {
@@ -426,19 +411,22 @@ export function AnimationStyles() {
       /* Environment-specific animations */
       .animate-terrestrial {
         animation: terrestrial-idle 4s ease-in-out infinite;
+        animation-duration: 2.5s;
       }
 
       .animate-aquatic {
         animation: aquatic-idle 4s ease-in-out infinite;
+        animation-duration: 3.5s;
       }
 
       .animate-amphibian {
         animation: amphibian-idle 4s ease-in-out infinite;
+        animation-duration: 3s;
       }
 
       /* New discard pile highlight animation class */
       .animate-discard-highlight {
-        animation: discard-highlight 0.5s ease-in-out;
+        animation: discard-highlight 0.8s ease-in-out;
       }
 
       /* Card zoom effect */
@@ -498,8 +486,9 @@ export function AnimationStyles() {
 
       /* Card trail animation */
       .card-trail {
-        position: fixed;
+        position: absolute;
         pointer-events: none;
+        animation: card-trail 0.5s ease-out forwards;
         z-index: 1000;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
       }
@@ -587,6 +576,22 @@ export function AnimationStyles() {
         animation: impact-wave 1.5s ease-out infinite;
         z-index: -1;
       }
+
+      /* New drag and drop styles */
+      .drop-target-highlight {
+        box-shadow: 0 0 0 4px rgba(74, 222, 128, 0.5);
+        background-color: rgba(74, 222, 128, 0.2);
+        transition: all 0.2s ease;
+      }
+
+      /* Card trail effect for drag */
+      @keyframes card-trail {
+        0% { opacity: 0.8; transform: scale(1); }
+        100% { opacity: 0; transform: scale(0.8); }
+      }
+
+      /* Discard pile highlight */
+
     `}</style>
   )
 }

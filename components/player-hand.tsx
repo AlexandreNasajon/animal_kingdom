@@ -57,13 +57,19 @@ export function PlayerHand({
   const [animatedCardIds, setAnimatedCardIds] = useState<number[]>([])
   const [hoveredCardIndex, setHoveredCardIndex] = useState<number | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const [draggingIndex, setDraggingIndex] = useState<number | null>(null)
-  const [touchStartPos, setTouchStartPos] = useState<{ x: number; y: number } | null>(null)
-  const [touchedCardIndex, setTouchedCardIndex] = useState<number | null>(null)
-  const [isDragging, setIsDragging] = useState(false)
-  // Track which card is directly under the mouse
-  const [activeCardIndex, setActiveCardIndex] = useState<number | null>(null)
   const [viewportWidth, setViewportWidth] = useState(0)
+
+  // Drag and drop state
+  const [draggedCardIndex, setDraggedCardIndex] = useState<number | null>(null)
+  const [dragImage, setDragImage] = useState<HTMLDivElement | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+
+  // Touch handling state
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null)
+  const touchCardIndexRef = useRef<number | null>(null)
+  const touchMoveThreshold = 10 // pixels to move before considering it a drag
+  const longPressTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const cardRefs = useRef<Map<number, HTMLDivElement>>(new Map())
 
   // Track viewport size for responsive adjustments
   useEffect(() => {
@@ -95,183 +101,212 @@ export function PlayerHand({
     }
   }, [newCardIds])
 
-  // Add window resize listener for responsive card spacing
+  // Create drag image once on component mount
   useEffect(() => {
-    const handleResize = () => {
-      // Force a re-render when window size changes
-      setHoveredCardIndex(null)
-    }
+    const image = document.createElement("div")
+    image.className = "fixed opacity-0 pointer-events-none"
+    image.style.width = "80px"
+    image.style.height = "120px"
+    image.style.zIndex = "9999"
+    document.body.appendChild(image)
+    setDragImage(image)
 
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
+    return () => {
+      document.body.removeChild(image)
+    }
   }, [])
 
-  // Update the handleMouseEnter function to set both hover and active states
-  const handleMouseEnter = (index: number) => {
-    if (!disabled) {
-      setHoveredCardIndex(index)
-      setActiveCardIndex(index)
-    }
-  }
-
-  // Update the handleMouseLeave function to clear both states
-  const handleMouseLeave = () => {
-    setHoveredCardIndex(null)
-    setActiveCardIndex(null)
-  }
-
-  // Add a new function to handle mouse movement over cards
-  const handleMouseMove = (e: React.MouseEvent, index: number) => {
+  // Handle mouse click on card
+  const handleCardClick = (index: number, event: React.MouseEvent) => {
     if (disabled) return
 
-    // Get the card element
-    const cardElement = e.currentTarget as HTMLElement
-    const rect = cardElement.getBoundingClientRect()
-
-    // Check if the mouse is directly over this card (not over the overlapped portion)
-    const isDirectlyOver =
-      e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom
-
-    if (isDirectlyOver) {
-      setActiveCardIndex(index)
-    } else if (activeCardIndex === index) {
-      setActiveCardIndex(null)
-    }
-  }
-
-  // Update the onClick handler to only work when the card is active
-  const handleCardClick = (index: number) => {
-    if (!disabled && activeCardIndex === index) {
+    // Only handle click if it's not part of a drag operation
+    if (!isDragging) {
       onSelectCard(index)
     }
+
+    // Reset drag state
+    setIsDragging(false)
   }
 
-  // Drag and drop handlers
-  const handleDragStart = (e: React.DragEvent, index: number) => {
-    if (disabled) return
+  // Drag start handler
+  const handleDragStart = (index: number, event: React.DragEvent) => {
+    if (disabled) {
+      event.preventDefault()
+      return
+    }
 
     // Set data for drag operation
-    e.dataTransfer.setData("text/plain", index.toString())
-    e.dataTransfer.effectAllowed = "move"
+    event.dataTransfer.setData("text/plain", index.toString())
+    event.dataTransfer.effectAllowed = "move"
 
-    // Add a custom class to the drag image
-    if (e.target instanceof HTMLElement) {
-      e.target.classList.add("dragging")
+    // Set dragged card index
+    setDraggedCardIndex(index)
+    setIsDragging(true)
+
+    // Create custom drag image
+    if (dragImage) {
+      const card = cards[index]
+      dragImage.innerHTML = ""
+
+      // Create a visual clone of the card
+      const cardClone = document.createElement("div")
+      cardClone.className = `h-[120px] w-[80px] rounded-md shadow-lg border-2 ${
+        card.type === "animal"
+          ? card.environment === "terrestrial"
+            ? "border-red-600 bg-red-900"
+            : card.environment === "aquatic"
+              ? "border-blue-600 bg-blue-900"
+              : "border-green-600 bg-green-900"
+          : "border-purple-600 bg-purple-900"
+      }`
+
+      // Add card name
+      const nameDiv = document.createElement("div")
+      nameDiv.className = "text-center text-white text-xs font-bold mt-1"
+      nameDiv.textContent = card.name
+      cardClone.appendChild(nameDiv)
+
+      // Add card type/points
+      const infoDiv = document.createElement("div")
+      infoDiv.className = "text-center text-white text-xs mt-auto mb-1"
+      infoDiv.textContent = card.type === "animal" ? `${card.environment} (${card.points} pts)` : "Impact"
+      cardClone.appendChild(infoDiv)
+
+      dragImage.appendChild(cardClone)
+
+      // Set the drag image
+      event.dataTransfer.setDragImage(dragImage, 40, 60)
     }
+  }
 
-    setDraggingIndex(index)
+  // Drag end handler
+  const handleDragEnd = (event: React.DragEvent) => {
+    setDraggedCardIndex(null)
 
-    // Create a custom drag image
-    const card = cards[index]
-    const dragImage = document.createElement("div")
-    dragImage.className = `h-[140px] w-[90px] border ${
-      card.type === "animal" ? getEnvironmentColor(card.environment) : "border-purple-600 bg-purple-900"
-    } rounded-md shadow-lg opacity-80`
-
-    document.body.appendChild(dragImage)
-    e.dataTransfer.setDragImage(dragImage, 45, 70)
-
-    // Remove the element after drag starts
+    // Small delay to ensure click isn't triggered immediately after drag
     setTimeout(() => {
-      document.body.removeChild(dragImage)
-    }, 0)
+      setIsDragging(false)
+    }, 100)
   }
 
-  const handleDragEnd = () => {
-    setDraggingIndex(null)
-
-    // Remove dragging class from all cards
-    const cardElements = containerRef.current?.querySelectorAll(".card-draggable")
-    cardElements?.forEach((el) => {
-      el.classList.remove("dragging")
-    })
-  }
-
-  // Touch handlers for mobile drag and drop
-  const handleTouchStart = (e: React.TouchEvent, index: number) => {
+  // Touch handlers for mobile
+  const handleTouchStart = (index: number, event: React.TouchEvent) => {
     if (disabled) return
 
-    const touch = e.touches[0]
-    setTouchStartPos({ x: touch.clientX, y: touch.clientY })
-    setTouchedCardIndex(index)
+    const touch = event.touches[0]
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY }
+    touchCardIndexRef.current = index
+
+    // Set up long press detection for card detail view
+    longPressTimeoutRef.current = setTimeout(() => {
+      // If finger hasn't moved much, consider it a long press
+      if (touchStartRef.current) {
+        onSelectCard(index)
+        touchStartRef.current = null // Prevent drag after long press
+      }
+    }, 500) // 500ms for long press
   }
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (disabled || touchStartPos === null || touchedCardIndex === null) return
+  const handleTouchMove = (event: React.TouchEvent) => {
+    if (disabled || !touchStartRef.current || touchCardIndexRef.current === null) return
 
-    const touch = e.touches[0]
-    const deltaX = touch.clientX - touchStartPos.x
-    const deltaY = touch.clientY - touchStartPos.y
+    // Clear long press timeout on movement
+    if (longPressTimeoutRef.current) {
+      clearTimeout(longPressTimeoutRef.current)
+      longPressTimeoutRef.current = null
+    }
 
-    // If the user has moved their finger more than 10px, consider it a drag
-    if (!isDragging && (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10)) {
+    const touch = event.touches[0]
+    const deltaX = touch.clientX - touchStartRef.current.x
+    const deltaY = touch.clientY - touchStartRef.current.y
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
+
+    // If moved enough to consider it a drag
+    if (distance > touchMoveThreshold) {
       setIsDragging(true)
-    }
 
-    if (isDragging) {
-      // Prevent scrolling when dragging
-      e.preventDefault()
+      // Find the card element
+      const cardElement = cardRefs.current.get(touchCardIndexRef.current)
+      if (cardElement) {
+        // Create visual feedback for dragging
+        cardElement.style.opacity = "0.7"
+        cardElement.style.transform = "scale(1.05)"
 
-      // Update the card's position
-      const cardElement = e.currentTarget as HTMLElement
-      cardElement.style.transform = `translate(${deltaX}px, ${deltaY}px)`
-      cardElement.style.zIndex = "100"
-      cardElement.style.opacity = "0.8"
-    }
-  }
+        // Check if we're over a drop target
+        const elementsUnderTouch = document.elementsFromPoint(touch.clientX, touch.clientY)
+        const dropTarget = elementsUnderTouch.find(
+          (el) => el.getAttribute("data-zone") === "field" && el.getAttribute("data-player") !== "opponent",
+        )
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (disabled || touchedCardIndex === null) return
-
-    const cardElement = e.currentTarget as HTMLElement
-
-    // Reset the card's position
-    cardElement.style.transform = ""
-    cardElement.style.zIndex = ""
-    cardElement.style.opacity = ""
-
-    if (isDragging) {
-      // Check if the card was dropped on the game board
-      const touch = e.changedTouches[0]
-      const dropElement = document.elementFromPoint(touch.clientX, touch.clientY)
-
-      if (dropElement) {
-        // Find the closest parent with data-zone attribute
-        let target = dropElement
-        while (target && !target.getAttribute("data-zone")) {
-          target = target.parentElement as HTMLElement
-        }
-
-        // If dropped on the field, play the card
-        if (
-          target &&
-          target.getAttribute("data-zone") === "field" &&
-          target.getAttribute("data-player") !== "opponent"
-        ) {
-          // Check if any animations are currently running
-          const anyCardAnimating = Array.from(document.querySelectorAll(".card-draggable")).some((card) => {
-            return (
-              card instanceof HTMLElement &&
-              (card.classList.contains("animate-draw") ||
-                card.classList.contains("animate-play") ||
-                card.classList.contains("animate-hand-to-field"))
-            )
+        if (dropTarget) {
+          // Visual feedback for valid drop target
+          dropTarget.classList.add("drop-target-highlight")
+        } else {
+          // Remove highlight from all potential drop targets
+          document.querySelectorAll(".drop-target-highlight").forEach((el) => {
+            el.classList.remove("drop-target-highlight")
           })
-
-          if (!anyCardAnimating) {
-            onPlayCard(touchedCardIndex)
-          }
         }
       }
-    } else {
-      // If not dragging, treat it as a tap/click
-      onSelectCard(touchedCardIndex)
+    }
+  }
+
+  const handleTouchEnd = (event: React.TouchEvent) => {
+    // Clear long press timeout
+    if (longPressTimeoutRef.current) {
+      clearTimeout(longPressTimeoutRef.current)
+      longPressTimeoutRef.current = null
+    }
+
+    // Only process if we have touch start data and card index
+    if (touchStartRef.current && touchCardIndexRef.current !== null) {
+      const touch = event.changedTouches[0]
+
+      // If we were dragging
+      if (isDragging) {
+        // Find elements under the touch point
+        const elementsUnderTouch = document.elementsFromPoint(touch.clientX, touch.clientY)
+        const dropTarget = elementsUnderTouch.find(
+          (el) => el.getAttribute("data-zone") === "field" && el.getAttribute("data-player") !== "opponent",
+        )
+
+        // If dropped on a valid target
+        if (dropTarget) {
+          onPlayCard(touchCardIndexRef.current)
+        }
+
+        // Reset card appearance
+        const cardElement = cardRefs.current.get(touchCardIndexRef.current)
+        if (cardElement) {
+          cardElement.style.opacity = ""
+          cardElement.style.transform = ""
+        }
+
+        // Remove highlight from all potential drop targets
+        document.querySelectorAll(".drop-target-highlight").forEach((el) => {
+          el.classList.remove("drop-target-highlight")
+        })
+      }
+      // If it was a short tap and not a drag, handle as a click
+      else if (!isDragging) {
+        onSelectCard(touchCardIndexRef.current)
+      }
     }
 
     // Reset touch state
-    setTouchStartPos(null)
-    setTouchedCardIndex(null)
+    touchStartRef.current = null
+    touchCardIndexRef.current = null
     setIsDragging(false)
+  }
+
+  // Save card element references
+  const setCardRef = (element: HTMLDivElement | null, index: number) => {
+    if (element) {
+      cardRefs.current.set(index, element)
+    } else {
+      cardRefs.current.delete(index)
+    }
   }
 
   // Special handling for Prey card in hover preview
@@ -312,15 +347,13 @@ export function PlayerHand({
 
   const cardSize = getCardSize()
 
-  // In the return statement, update the card div's className and onClick
   return (
     <div ref={containerRef} className="flex justify-center overflow-visible p-0 min-h-[100px] sm:min-h-[110px]">
       {cards.map((card, index) => {
         const isHovered = hoveredCardIndex === index
-        const isActive = activeCardIndex === index
         const isPlaying = card.id === playingCardId
         const isAnimating = animatedCardIds.includes(card.id)
-        const isDragging = draggingIndex === index
+        const isDragged = draggedCardIndex === index
 
         // Get the appropriate animation class for this card
         const animationClass = getCardAnimation(card)
@@ -328,27 +361,28 @@ export function PlayerHand({
         return (
           <div
             key={index}
+            ref={(el) => setCardRef(el as HTMLDivElement, index)}
             className={`relative cursor-pointer transform transition-all ${
               disabled ? "opacity-50" : "opacity-100"
             } ${isAnimating ? "animate-new-card" : ""} ${isPlaying ? "animate-play-card" : ""}`}
-            onClick={() => handleCardClick(index)}
-            onMouseEnter={() => handleMouseEnter(index)}
-            onMouseLeave={handleMouseLeave}
-            onMouseMove={(e) => handleMouseMove(e, index)}
-            onDragStart={(e) => handleDragStart(e, index)}
+            onClick={(e) => handleCardClick(index, e)}
+            onMouseEnter={() => setHoveredCardIndex(index)}
+            onMouseLeave={() => setHoveredCardIndex(null)}
+            onDragStart={(e) => handleDragStart(index, e)}
             onDragEnd={handleDragEnd}
-            draggable={!disabled && isActive}
-            onTouchStart={(e) => handleTouchStart(e, index)}
+            onTouchStart={(e) => handleTouchStart(index, e)}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
+            draggable={!disabled}
             data-card-id={card.id}
+            data-card-index={index}
             style={{
               height: cardSize.height,
               width: cardSize.width,
               marginLeft: index > 0 ? cardSize.overlap : "0",
-              zIndex: isActive ? 10 : index, // Active card gets highest z-index
-              pointerEvents: isActive || !cards.some((_c, i) => activeCardIndex === i) ? "auto" : "none", // Only allow interaction with active card
-              boxShadow: isActive ? "0 0 10px rgba(255, 255, 255, 0.5)" : "none", // Add subtle glow to active card
+              zIndex: isHovered ? 10 : index,
+              transform: isDragged ? "scale(1.05)" : "",
+              opacity: isDragged ? "0.7" : "1",
             }}
           >
             <Card
@@ -360,7 +394,7 @@ export function PlayerHand({
                       ? "bg-blue-900"
                       : "bg-green-900"
                   : "bg-purple-900"
-              } ${isDragging ? "scale-105" : isActive ? "scale-105" : ""} border-0 shadow-md`}
+              } ${isHovered && !disabled ? "scale-105" : ""} border-0 shadow-md`}
             >
               {/* Points indicator for animal cards */}
               {card.type === "animal" && card.points && (
@@ -368,10 +402,12 @@ export function PlayerHand({
                   {card.points}
                 </div>
               )}
-              {/* Add a subtle highlight for the active card */}
-              {isActive && (
+
+              {/* Add a subtle highlight for the hovered card */}
+              {isHovered && !disabled && (
                 <div className="absolute inset-0 border-2 border-white/30 rounded-md pointer-events-none z-10"></div>
               )}
+
               <div className="absolute inset-0 border-2 border-transparent bg-gradient-to-br from-white/10 to-black/20 pointer-events-none"></div>
               <div className="absolute inset-0 flex flex-col items-center justify-between overflow-hidden p-1">
                 <div className="w-full text-center text-[10px] sm:text-[12px] font-bold truncate">{card.name}</div>
@@ -391,11 +427,8 @@ export function PlayerHand({
             </Card>
 
             {/* Enlarged card preview on hover - only show on desktop */}
-            {isHovered && typeof window !== "undefined" && window.innerWidth >= 640 && (
-              <div
-                className="absolute left-1/2 bottom-full mb-2 transform -translate-x-1/2 z-50 pointer-events-none"
-                style={{ display: disabled ? "none" : "block" }}
-              >
+            {isHovered && typeof window !== "undefined" && window.innerWidth >= 640 && !disabled && (
+              <div className="absolute left-1/2 bottom-full mb-2 transform -translate-x-1/2 z-50 pointer-events-none">
                 <Card
                   className={`h-[280px] w-[180px] border-2 ${
                     card.type === "animal" ? getEnvironmentColor(card.environment) : "border-purple-600 bg-purple-900"

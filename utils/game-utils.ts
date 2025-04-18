@@ -1091,7 +1091,7 @@ export function resolveEffect(state: GameState, targetIndex: number | number[]):
 
     case "veterinarian":
       // Play an animal card from the discard pile
-      const discardAnimals = state.sharedDiscard.filter((card) => card.type === "animal")
+      const discardAnimals = state.sharedDiscard.filter((c) => c.type === "animal")
       if ((targetIndex as number) >= 0 && (targetIndex as number) < discardAnimals.length) {
         const targetCard = discardAnimals[targetIndex as number]
         const newDiscard = state.sharedDiscard.filter((card) => card.id !== targetCard.id)
@@ -1290,7 +1290,7 @@ export function resolveEffect(state: GameState, targetIndex: number | number[]):
     case "epidemic":
       // Send 1 animal to the bottom along with all animals of same environment
       if (forPlayer) {
-        // Fixed: For epidemic, we're only selecting from player's field
+        // For epidemic, we're selecting from player's field
         const targetCard = state.playerField[targetIndex as number]
         if (!targetCard) return state
 
