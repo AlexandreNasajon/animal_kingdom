@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { GameService } from "@/services/game-service"
-import { AuthModal } from "@/components/auth/auth-modal"
 import Link from "next/link"
 
 export default function OnlinePage() {
@@ -13,15 +12,13 @@ export default function OnlinePage() {
   const [isCreating, setIsCreating] = useState(false)
   const [isJoining, setIsJoining] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [showAuthModal, setShowAuthModal] = useState(false)
-  const [authAction, setAuthAction] = useState<"host" | "join">("host")
   const { user, isLoading } = useAuth()
   const router = useRouter()
 
   const handleHostGame = async () => {
     if (!user) {
-      setAuthAction("host")
-      setShowAuthModal(true)
+      // Redirect to sign-in page instead of showing modal
+      router.push("/auth/sign-in?redirect=/game/online&action=host")
       return
     }
 
@@ -45,8 +42,8 @@ export default function OnlinePage() {
     }
 
     if (!user) {
-      setAuthAction("join")
-      setShowAuthModal(true)
+      // Redirect to sign-in page instead of showing modal
+      router.push(`/auth/sign-in?redirect=/game/online&action=join&gameId=${encodeURIComponent(gameId)}`)
       return
     }
 
@@ -60,16 +57,6 @@ export default function OnlinePage() {
       console.error("Error joining game:", err)
       setError(err.message || "Failed to join game")
       setIsJoining(false)
-    }
-  }
-
-  const handleAuthSuccess = () => {
-    setShowAuthModal(false)
-    // After successful auth, try the action again
-    if (authAction === "host") {
-      setTimeout(() => handleHostGame(), 500)
-    } else {
-      setTimeout(() => handleJoinGame(), 500)
     }
   }
 
@@ -127,13 +114,6 @@ export default function OnlinePage() {
           </Link>
         </div>
       </div>
-
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        initialTab="signin"
-        onSuccess={handleAuthSuccess}
-      />
     </div>
   )
 }
