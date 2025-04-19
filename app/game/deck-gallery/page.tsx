@@ -28,7 +28,7 @@ export default function DeckGallery() {
   })
 
   return (
-    <div className="min-h-screen bg-green-800 p-4 text-white">
+    <div className="h-screen overflow-y-scroll bg-green-800 p-4 text-white">
       <div className="container mx-auto">
         <div className="mb-6">
           <Link href="/game/play-options">
@@ -121,7 +121,7 @@ export default function DeckGallery() {
           </div>
         </div>
 
-        <div className="h-[60vh] overflow-y-auto pr-2 bg-green-900/50 rounded-lg p-4">
+        <div className="bg-green-900/50 rounded-lg p-4">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {filteredCards.map((card) => (
               <div key={card.id} className="flex justify-center">

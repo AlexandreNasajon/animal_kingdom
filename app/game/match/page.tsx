@@ -1415,8 +1415,8 @@ export default function OriginalGameMatch() {
         setTargetDescription("Select one of your animals and one of the opponent's animals to exchange control.")
         // For Confuse, we need to set the isConfuseEffect flag to true in the TargetSelectionModal
         setShowTargetModal(true)
-        // We need to provide both player and opponent fields for the confuse effect
-        setTargetCards([]) // We don't need these for the Confuse effect as we're using a different UI
+        // We don't need these for the Confuse effect as we're using a different UI
+        setTargetCards([])
         setTargetFilter(undefined)
         playerCardIndices = []
         break
@@ -2481,7 +2481,7 @@ export default function OriginalGameMatch() {
       </div>
 
       {/* Player hand - positioned higher on screen with enhanced styling */}
-      <div className="w-full px-2 pb-1 pt-0 bg-gradient-to-r from-green-950/90 via-green-900/90 to-green-950/90 border-t border-green-800/50 absolute bottom-0 left-0 right-0 shadow-lg">
+      <div className="w-full px-2 pb-1 pt-0 bg-gradient-to-r from-green-950/90 via-green-900/90 to-green-950/90 border-t border-green-800/50 absolute bottom-[10%] left-0 right-0 shadow-lg">
         <PlayerHand
           cards={gameState.playerHand}
           onSelectCard={handleSelectCard}
@@ -2491,6 +2491,7 @@ export default function OriginalGameMatch() {
           }
           newCardIds={newCardIds}
           playingCardId={playingCardId}
+          size="lg"
         />
       </div>
 
