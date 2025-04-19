@@ -4,9 +4,8 @@ import type React from "react"
 
 import { useState, useEffect, useRef } from "react"
 import type { GameCard } from "@/types/game"
-import { Card } from "@/components/ui/card"
 import { BoardCardZoomModal } from "./board-card-zoom-modal"
-import { getCardArt } from "./card-art/card-art-mapper"
+import { GameCardTemplate } from "./game-card-template"
 
 interface GameBoardProps {
   cards: GameCard[]
@@ -265,23 +264,47 @@ export function GameBoard({
 
   const cardSize = getCardSize()
 
+  // Get field background based on player and winning status
+  const getFieldBackground = () => {
+    if (isWinning) {
+      return isOpponent
+        ? "bg-gradient-to-r from-yellow-900/80 via-yellow-800/80 to-yellow-900/80 border-yellow-500"
+        : "bg-gradient-to-r from-yellow-900/80 via-yellow-800/80 to-yellow-900/80 border-yellow-500"
+    }
+
+    return isOpponent
+      ? "bg-gradient-to-r from-red-950/80 via-red-900/80 to-red-950/80 border-red-700"
+      : "bg-gradient-to-r from-blue-950/80 via-blue-900/80 to-blue-950/80 border-blue-700"
+  }
+
   return (
     <>
       <div
         ref={boardRef}
-        className={`flex ${isOpponent ? "min-h-[100px] sm:min-h-[120px] max-w-[95%] mx-auto" : "min-h-[110px] sm:min-h-[130px]"} items-center justify-center gap-1 sm:gap-2 rounded-lg border ${
-          isWinning
-            ? `${isOpponent ? "border-yellow-500" : "border-yellow-500"} bg-yellow-900 shadow-inner shadow-yellow-500/30`
-            : `${isOpponent ? "border-red-700" : "border-blue-700"} bg-green-950`
-        } p-1 transition-all duration-300 ${
+        className={`flex ${isOpponent ? "min-h-[100px] sm:min-h-[120px] max-w-[95%] mx-auto" : "min-h-[110px] sm:min-h-[130px]"} items-center justify-center gap-1 sm:gap-2 rounded-lg border-2 ${getFieldBackground()} p-1 transition-all duration-300 ${
           dropHighlight && !isOpponent ? "ring-4 ring-green-400 bg-green-900/50" : ""
-        }`}
+        } shadow-lg backdrop-blur-sm`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         data-zone="field"
         data-player={isOpponent ? "opponent" : "player"}
       >
+        {/* Field texture overlay */}
+        <div
+          className="absolute inset-0 bg-repeat opacity-10 pointer-events-none"
+          style={{
+            backgroundImage:
+              "url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1IiBoZWlnaHQ9IjUiPgo8cmVjdCB3aWR0aD0iNSIgaGVpZ2h0PSI1IiBmaWxsPSIjZmZmIj48L3JlY3Q+CjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNjY2MiPjwvcmVjdD4KPC9zdmc+')",
+          }}
+        ></div>
+
+        {/* Inner glow effect */}
+        <div
+          className="absolute inset-0 opacity-30 rounded-lg pointer-events-none"
+          style={{ boxShadow: "inset 0 0 15px rgba(255, 255, 255, 0.2)" }}
+        ></div>
+
         {cards.length === 0 ? (
           <div className="flex w-full items-center justify-center p-1 text-xs text-white">
             {isOpponent ? "Opponent's field is empty" : "Your field is empty"}
@@ -321,7 +344,7 @@ export function GameBoard({
 
             return (
               <div
-                className={`relative cursor-pointer transition-all transform ${animationClass}`}
+                className={`relative cursor-pointer transition-all transform ${animationClass} hover:z-10`}
                 style={{
                   height: cardSize.height,
                   width: cardSize.width,
@@ -331,44 +354,10 @@ export function GameBoard({
                 onClick={() => handleCardClick(card)}
                 ref={(el) => setCardRef(el, card.id)}
               >
-                <Card
-                  className={`relative h-full w-full border-2 ${
-                    card.type === "animal"
-                      ? card.environment === "terrestrial"
-                        ? "border-red-600 bg-red-900/60"
-                        : card.environment === "aquatic"
-                          ? "border-blue-600 bg-blue-900/60"
-                          : "border-green-600 bg-green-900/60"
-                      : "border-purple-600 bg-purple-900/60"
-                  }`}
-                >
-                  <div className="absolute inset-0 border-[1px] border-transparent bg-gradient-to-br from-white/10 to-black/20"></div>
-                  <div className="absolute inset-0 flex flex-col items-center justify-between overflow-hidden p-1">
-                    <div className="w-full text-center text-[8px] sm:text-[9px] font-bold line-clamp-1">
-                      {card.name}
-                    </div>
-                    <div className="relative h-[40px] sm:h-[50px] w-full flex items-center justify-center">
-                      {getCardArt(card)}
-                    </div>
-                    <div className="w-full text-center text-[7px] sm:text-[8px]">
-                      {card.type === "animal" ? (
-                        <div className="flex flex-col gap-0.5">
-                          <div className="flex items-center justify-between">
-                            <span className="bg-gray-800 px-1 rounded truncate">{card.environment}</span>
-                            <span className="bg-yellow-600 px-1 rounded">{card.points} pts</span>
-                          </div>
-                          {card.effect && (
-                            <div className="text-[6px] sm:text-[7px] text-gray-300 line-clamp-1 px-0.5">
-                              {card.effect}
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="text-gray-300 line-clamp-1 px-0.5">{card.effect}</div>
-                      )}
-                    </div>
-                  </div>
-                </Card>
+                <GameCardTemplate card={card} size={isOpponent ? "xs" : "sm"} className={animationClass} />
+
+                {/* Add subtle hover effect */}
+                <div className="absolute inset-0 bg-white/0 hover:bg-white/10 rounded-sm transition-colors duration-200"></div>
               </div>
             )
           })

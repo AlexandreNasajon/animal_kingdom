@@ -4,9 +4,7 @@ import { useState } from "react"
 import type { GameCard } from "@/types/game"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { getCardArt } from "./card-art/card-art-mapper"
+import { GameCardTemplate } from "./game-card-template"
 
 interface ExchangeSelectionModalProps {
   open: boolean
@@ -79,35 +77,12 @@ export function ExchangeSelectionModal({
               ) : (
                 playerCards.map((card, index) => (
                   <div key={card.id} className="relative">
-                    <Card
-                      className={`h-[120px] w-[90px] cursor-pointer ${
-                        card.type === "animal"
-                          ? getEnvironmentColor(card.environment)
-                          : "border-purple-600 bg-purple-900"
-                      } ${selectedPlayerCard === index ? "ring-2 ring-yellow-400" : ""} relative overflow-hidden`}
+                    <GameCardTemplate
+                      card={card}
+                      size="sm"
+                      selected={selectedPlayerCard === index}
                       onClick={() => setSelectedPlayerCard(index)}
-                    >
-                      {/* Card frame decoration */}
-                      <div className="absolute inset-0 border-4 border-transparent bg-gradient-to-br from-white/10 to-black/20 pointer-events-none"></div>
-                      <div className="absolute inset-0 border border-white/10 rounded-sm pointer-events-none"></div>
-
-                      <CardContent className="flex h-full flex-col items-center justify-between p-1">
-                        <div className="w-full text-center text-xs font-medium text-white">{card.name}</div>
-
-                        <div className="relative h-[70px] w-full">{getCardArt(card)}</div>
-
-                        <div className="w-full">
-                          {card.type === "animal" && (
-                            <div className="flex items-center justify-between">
-                              <Badge variant="outline" className="text-[9px] text-white">
-                                {card.environment}
-                              </Badge>
-                              <Badge className="bg-yellow-600 text-[9px] text-white">{card.points}</Badge>
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
+                    />
                     {selectedPlayerCard === index && (
                       <div className="absolute top-0 right-0 bg-yellow-500 text-white font-bold rounded-full w-6 h-6 flex items-center justify-center">
                         1
@@ -128,35 +103,12 @@ export function ExchangeSelectionModal({
               ) : (
                 opponentCards.map((card, index) => (
                   <div key={card.id} className="relative">
-                    <Card
-                      className={`h-[120px] w-[90px] cursor-pointer ${
-                        card.type === "animal"
-                          ? getEnvironmentColor(card.environment)
-                          : "border-purple-600 bg-purple-900"
-                      } ${selectedOpponentCard === index ? "ring-2 ring-yellow-400" : ""} relative overflow-hidden`}
+                    <GameCardTemplate
+                      card={card}
+                      size="sm"
+                      selected={selectedOpponentCard === index}
                       onClick={() => setSelectedOpponentCard(index)}
-                    >
-                      {/* Card frame decoration */}
-                      <div className="absolute inset-0 border-4 border-transparent bg-gradient-to-br from-white/10 to-black/20 pointer-events-none"></div>
-                      <div className="absolute inset-0 border border-white/10 rounded-sm pointer-events-none"></div>
-
-                      <CardContent className="flex h-full flex-col items-center justify-between p-1">
-                        <div className="w-full text-center text-xs font-medium text-white">{card.name}</div>
-
-                        <div className="relative h-[70px] w-full">{getCardArt(card)}</div>
-
-                        <div className="w-full">
-                          {card.type === "animal" && (
-                            <div className="flex items-center justify-between">
-                              <Badge variant="outline" className="text-[9px] text-white">
-                                {card.environment}
-                              </Badge>
-                              <Badge className="bg-yellow-600 text-[9px] text-white">{card.points}</Badge>
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
+                    />
                     {selectedOpponentCard === index && (
                       <div className="absolute top-0 right-0 bg-yellow-500 text-white font-bold rounded-full w-6 h-6 flex items-center justify-center">
                         2

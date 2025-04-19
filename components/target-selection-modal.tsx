@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -11,8 +10,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { getCardArt } from "@/components/card-art/card-art-mapper"
 import type { GameCard } from "@/types/game"
+import { GameCardTemplate } from "./game-card-template"
 
 interface TargetSelectionModalProps {
   open: boolean
@@ -46,6 +45,9 @@ export function TargetSelectionModal({
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   const [selectedPlayerIndex, setSelectedPlayerIndex] = useState<number | null>(null)
   const [selectedOpponentIndex, setSelectedOpponentIndex] = useState<number | null>(null)
+  // Add support for tracking card click order for Octopus effect
+  // Add a new state variable to track the order of card clicks
+  const [clickOrder, setClickOrder] = useState<number[]>([])
 
   // Reset selection when modal opens
   useEffect(() => {
@@ -53,11 +55,26 @@ export function TargetSelectionModal({
       setSelectedIndex(null)
       setSelectedPlayerIndex(null)
       setSelectedOpponentIndex(null)
+      // Reset click order when modal opens
+      setClickOrder([])
     }
   }, [open])
 
+  // Update the handleCardClick function to track click order for Octopus effect
   const handleCardClick = (index: number) => {
-    setSelectedIndex(index)
+    // For Octopus effect (when title contains "Rearrange"), track click order
+    if (title.includes("Rearrange")) {
+      // If already clicked, remove from order
+      if (clickOrder.includes(index)) {
+        setClickOrder(clickOrder.filter((i) => i !== index))
+      } else {
+        // Add to order
+        setClickOrder([...clickOrder, index])
+      }
+    } else {
+      // Normal behavior for other effects
+      setSelectedIndex(index)
+    }
   }
 
   const handlePlayerCardClick = (index: number) => {
@@ -68,18 +85,23 @@ export function TargetSelectionModal({
     setSelectedOpponentIndex(index)
   }
 
+  // Update the handleConfirm function to pass the click order for Octopus effect
   const handleConfirm = () => {
     if (isConfuseEffect) {
       if (selectedPlayerIndex !== null && selectedOpponentIndex !== null) {
         onConfirm([selectedPlayerIndex, selectedOpponentIndex])
       }
+    } else if (title.includes("Rearrange") && clickOrder.length > 0) {
+      // For Octopus effect, pass the click order
+      onConfirm(clickOrder)
     } else if (selectedIndex !== null) {
       onConfirm(selectedIndex)
     }
   }
 
+  // Update the isCardSelectable function to properly check if filter is a function before calling it
   const isCardSelectable = (card: GameCard) => {
-    if (!filter) return true
+    if (!filter || typeof filter !== "function") return true
     return filter(card)
   }
 
@@ -99,29 +121,13 @@ export function TargetSelectionModal({
             <div className="grid grid-cols-3 gap-2">
               {opponentField.length > 0 ? (
                 opponentField.map((card, index) => (
-                  <Card
+                  <div
                     key={`opponent-${index}`}
-                    className={`p-2 h-[120px] cursor-pointer transition-all ${
-                      selectedOpponentIndex === index
-                        ? "border-4 border-yellow-500 scale-105"
-                        : "border border-green-700 hover:border-green-500"
-                    } ${
-                      card.type === "animal"
-                        ? card.environment === "terrestrial"
-                          ? "bg-red-900/60"
-                          : card.environment === "aquatic"
-                            ? "bg-blue-900/60"
-                            : "bg-green-900/60"
-                        : "bg-purple-900/60"
-                    }`}
+                    className={`${selectedOpponentIndex === index ? "scale-105 ring-2 ring-yellow-500" : ""} cursor-pointer`}
                     onClick={() => handleOpponentCardClick(index)}
                   >
-                    <div className="text-center text-xs font-bold mb-1">{card.name}</div>
-                    <div className="relative h-[60px] flex items-center justify-center">{getCardArt(card)}</div>
-                    <div className="mt-1 text-center text-[10px]">
-                      <span className="bg-yellow-600 px-1 rounded">{card.points} pts</span>
-                    </div>
-                  </Card>
+                    <GameCardTemplate card={card} size="sm" selected={selectedOpponentIndex === index} />
+                  </div>
                 ))
               ) : (
                 <div className="col-span-3 text-center text-sm text-gray-400 py-4">No animals on AI's field</div>
@@ -135,29 +141,13 @@ export function TargetSelectionModal({
             <div className="grid grid-cols-3 gap-2">
               {playerField.length > 0 ? (
                 playerField.map((card, index) => (
-                  <Card
+                  <div
                     key={`player-${index}`}
-                    className={`p-2 h-[120px] cursor-pointer transition-all ${
-                      selectedPlayerIndex === index
-                        ? "border-4 border-yellow-500 scale-105"
-                        : "border border-green-700 hover:border-green-500"
-                    } ${
-                      card.type === "animal"
-                        ? card.environment === "terrestrial"
-                          ? "bg-red-900/60"
-                          : card.environment === "aquatic"
-                            ? "bg-blue-900/60"
-                            : "bg-green-900/60"
-                        : "bg-purple-900/60"
-                    }`}
+                    className={`${selectedPlayerIndex === index ? "scale-105 ring-2 ring-yellow-500" : ""} cursor-pointer`}
                     onClick={() => handlePlayerCardClick(index)}
                   >
-                    <div className="text-center text-xs font-bold mb-1">{card.name}</div>
-                    <div className="relative h-[60px] flex items-center justify-center">{getCardArt(card)}</div>
-                    <div className="mt-1 text-center text-[10px]">
-                      <span className="bg-yellow-600 px-1 rounded">{card.points} pts</span>
-                    </div>
-                  </Card>
+                    <GameCardTemplate card={card} size="sm" selected={selectedPlayerIndex === index} />
+                  </div>
                 ))
               ) : (
                 <div className="col-span-3 text-center text-sm text-gray-400 py-4">No animals on your field</div>
@@ -214,33 +204,15 @@ export function TargetSelectionModal({
                     const isSelectable = isCardSelectable(card)
 
                     return (
-                      <Card
-                        key={`ai-${aiIndex}`}
-                        className={`p-2 h-[120px] transition-all ${
-                          selectedIndex === originalIndex
-                            ? "border-4 border-yellow-500 scale-105"
-                            : "border border-green-700 hover:border-green-500"
-                        } ${
-                          card.type === "animal"
-                            ? card.environment === "terrestrial"
-                              ? "bg-red-900/60"
-                              : card.environment === "aquatic"
-                                ? "bg-blue-900/60"
-                                : "bg-green-900/60"
-                            : "bg-purple-900/60"
-                        } ${!isSelectable ? "opacity-50" : "cursor-pointer"}`}
-                        onClick={() => isSelectable && handleCardClick(originalIndex)}
-                      >
-                        <div className="text-center text-xs font-bold mb-1">{card.name}</div>
-                        <div className="relative h-[60px] flex items-center justify-center">{getCardArt(card)}</div>
-                        <div className="mt-1 text-center text-[10px]">
-                          {card.type === "animal" ? (
-                            <span className="bg-yellow-600 px-1 rounded">{card.points} pts</span>
-                          ) : (
-                            <span className="bg-purple-800 px-1 rounded">Impact</span>
-                          )}
-                        </div>
-                      </Card>
+                      <div key={`ai-${aiIndex}`}>
+                        <GameCardTemplate
+                          card={card}
+                          size="sm"
+                          selected={selectedIndex === originalIndex}
+                          disabled={!isSelectable}
+                          onClick={() => isSelectable && handleCardClick(originalIndex)}
+                        />
+                      </div>
                     )
                   })}
                 {cards.filter((_, index) => !playerCardIndices.includes(index)).length === 0 && (
@@ -260,33 +232,15 @@ export function TargetSelectionModal({
                     const isSelectable = isCardSelectable(card)
 
                     return (
-                      <Card
-                        key={`player-${playerIndex}`}
-                        className={`p-2 h-[120px] transition-all ${
-                          selectedIndex === originalIndex
-                            ? "border-4 border-yellow-500 scale-105"
-                            : "border border-green-700 hover:border-green-500"
-                        } ${
-                          card.type === "animal"
-                            ? card.environment === "terrestrial"
-                              ? "bg-red-900/60"
-                              : card.environment === "aquatic"
-                                ? "bg-blue-900/60"
-                                : "bg-green-900/60"
-                            : "bg-purple-900/60"
-                        } ${!isSelectable ? "opacity-50" : "cursor-pointer"} border-l-4 border-l-blue-500`}
-                        onClick={() => isSelectable && handleCardClick(originalIndex)}
-                      >
-                        <div className="text-center text-xs font-bold mb-1">{card.name}</div>
-                        <div className="relative h-[60px] flex items-center justify-center">{getCardArt(card)}</div>
-                        <div className="mt-1 text-center text-[10px]">
-                          {card.type === "animal" ? (
-                            <span className="bg-yellow-600 px-1 rounded">{card.points} pts</span>
-                          ) : (
-                            <span className="bg-purple-800 px-1 rounded">Impact</span>
-                          )}
-                        </div>
-                      </Card>
+                      <div key={`player-${playerIndex}`} className="border-l-4 border-l-blue-500">
+                        <GameCardTemplate
+                          card={card}
+                          size="sm"
+                          selected={selectedIndex === originalIndex}
+                          disabled={!isSelectable}
+                          onClick={() => isSelectable && handleCardClick(originalIndex)}
+                        />
+                      </div>
                     )
                   })}
                 {cards.filter((_, index) => playerCardIndices.includes(index)).length === 0 && (
@@ -304,35 +258,20 @@ export function TargetSelectionModal({
                 const isPlayerCard = playerCardIndices.includes(index)
 
                 return (
-                  <Card
-                    key={index}
-                    className={`p-2 h-[120px] transition-all ${
-                      selectedIndex === index
-                        ? "border-4 border-yellow-500 scale-105"
-                        : "border border-green-700 hover:border-green-500"
-                    } ${
-                      card.type === "animal"
-                        ? card.environment === "terrestrial"
-                          ? "bg-red-900/60"
-                          : card.environment === "aquatic"
-                            ? "bg-blue-900/60"
-                            : "bg-green-900/60"
-                        : "bg-purple-900/60"
-                    } ${!isSelectable ? "opacity-50" : "cursor-pointer"} ${
-                      isPlayerCard ? "border-l-4 border-l-blue-500" : ""
-                    }`}
-                    onClick={() => isSelectable && handleCardClick(index)}
-                  >
-                    <div className="text-center text-xs font-bold mb-1">{card.name}</div>
-                    <div className="relative h-[60px] flex items-center justify-center">{getCardArt(card)}</div>
-                    <div className="mt-1 text-center text-[10px]">
-                      {card.type === "animal" ? (
-                        <span className="bg-yellow-600 px-1 rounded">{card.points} pts</span>
-                      ) : (
-                        <span className="bg-purple-800 px-1 rounded">Impact</span>
-                      )}
-                    </div>
-                  </Card>
+                  <div key={index} className={isPlayerCard ? "border-l-4 border-l-blue-500" : ""}>
+                    <GameCardTemplate
+                      card={card}
+                      size="sm"
+                      selected={selectedIndex === index}
+                      disabled={!isSelectable}
+                      onClick={() => isSelectable && handleCardClick(index)}
+                      orderNumber={
+                        title.includes("Rearrange") && clickOrder.includes(index)
+                          ? clickOrder.indexOf(index) + 1
+                          : undefined
+                      }
+                    />
+                  </div>
                 )
               })
             ) : (
@@ -349,7 +288,9 @@ export function TargetSelectionModal({
           )}
           <Button
             onClick={handleConfirm}
-            disabled={selectedIndex === null && !isConfuseEffect}
+            disabled={
+              selectedIndex === null && !isConfuseEffect && !(title.includes("Rearrange") && clickOrder.length > 0)
+            }
             className="bg-green-700 hover:bg-green-600"
           >
             Confirm

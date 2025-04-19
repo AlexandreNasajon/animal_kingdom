@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
-import { OnlineMatch } from "./online-match"
-import { useAuth } from "@/contexts/auth-context"
 import { useRouter } from "next/navigation"
 
 import { useCallback, useRef } from "react"
@@ -17,7 +15,6 @@ import { CardSelectionModal } from "@/components/card-selection-modal"
 import { TargetSelectionModal } from "@/components/target-selection-modal"
 import { CardDetailModal } from "@/components/card-detail-modal"
 import { AnimationStyles } from "@/components/animation-styles"
-import { getCardArt } from "@/components/card-art/card-art-mapper"
 import {
   initializeGame,
   drawCards,
@@ -39,21 +36,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { DiscardPileGallery } from "@/components/discard-pile-gallery"
 
 // Import the new animation function
 import { createCardToDiscardAnimation, createCardToDeckAnimation } from "@/utils/animation-utils"
-import { resolveAnimalEffect, applyAnimalEffect } from "@/utils/game-effects"
-
-// Import our modal components
-import { OpponentHandSelectionModal } from "@/components/opponent-hand-selection-modal"
-import { PlayerHandSelectionModal } from "@/components/player-hand-selection-modal"
-
-// First, import the new DeckTopCardsModal component
-import { DeckTopCardsModal } from "@/components/deck-top-cards-modal"
-
-// Import the OpponentHandReveal component
-import { OpponentHandReveal } from "@/components/opponent-hand-reveal"
+import { applyAnimalEffect } from "@/utils/game-effects"
 
 // Let's completely revise the AI card animation approach to make sure it falls onto the AI field.
 
@@ -158,14 +144,14 @@ const createParticles = (element: HTMLElement, color: string, count = 10) => {
 }
 
 // Original Game Match Component
-function OriginalGameMatch() {
+export default function OriginalGameMatch() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const deckId = Number.parseInt(searchParams.get("deck") || "1")
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [showAlert, setShowAlert] = useState(false)
   const [alertMessage, setAlertMessage] = useState("")
-  const [isAIThinking, setIsAIThinking] = useState(false) // Fixed initialization
+  const [isAIThinking, setIsAIThinking] = useState(false)
   const [selectedCardIndex, setSelectedCardIndex] = useState<number | null>(null)
   const [showCardDetail, setShowCardDetail] = useState(false)
   const [lastGameMessage, setLastGameMessage] = useState<string>("")
@@ -956,7 +942,10 @@ function OriginalGameMatch() {
         try {
           // First, get the filtered cards that match the Tuna criteria
           const filteredCards = gameState.playerHand.filter(
-            (card) => card.type === "animal" && (card.environment === "aquatic" || card.environment === "amphibian"),
+            (card) =>
+              card.type === "animal" &&
+              (card.environment === "aquatic" || card.environment === "amphibian") &&
+              (card.points || 0) <= 3,
           )
 
           // Validate the index
@@ -1378,6 +1367,15 @@ function OriginalGameMatch() {
         playerCardIndices = []
         break
 
+      case "mouse":
+        setTargetTitle("Select Target")
+        setTargetDescription("Select a terrestrial animal to send to the top of the deck.")
+        setTargetFilter((card) => card?.environment === "terrestrial" || card?.environment === "amphibian")
+        setTargetCards(gameState.opponentField)
+        setShowTargetModal(true)
+        playerCardIndices = []
+        break
+
       case "fisher":
         setTargetTitle("Select Target")
         setTargetDescription("Select an aquatic animal to destroy.")
@@ -1409,13 +1407,16 @@ function OriginalGameMatch() {
         playerCardIndices = []
         break
 
+      // Find the section in the useEffect that handles the "confuse" case in the switch statement
+      // and replace it with this corrected version:
+
       case "confuse":
         setTargetTitle("Exchange Animals")
         setTargetDescription("Select one of your animals and one of the opponent's animals to exchange control.")
-        // For Confuse, we'll use the special UI that shows both boards separately
+        // For Confuse, we need to set the isConfuseEffect flag to true in the TargetSelectionModal
         setShowTargetModal(true)
-        // We don't need these for the Confuse effect as we're using a different UI
-        setTargetCards([])
+        // We need to provide both player and opponent fields for the confuse effect
+        setTargetCards([]) // We don't need these for the Confuse effect as we're using a different UI
         setTargetFilter(undefined)
         playerCardIndices = []
         break
@@ -1478,8 +1479,14 @@ function OriginalGameMatch() {
       // Add this case in the switch statement that handles pendingEffect.type
       case "octopus":
         if (forPlayer) {
-          // Show the opponent's hand
-          setShowOpponentHand(true)
+          setTargetTitle("Rearrange Cards")
+          setTargetDescription(
+            "Click the cards in the order you want them to be placed on top of the deck (first click = top card).",
+          )
+          setTargetFilter(undefined)
+          setTargetCards(gameState.sharedDeck.slice(0, Math.min(3, gameState.sharedDeck.length)))
+          setShowTargetModal(true)
+          playerCardIndices = []
         }
         break
 
@@ -1493,34 +1500,23 @@ function OriginalGameMatch() {
         playerCardIndices = []
         break
 
-      case "frog":
-        setTargetTitle("Select Animal")
-        setTargetDescription("Select an animal with 2 or fewer points to return to its owner's hand.")
-        setTargetFilter((card) => (card?.points || 0) <= 2)
-        setTargetCards([...gameState.playerField, ...gameState.opponentField])
-        setShowTargetModal(true)
-        // Mark player's cards
-        playerCardIndices = Array.from({ length: gameState.playerField.length }, (_, i) => i)
-        break
-
       case "crocodile":
         setTargetTitle("Select Animal")
-        setTargetDescription("Select an animal with 3 or fewer points to destroy.")
+        setTargetDescription("Select an opponent's animal with 3 or fewer points to send to the bottom of the deck.")
         setTargetFilter((card) => (card?.points || 0) <= 3)
-        setTargetCards([...gameState.playerField, ...gameState.opponentField])
+        setTargetCards(gameState.opponentField)
         setShowTargetModal(true)
-        // Mark player's cards
-        playerCardIndices = Array.from({ length: gameState.playerField.length }, (_, i) => i)
+        // No player cards as we're only targeting opponent field
+        playerCardIndices = []
         break
 
       case "dolphin":
-        setTargetTitle("Rearrange Cards")
-        setTargetDescription("Look at the top cards of the deck and rearrange them.")
+        setTargetTitle("Select Card")
+        setTargetDescription("Select a card from your hand to send to the bottom of the deck and draw a card.")
         setTargetFilter(undefined)
-        setTargetCards(gameState.sharedDeck.slice(0, Math.min(3, gameState.sharedDeck.length)))
+        setTargetCards(gameState.playerHand)
         setShowTargetModal(true)
-        // No player cards
-        playerCardIndices = []
+        playerCardIndices = Array.from({ length: gameState.playerHand.length }, (_, i) => i)
         break
 
       case "squirrel":
@@ -1595,7 +1591,7 @@ function OriginalGameMatch() {
           tempState.playerHand.push(sacrificedAnimal)
           tempState.message = `You returned ${sacrificedAnimal.name} to your hand and played ${cardToPlay.name}.`
         } else {
-          // For Lion and Shark, send to discard
+          // For Lion, Shark, and Crocodile, send to discard
           tempState.sharedDiscard = [...gameState.sharedDiscard, sacrificedAnimal]
           tempState.message = `You sacrificed ${sacrificedAnimal.name} to play ${cardToPlay.name}.`
         }
@@ -1722,13 +1718,11 @@ function OriginalGameMatch() {
       }
 
       // For Lion and Shark, set up target selection for sacrifice
-      // For Crocodile, set up target selection for returning to hand
-      const costType = card.name === "Crocodile" ? "return" : "sacrifice"
+      // For Crocodile, set up target selection for sacrifice (not returning to hand)
+      const costType = "sacrifice"
 
-      setTargetTitle(`Select an Animal to ${costType === "return" ? "Return to Hand" : "Sacrifice"}`)
-      setTargetDescription(
-        `Select one of your animals to ${costType === "return" ? "return to your hand" : "sacrifice"} in order to play ${card.name}.`,
-      )
+      setTargetTitle(`Select an Animal to Sacrifice`)
+      setTargetDescription(`Select one of your animals to sacrifice in order to play ${card.name}.`)
       setTargetFilter((c) => c?.type === "animal")
       setTargetCards(gameState.playerField)
       setPlayerCardIndices(Array.from({ length: gameState.playerField.length }, (_, i) => i))
@@ -1874,13 +1868,11 @@ function OriginalGameMatch() {
       }
 
       // For Lion and Shark, set up target selection for sacrifice
-      // For Crocodile, set up target selection for returning to hand
-      const costType = card.name === "Crocodile" ? "return" : "sacrifice"
+      // For Crocodile, set up target selection for sacrifice (not returning to hand)
+      const costType = "sacrifice"
 
-      setTargetTitle(`Select an Animal to ${costType === "return" ? "Return to Hand" : "Sacrifice"}`)
-      setTargetDescription(
-        `Select one of your animals to ${costType === "return" ? "return to your hand" : "sacrifice"} in order to play ${card.name}.`,
-      )
+      setTargetTitle(`Select an Animal to Sacrifice`)
+      setTargetDescription(`Select one of your animals to sacrifice in order to play ${card.name}.`)
       setTargetFilter((c) => c?.type === "animal")
       setTargetCards(gameState.playerField)
       setPlayerCardIndices(Array.from({ length: gameState.playerField.length }, (_, i) => i))
@@ -2321,9 +2313,9 @@ function OriginalGameMatch() {
       </div>
 
       {/* Main game content - use flex-1 to take remaining space */}
-      <div className="flex flex-col px-2 flex-1 overflow-hidden pb-20">
+      <div className="flex flex-col px-2 flex-1 overflow-hidden pb-16">
         {/* AI Hand (face down) */}
-        <div className="mb-0">
+        <div className="mb-1">
           <OpponentHand
             cardCount={gameState.opponentHand.length}
             isThinking={isAIThinking}
@@ -2331,8 +2323,8 @@ function OriginalGameMatch() {
           />
         </div>
 
-        {/* Opponent field */}
-        <div className="mb-0" ref={opponentFieldRef}>
+        {/* Opponent field with enhanced styling */}
+        <div className="mb-2" ref={opponentFieldRef}>
           <GameBoard
             cards={gameState.opponentField}
             isOpponent={true}
@@ -2343,25 +2335,27 @@ function OriginalGameMatch() {
           />
         </div>
 
-        {/* Score display and game log between fields - NO EXTRA SPACE */}
-        <div className="flex flex-col">
+        {/* Score display and game log between fields - with enhanced styling */}
+        <div className="flex flex-col mb-2">
           {/* Score display and game log in one compact area */}
-          <div className="bg-black/30 rounded-md p-1 mb-0">
+          <div className="bg-gradient-to-r from-black/40 via-black/60 to-black/40 backdrop-blur-sm rounded-md p-1 border border-gray-700/50 shadow-inner">
             {/* Score display */}
             <div className="flex justify-center items-center gap-4 mb-0">
               <div className="flex items-center gap-1">
-                <div className="h-2 w-2 rounded-full bg-red-700"></div>
+                <div className="h-2 w-2 rounded-full bg-gradient-to-br from-red-600 to-red-800 shadow-sm"></div>
                 <span className="text-[9px] flex items-center gap-1">
-                  AI {isAIThinking && <span className="text-yellow-300">(Thinking...)</span>}
+                  AI {isAIThinking && <span className="text-yellow-300 animate-pulse">(Thinking...)</span>}
                 </span>
                 <span
                   className={`rounded-md ${
-                    gameState.opponentPoints >= 7 ? "animate-pulse bg-yellow-600" : "bg-green-700"
-                  } px-1 py-0 text-xs font-bold flex items-center gap-1`}
+                    gameState.opponentPoints >= 7
+                      ? "animate-pulse bg-gradient-to-r from-yellow-500 to-yellow-600"
+                      : "bg-gradient-to-r from-green-700 to-green-800"
+                  } px-1 py-0 text-xs font-bold flex items-center gap-1 shadow-sm`}
                 >
                   {gameState.opponentPoints}
                   {gameState.opponentPoints >= 7 && (
-                    <span className="flex items-center text-yellow-400">
+                    <span className="flex items-center text-yellow-200">
                       <Crown className="h-3 w-3" />
                     </span>
                   )}
@@ -2371,113 +2365,123 @@ function OriginalGameMatch() {
               <div className="flex items-center gap-1">
                 <span
                   className={`rounded-md ${
-                    gameState.playerPoints >= 7 ? "animate-pulse bg-yellow-600" : "bg-green-700"
-                  } px-1 py-0 text-xs font-bold flex items-center gap-1`}
+                    gameState.playerPoints >= 7
+                      ? "animate-pulse bg-gradient-to-r from-yellow-500 to-yellow-600"
+                      : "bg-gradient-to-r from-green-700 to-green-800"
+                  } px-1 py-0 text-xs font-bold flex items-center gap-1 shadow-sm`}
                 >
                   {gameState.playerPoints}
                   {gameState.playerPoints >= 7 && (
-                    <span className="flex items-center text-yellow-400">
+                    <span className="flex items-center text-yellow-200">
                       <Crown className="h-3 w-3" />
                     </span>
                   )}
                 </span>
                 <span className="text-[9px]">You</span>
-                <div className="h-2 w-2 rounded-full bg-blue-700"></div>
+                <div className="h-2 w-2 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 shadow-sm"></div>
               </div>
             </div>
 
-            {/* Game Log */}
+            {/* Game Log with enhanced styling */}
             <div className="w-full">
-              <div className="text-[9px] text-center overflow-hidden text-white">
+              <div className="text-[9px] text-center overflow-hidden text-white/90 font-medium">
                 {lastGameMessage || "Game started. Your turn."}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Player field */}
-        <div className="mt-0 flex-1">
-          <div className="flex items-center justify-between gap-1 h-full">
-            {/* Discard pile on the left */}
-            <div className="w-[70px] flex-shrink-0">
-              <Card
-                className={`h-[100px] w-[65px] border-2 border-green-700 bg-green-900 shadow-md relative overflow-hidden cursor-pointer hover:scale-105 transition-transform`}
-                onClick={() => setShowDiscardGallery(true)}
-                ref={discardPileRef}
-              >
-                {/* Card frame decoration */}
-                <div className="absolute inset-0 border-4 border-transparent bg-gradient-to-br from-green-800/20 to-black/30 pointer-events-none"></div>
-                <div className="absolute inset-0 border border-green-400/10 rounded-sm pointer-events-none"></div>
+        {/* Player field - moved higher up */}
+        <div className="mb-2">
+          <GameBoard
+            cards={gameState.playerField}
+            isOpponent={false}
+            points={gameState.playerPoints}
+            newCardId={newPlayerFieldCardId}
+            discardingCardId={discardingCardId}
+            returningToDeckCardId={returningToDeckCardId}
+            onCardDrop={handleCardDrop}
+          />
+        </div>
 
-                <div className="absolute inset-0 flex items-center justify-center">
-                  {gameState.sharedDiscard.length > 0 ? (
-                    <div className="text-center">
-                      <div className="text-xs font-bold text-green-400">{gameState.sharedDiscard.length}</div>
-                      <div className="text-[8px] text-green-400">Discard</div>
-                    </div>
-                  ) : (
-                    <div className="text-[8px] text-green-400 text-center">Empty</div>
-                  )}
-                </div>
-              </Card>
-            </div>
+        {/* Deck and discard area */}
+        <div className="flex items-center justify-between gap-2 mb-2">
+          {/* Discard pile on the left */}
+          <div className="w-[70px] flex-shrink-0">
+            <Card
+              className={`h-[100px] w-[65px] border-2 border-green-700 bg-gradient-to-br from-green-800 to-green-950 shadow-md relative overflow-hidden cursor-pointer hover:scale-105 transition-transform`}
+              onClick={() => setShowDiscardGallery(true)}
+              ref={discardPileRef}
+            >
+              {/* Card frame decoration */}
+              <div className="absolute inset-0 border-4 border-transparent bg-gradient-to-br from-green-800/20 to-black/30 pointer-events-none"></div>
+              <div className="absolute inset-0 border border-green-400/10 rounded-sm pointer-events-none"></div>
 
-            {/* Player field in the middle */}
-            <div className="flex-1">
-              <GameBoard
-                cards={gameState.playerField}
-                isOpponent={false}
-                points={gameState.playerPoints}
-                newCardId={newPlayerFieldCardId}
-                discardingCardId={discardingCardId}
-                returningToDeckCardId={returningToDeckCardId}
-                onCardDrop={handleCardDrop}
-              />
-            </div>
+              {/* Inner glow effect */}
+              <div
+                className="absolute inset-0 opacity-30 rounded-sm pointer-events-none"
+                style={{ boxShadow: "inset 0 0 15px rgba(255, 255, 255, 0.2)" }}
+              ></div>
 
-            {/* Deck on the right */}
-            <div className="w-[70px] flex-shrink-0">
-              <Card
-                ref={deckPileRef}
-                className={`h-[100px] w-[65px] ${
-                  gameState.currentTurn === "player" && gameState.gameStatus === "playing" && !gameState.pendingEffect
-                    ? "cursor-pointer hover:scale-105 transition-transform"
-                    : "cursor-not-allowed opacity-70"
-                } border-2 border-green-700 bg-green-900 shadow-md relative overflow-hidden`}
-                onClick={
-                  gameState.currentTurn === "player" && gameState.gameStatus === "playing" && !gameState.pendingEffect
-                    ? handleDrawCards
-                    : undefined
-                }
-              >
-                {/* Card frame decoration */}
-                <div className="absolute inset-0 border-4 border-transparent bg-gradient-to-br from-green-800/20 to-black/30 pointer-events-none"></div>
-                <div className="absolute inset-0 border border-green-400/10 rounded-sm pointer-events-none"></div>
-
-                {/* Draw text at the top */}
-                {gameState.currentTurn === "player" &&
-                  gameState.gameStatus === "playing" &&
-                  !gameState.pendingEffect && (
-                    <div className="absolute top-0 left-0 right-0 bg-green-700/80 text-[8px] text-center py-0.5 text-white font-bold">
-                      Draw 2
-                    </div>
-                  )}
-
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="card-back-pattern"></div>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <Layers className="h-5 w-5 text-green-400 mb-0" />
-                    <div className="text-xs font-bold text-green-400">{gameState.sharedDeck.length}</div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                {gameState.sharedDiscard.length > 0 ? (
+                  <div className="text-center">
+                    <div className="text-xs font-bold text-green-400">{gameState.sharedDiscard.length}</div>
+                    <div className="text-[8px] text-green-400">Discard</div>
                   </div>
+                ) : (
+                  <div className="text-[8px] text-green-400 text-center">Empty</div>
+                )}
+              </div>
+            </Card>
+          </div>
+
+          {/* Deck on the right */}
+          <div className="w-[70px] flex-shrink-0">
+            <Card
+              ref={deckPileRef}
+              className={`h-[100px] w-[65px] ${
+                gameState.currentTurn === "player" && gameState.gameStatus === "playing" && !gameState.pendingEffect
+                  ? "cursor-pointer hover:scale-105 transition-transform"
+                  : "cursor-not-allowed opacity-70"
+              } border-2 border-green-700 bg-gradient-to-br from-green-800 to-green-950 shadow-md relative overflow-hidden`}
+              onClick={
+                gameState.currentTurn === "player" && gameState.gameStatus === "playing" && !gameState.pendingEffect
+                  ? handleDrawCards
+                  : undefined
+              }
+            >
+              {/* Card frame decoration */}
+              <div className="absolute inset-0 border-4 border-transparent bg-gradient-to-br from-green-800/20 to-black/30 pointer-events-none"></div>
+              <div className="absolute inset-0 border border-green-400/10 rounded-sm pointer-events-none"></div>
+
+              {/* Inner glow effect */}
+              <div
+                className="absolute inset-0 opacity-30 rounded-sm pointer-events-none"
+                style={{ boxShadow: "inset 0 0 15px rgba(255, 255, 255, 0.2)" }}
+              ></div>
+
+              {/* Draw text at the top with enhanced styling */}
+              {gameState.currentTurn === "player" && gameState.gameStatus === "playing" && !gameState.pendingEffect && (
+                <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-green-700/80 via-green-600/80 to-green-700/80 text-[8px] text-center py-0.5 text-white font-bold shadow-sm">
+                  Draw 2
                 </div>
-              </Card>
-            </div>
+              )}
+
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="card-back-pattern"></div>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <Layers className="h-5 w-5 text-green-400 mb-0 drop-shadow-md" />
+                  <div className="text-xs font-bold text-green-400">{gameState.sharedDeck.length}</div>
+                </div>
+              </div>
+            </Card>
           </div>
         </div>
       </div>
 
-      {/* Player hand - positioned higher on screen */}
-      <div className="w-full px-2 pb-1 pt-0 bg-green-950/80 border-t border-green-800 absolute bottom-16 left-0 right-0">
+      {/* Player hand - positioned higher on screen with enhanced styling */}
+      <div className="w-full px-2 pb-1 pt-0 bg-gradient-to-r from-green-950/90 via-green-900/90 to-green-950/90 border-t border-green-800/50 absolute bottom-0 left-0 right-0 shadow-lg">
         <PlayerHand
           cards={gameState.playerHand}
           onSelectCard={handleSelectCard}
@@ -2490,12 +2494,24 @@ function OriginalGameMatch() {
         />
       </div>
 
-      {/* Animation error message */}
+      {/* Add a subtle background pattern to the entire game */}
+      <div
+        className="absolute inset-0 pointer-events-none bg-repeat opacity-5"
+        style={{
+          backgroundImage:
+            "url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+CjxyZWN0IHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0ibm9uZSI+PC9yZWN0Pgo8Y2lyY2xlIGN4PSIyIiBjeT0iMiIgcj0iMSIgZmlsbD0iI2ZmZiI+PC9jaXJjbGU+CjxjaXJjbGUgY3g9IjEwIiBjeT0iMTAiIHI9IjEiIGZpbGw9IiNmZmYiPjwvY2lyY2xlPgo8Y2lyY2xlIGN4PSIxOCIgY3k9IjE4IiByPSIxIiBmaWxsPSIjZmZmIj48L2NpcmNsZT4KPC9zdmc+')",
+        }}
+      ></div>
+
+      {/* Animation error message with improved styling */}
       {animationError && (
-        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-800/90 text-white px-4 py-2 rounded-md z-50 text-sm">
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-red-800/90 to-red-900/90 text-white px-4 py-2 rounded-md z-50 text-sm shadow-lg border border-red-700/50">
           <div className="flex items-center gap-2">
             <span>{animationError}</span>
-            <button onClick={handleDismissError} className="text-xs bg-red-700 hover:bg-red-600 px-2 py-1 rounded">
+            <button
+              onClick={handleDismissError}
+              className="text-xs bg-red-700 hover:bg-red-600 px-2 py-1 rounded transition-colors"
+            >
               Dismiss
             </button>
           </div>
@@ -2510,6 +2526,7 @@ function OriginalGameMatch() {
         onPlay={handlePlayCard}
         disabled={gameState.currentTurn !== "player" || gameState.gameStatus !== "playing" || !!gameState.pendingEffect}
       />
+
       {/* Game over alert */}
       <AlertDialog open={showAlert} onOpenChange={setShowAlert}>
         <AlertDialogContent className="border-2 border-green-700 bg-green-900/90 text-white">
@@ -2527,6 +2544,7 @@ function OriginalGameMatch() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
       {/* Discard selection modal */}
       <CardSelectionModal
         open={showDiscardModal}
@@ -2538,6 +2556,7 @@ function OriginalGameMatch() {
         selectionCount={discardCount}
         actionText="Send to Bottom"
       />
+
       {/* Target selection modal */}
       <TargetSelectionModal
         open={showTargetModal}
@@ -2553,6 +2572,7 @@ function OriginalGameMatch() {
         playerField={gameState?.playerField || []}
         opponentField={gameState?.opponentField || []}
       />
+
       {/* AI Trap selection modal */}
       <TargetSelectionModal
         open={showAITrapModal}
@@ -2577,300 +2597,112 @@ function OriginalGameMatch() {
         filter={targetFilter}
         playerCardIndices={playerCardIndices}
       />
-      {/* AI card play animation overlay */}
-      {showAiCardAnimation && aiPlayedCard && (
-        <div className="pointer-events-none fixed inset-0 z-30 overflow-hidden">
-          <div className={`ai-card-animation ${aiCardAnimationPhase === "toField" ? "fall-to-field" : ""}`}>
-            {/* Card container with 3D flip animation */}
-            <div className="relative">
-              {/* Card back */}
-              <div
-                className="absolute inset-0 backface-hidden"
-                style={{
-                  backfaceVisibility: "hidden",
-                  transform: aiCardAnimationPhase === "flip" ? "rotateY(180deg)" : "rotateY(180deg)",
-                  transition: "transform 1.5s ease-in-out",
-                  opacity: aiCardAnimationPhase === "flip" ? 1 : 0,
-                }}
-              >
-                <Card className="h-[200px] w-[140px] border-4 border-red-700 bg-red-900 shadow-xl">
-                  <div className="absolute inset-0 border-8 border-transparent bg-gradient-to-br from-red-800/20 to black/30"></div>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="card-back-pattern"></div>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="h-14 w-14 rounded-full border-4 border-red-400 flex items-center justify-center">
-                        <span className="text-lg font-bold text-red-400">AI</span>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              </div>
 
-              {/* Card front */}
-              <div
-                className="backface-hidden"
-                style={{
-                  backfaceVisibility: "hidden",
-                  transform: aiCardAnimationPhase === "flip" ? "rotateY(0deg)" : "rotateY(0deg)",
-                  transition: "transform 1.5s ease-in-out",
-                }}
-              >
-                <Card
-                  className={`h-[200px] w-[140px] border-4 ${
-                    aiPlayedCard.type === "animal"
-                      ? aiPlayedCard.environment === "terrestrial"
-                        ? "border-red-600 bg-red-900"
-                        : aiPlayedCard.environment === "aquatic"
-                          ? "border-blue-600 bg-blue-900"
-                          : "border-green-600 bg-green-900"
-                      : "border-purple-600 bg-purple-900"
-                  } shadow-xl`}
-                >
-                  <div className="absolute inset-0 border-8 border-transparent bg-gradient-to-br from-white/10 to-black/20"></div>
-                  <div className="absolute inset-0 flex flex-col items-center justify-between p-2">
-                    <div className="text-center text-xs font-bold">{aiPlayedCard.name}</div>
-                    <div className="relative h-[120px] w-full flex items-center justify-center">
-                      {getCardArt(aiPlayedCard)}
-                    </div>
-                    <div className="w-full text-center text-[10px]">
-                      {aiPlayedCard.type === "animal" ? (
-                        <div className="flex items-center justify-between">
-                          <span className="bg-gray-800 px-1 rounded text-[9px]">{aiPlayedCard.environment}</span>
-                          <span className="bg-yellow-600 px-1 rounded text-[9px]">{aiPlayedCard.points} pts</span>
-                        </div>
-                      ) : (
-                        <div className="text-[9px] text-gray-300">{aiPlayedCard.effect}</div>
-                      )}
-                    </div>
-                  </div>
-                </Card>
-              </div>
-            </div>
+      {/* Find the section where we render the modals for specific effects */}
+      {/* Add the missing modal components that aren't being rendered */}
 
-            <div className="absolute top-full mt-2 text-center w-full">
-              <div className="bg-red-900/80 text-white text-xs px-2 py-1 rounded-md">AI plays {aiPlayedCard.name}</div>
-            </div>
-          </div>
-        </div>
+      {/* After the AI Trap selection modal, add these modal components: */}
+
+      {/* Squirrel effect modal */}
+      {showSquirrelModal && gameState && (
+        <TargetSelectionModal
+          open={showSquirrelModal}
+          onClose={() => setShowSquirrelModal(false)}
+          cards={gameState.opponentHand}
+          onConfirm={handleSquirrelSelection}
+          title="Select Card to Discard"
+          description="Select a card from your opponent's hand to discard."
+          filter={undefined}
+          playerCardIndices={[]}
+        />
       )}
-      {/* AI animation overlays */}
-      {aiDrawingCards && (
-        <div className="pointer-events-none fixed inset-0 z-20 overflow-hidden">
-          <div className="absolute right-1/4 top-1/4 flex items-center justify-center">
-            <div className="relative h-16 w-16 rounded-full bg-red-500/20 animate-pulse"></div>
-            {Array.from({ length: aiDrawnCardCount }).map((_, i) => (
-              <div
-                key={i}
-                className="absolute h-14 w-10 rounded-md border-2 border-red-600 bg-green-800 shadow-lg animate-ai-draw"
-                style={{
-                  animationDelay: `${i * 0.3}s`,
-                  boxShadow: "0 0 10px rgba(255, 0, 0, 0.5)",
-                }}
-              >
-                <div className="absolute inset-0 flex items-center justify-center text-[9px] text-white font-bold">
-                  AI
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+
+      {/* Tuna effect modal */}
+      {showTunaModal && gameState && (
+        <TargetSelectionModal
+          open={showTunaModal}
+          onClose={() => setShowTunaModal(false)}
+          cards={gameState.playerHand.filter(
+            (card) =>
+              card.type === "animal" &&
+              (card.environment === "aquatic" || card.environment === "amphibian") &&
+              (card.points || 0) <= 3,
+          )}
+          onConfirm={handleTunaSelection}
+          title="Play Aquatic Animal"
+          description="Select an aquatic or amphibian animal with 3 or fewer points from your hand to play."
+          filter={undefined}
+          playerCardIndices={[]}
+        />
       )}
-      {aiDiscardingCards && (
-        <div className="pointer-events-none fixed inset-0 z-20 overflow-hidden">
-          <div className="absolute right-1/4 top-1/4">
-            {aiDiscardedCardIds.map((_, i) => (
-              <div
-                key={i}
-                className="absolute h-14 w-10 rounded-md border border-red-600 bg-red-800 shadow-md animate-discard"
-                style={{
-                  animationDelay: `${i * 0.3}s`,
-                }}
-              />
-            ))}
-          </div>
-        </div>
+
+      {/* Turtle effect modal */}
+      {showTurtleModal && gameState && (
+        <TargetSelectionModal
+          open={showTurtleModal}
+          onClose={() => setShowTurtleModal(false)}
+          cards={gameState.playerHand.filter(
+            (card) =>
+              card.type === "animal" &&
+              (card.environment === "aquatic" || card.environment === "amphibian") &&
+              (card.points || 0) <= 2,
+          )}
+          onConfirm={handleTurtleSelection}
+          title="Play Aquatic Animal"
+          description="Select an aquatic or amphibian animal with 2 or fewer points from your hand to play."
+          filter={undefined}
+          playerCardIndices={[]}
+        />
       )}
-      {/* Victory animation overlay */}
-      {(gameState.playerPoints >= 7 || gameState.opponentPoints >= 7) && (
-        <div className="pointer-events-none fixed inset-0 z-10 overflow-hidden">
-          <div className="absolute inset-0 flex items-center justify-center">
-            {gameState.playerPoints >= 7 && (
-              <div className="animate-bounce rounded-full bg-yellow-500/20 p-4 text-center">
-                <Crown className="h-6 w-6 text-yellow-400" />
-              </div>
-            )}
-          </div>
-          <div className="absolute inset-x-0 top-0">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div
-                key={i}
-                className="animate-confetti absolute h-2 w-2 rounded-full bg-yellow-400"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  animationDelay: `${Math.random() * 5}s`,
-                  animationDuration: `${Math.random() * 3 + 2}s`,
-                }}
-              />
-            ))}
-          </div>
-        </div>
+
+      {/* Crab effect modal */}
+      {showCrabModal && gameState && gameState.sharedDeck.length >= 2 && (
+        <TargetSelectionModal
+          open={showCrabModal}
+          onClose={() => setShowCrabModal(false)}
+          cards={gameState.sharedDeck.slice(0, 2)}
+          onConfirm={handleCrabSelection}
+          title="Choose a Card"
+          description="Select one card to add to your hand. The other will be sent to the bottom of the deck."
+          filter={undefined}
+          playerCardIndices={[]}
+        />
       )}
+
+      {/* Zebra effect modal */}
+      {showZebraModal && gameState && (
+        <TargetSelectionModal
+          open={showZebraModal}
+          onClose={handleZebraEffectClose}
+          cards={gameState.opponentHand}
+          onConfirm={() => {}}
+          title="Opponent's Hand"
+          description="You can see your opponent's hand. Click Close when done."
+          filter={undefined}
+          playerCardIndices={[]}
+        />
+      )}
+
+      {/* Quit confirmation dialog */}
       <AlertDialog open={showQuitConfirmation} onOpenChange={setShowQuitConfirmation}>
         <AlertDialogContent className="border-2 border-green-700 bg-green-900/90 text-white">
           <AlertDialogHeader>
             <AlertDialogTitle>Quit Game</AlertDialogTitle>
-            <AlertDialogDescription className="text-green-200">
-              Are you sure you want to quit the current game? Your progress will be lost.
-            </AlertDialogDescription>
+            <AlertDialogDescription className="text-green-200">{alertMessage}</AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <Button
+          <AlertDialogFooter className="flex justify-between">
+            <AlertDialogAction
               onClick={() => setShowQuitConfirmation(false)}
-              variant="outline"
-              className="border-red-700 text-red-400 hover:bg-red-900/30 hover:text-red-300"
+              className="bg-green-700 hover:bg-green-600"
             >
-              Cancel
-            </Button>
-            <Button onClick={() => router.push("/")} className="bg-green-700 hover:bg-green-600">
+              Continue Playing
+            </AlertDialogAction>
+            <AlertDialogAction onClick={() => router.push("/")} className="bg-red-700 hover:bg-red-600">
               Quit Game
-            </Button>
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      {/* Discard Pile Gallery */}
-      <DiscardPileGallery
-        open={showDiscardGallery}
-        onClose={() => setShowDiscardGallery(false)}
-        cards={gameState.sharedDiscard}
-      />
-      {/* Opponent Hand Reveal Modal */}
-      <OpponentHandReveal
-        open={showOpponentHand}
-        onClose={() => {
-          setShowOpponentHand(false)
-          // Resolve the octopus effect
-          if (gameState?.pendingEffect?.type === "octopus") {
-            const newState = resolveAnimalEffect(gameState, 0)
-            setGameState(newState)
-          }
-        }}
-        cards={gameState?.opponentHand || []}
-      />
-      {/* Add the OpponentHandSelectionModal component to the JSX */}
-      {/* Add this near the bottom of the component, with the other modals */}
-      <OpponentHandSelectionModal
-        open={showSquirrelModal}
-        onClose={() => setShowSquirrelModal(false)}
-        cards={gameState?.opponentHand || []}
-        onSelect={handleSquirrelSelection}
-        title="Squirrel Effect: Select a Card to Discard"
-        description="Choose one of your opponent's cards to send to the discard pile."
-      />
-      {/* Add the PlayerHandSelectionModal components for Tuna and Turtle effects */}
-      <PlayerHandSelectionModal
-        open={showTunaModal}
-        onClose={() => setShowTunaModal(false)}
-        cards={
-          gameState?.playerHand.filter(
-            (card) => card.type === "animal" && (card.environment === "aquatic" || card.environment === "amphibian"),
-          ) || []
-        }
-        onSelect={handleTunaSelection}
-        title="Tuna Effect: Play an Aquatic Animal"
-        description="Select an aquatic animal from your hand to play."
-        filter={(card) =>
-          card.type === "animal" && (card.environment === "aquatic" || card.environment === "amphibian")
-        }
-      />
-      <PlayerHandSelectionModal
-        open={showTurtleModal}
-        onClose={() => setShowTurtleModal(false)}
-        cards={gameState?.playerHand || []}
-        onSelect={handleTurtleSelection}
-        title="Turtle Effect: Play a Small Aquatic Animal"
-        description="Select an aquatic animal with 2 or fewer points from your hand to play."
-        filter={(card) =>
-          card.type === "animal" &&
-          (card.environment === "aquatic" || card.environment === "amphibian") &&
-          (card.points || 0) <= 2
-        }
-      />
-      {/* Add the DeckTopCardsModal component to the JSX */}
-      {/* Add this near the bottom of the component, with the other modals */}
-      <DeckTopCardsModal
-        open={showCrabModal}
-        onClose={() => setShowCrabModal(false)}
-        cards={gameState?.sharedDeck.slice(0, Math.min(2, gameState?.sharedDeck.length || 0)) || []}
-        onSelect={handleCrabSelection}
-        title="Crab Effect: Choose a Card"
-        description="Select one card to add to your hand. The other will be sent to the bottom of the deck."
-      />
-      {/* Add Zebra Effect Modal for revealing opponent's hand */}
-      <OpponentHandReveal
-        open={showZebraModal}
-        onClose={handleZebraEffectClose}
-        cards={gameState?.opponentHand || []}
-        title="Zebra Effect: View Opponent's Hand"
-        description="You can see all cards in your opponent's hand."
-      />
     </div>
   )
-}
-
-export default function MatchPage() {
-  const searchParams = useSearchParams()
-  const mode = searchParams.get("mode")
-  const roomCode = searchParams.get("room")
-  const deckId = searchParams.get("deck")
-  const { user, isLoading } = useAuth()
-  const router = useRouter()
-  const [isRedirecting, setIsRedirecting] = useState(false)
-
-  // Redirect to sign in if trying to play online without being logged in
-  useEffect(() => {
-    if (!isLoading && !user && (mode === "host" || mode === "join") && !isRedirecting) {
-      setIsRedirecting(true)
-      router.push("/auth/sign-in")
-    }
-  }, [user, isLoading, mode, router, isRedirecting])
-
-  // Redirect to deck selection if trying to play without selecting a deck
-  useEffect(() => {
-    if (mode === "ai" && !deckId && !isRedirecting) {
-      setIsRedirecting(true)
-      router.push("/game/deck-selection?mode=ai")
-    }
-  }, [mode, deckId, router, isRedirecting])
-
-  // Redirect to online page if trying to play online without a room code
-  useEffect(() => {
-    if ((mode === "host" || mode === "join") && !roomCode && !isRedirecting) {
-      setIsRedirecting(true)
-      router.push("/game/online")
-    }
-  }, [mode, roomCode, router, isRedirecting])
-
-  if (isLoading || isRedirecting) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-green-800 to-green-950 p-4 text-white">
-        <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-4 border-green-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p>Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
-  // If mode is AI, use the original game match component
-  if (mode === "ai") {
-    return <OriginalGameMatch />
-  }
-
-  // If mode is host or join, use the online match component
-  if ((mode === "host" || mode === "join") && roomCode) {
-    return <OnlineMatch roomCode={roomCode} />
-  }
-
-  // Default to AI mode if no valid mode is specified
-  return <OriginalGameMatch />
 }

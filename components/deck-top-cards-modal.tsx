@@ -11,9 +11,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
-import { Card } from "@/components/ui/card"
 import { Check } from "lucide-react"
-import { getCardArt } from "./card-art/card-art-mapper"
+import { GameCardTemplate } from "./game-card-template"
 
 interface DeckTopCardsModalProps {
   open: boolean
@@ -63,40 +62,18 @@ export function DeckTopCardsModal({ open, onClose, cards, onSelect, title, descr
                 } hover:scale-105`}
                 onClick={() => handleCardClick(index)}
               >
-                <Card
-                  className={`relative h-full w-full ${
-                    card.type === "animal"
-                      ? card.environment === "terrestrial"
-                        ? "bg-red-900/60"
-                        : card.environment === "aquatic"
-                          ? "bg-blue-900/60"
-                          : "bg-green-900/60"
-                      : "bg-purple-900/60"
-                  } border-0 shadow-md`}
-                >
-                  <div className="absolute inset-0 border-2 border-transparent bg-gradient-to-br from-white/10 to-black/20"></div>
-                  <div className="absolute inset-0 flex flex-col items-center justify-between overflow-hidden p-1">
-                    <div className="w-full text-center text-[10px] sm:text-xs font-bold truncate">{card.name}</div>
-                    <div className="relative h-[60px] sm:h-[80px] w-full flex items-center justify-center">
-                      {getCardArt(card)}
-                    </div>
-                    <div className="w-full text-center text-[8px] sm:text-[10px]">
-                      {card.type === "animal" ? (
-                        <div className="flex items-center justify-between">
-                          <span className="bg-gray-800 px-1 rounded truncate">{card.environment}</span>
-                          <span className="bg-yellow-600 px-1 rounded">{card.points} pts</span>
-                        </div>
-                      ) : (
-                        <div className="text-gray-300 truncate">{card.effect}</div>
-                      )}
-                    </div>
-                  </div>
+                <div className="relative">
+                  <GameCardTemplate
+                    card={card}
+                    size={typeof window !== "undefined" && window.innerWidth < 640 ? "xs" : "sm"}
+                    selected={selectedIndex === index}
+                  />
                   {selectedIndex === index && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/40">
                       <Check className="h-6 w-6 text-yellow-400" />
                     </div>
                   )}
-                </Card>
+                </div>
               </div>
             ))
           )}

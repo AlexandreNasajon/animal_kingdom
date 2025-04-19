@@ -207,34 +207,48 @@ export function applyAnimalEffect(state: GameState, card: GameCard, forPlayer: b
     }
   }
 
-  // Wolf: "On play, each player discards 1 card at random."
+  // Wolf: "On play, if your opponent has 5 or fewer cards in hand, send 1 terrestrial animal they control to their hand."
   else if (card.name === "Wolf") {
-    let message = `${forPlayer ? "You" : "AI"} played ${card.name}.`
+    const opponentHandSize = forPlayer ? state.opponentHand.length : state.playerHand.length
+    const validTargets = forPlayer
+      ? state.opponentField.filter((c) => c.environment === "terrestrial")
+      : state.playerField.filter((c) => c.environment === "terrestrial")
 
-    // Both players discard a card at random
-    if (state.playerHand.length > 0) {
-      const playerDiscardIndex = Math.floor(Math.random() * state.playerHand.length)
-      const playerDiscardedCard = state.playerHand[playerDiscardIndex]
-      const newPlayerHand = [...state.playerHand]
-      newPlayerHand.splice(playerDiscardIndex, 1)
+    if (opponentHandSize <= 5 && validTargets.length > 0) {
+      if (forPlayer) {
+        newState = {
+          ...newState,
+          pendingEffect: {
+            type: "wolf",
+            forPlayer,
+          },
+          message: `You played ${card.name}. Select a terrestrial animal your opponent controls to send to their hand.`,
+        }
+      } else {
+        // AI automatically selects the highest value terrestrial animal
+        const targetIndex = state.playerField
+          .map((c, i) => ({ card: c, index: i }))
+          .filter((item) => item.card.environment === "terrestrial")
+          .sort((a, b) => (b.card.points || 0) - (a.card.points || 0))[0].index
 
-      newState.playerHand = newPlayerHand
-      newState.sharedDiscard = [...state.sharedDiscard, playerDiscardedCard]
-      message += ` You discarded ${playerDiscardedCard.name}.`
+        const targetCard = state.playerField[targetIndex]
+        const newPlayerField = [...state.playerField]
+        newPlayerField.splice(targetIndex, 1)
+
+        newState = {
+          ...newState,
+          playerField: newPlayerField,
+          playerHand: [...state.playerHand, targetCard],
+          playerPoints: state.playerPoints - (targetCard.points || 0),
+          message: `AI played ${card.name} and sent your ${targetCard.name} to your hand.`,
+        }
+      }
+    } else {
+      newState = {
+        ...newState,
+        message: `${forPlayer ? "You" : "AI"} played ${card.name}, but your opponent has more than 5 cards or no terrestrial animals.`,
+      }
     }
-
-    if (state.opponentHand.length > 0) {
-      const opponentDiscardIndex = Math.floor(Math.random() * state.opponentHand.length)
-      const opponentDiscardedCard = state.opponentHand[opponentDiscardIndex]
-      const newOpponentHand = [...state.opponentHand]
-      newOpponentHand.splice(opponentDiscardIndex, 1)
-
-      newState.opponentHand = newOpponentHand
-      newState.sharedDiscard = [...newState.sharedDiscard, opponentDiscardedCard]
-      message += ` AI discarded a card.`
-    }
-
-    newState.message = message
   }
 
   // Lion: "Sacrifice 1 animal to play this card. On play, your opponent discards 2 cards at random."
@@ -286,14 +300,20 @@ export function applyAnimalEffect(state: GameState, card: GameCard, forPlayer: b
     }
   }
 
-  // Tuna: "On play, play an aquatic animal from hand."
+  // Tuna: "On play, play a 3 or fewer points aquatic animal from hand."
   else if (card.name === "Tuna") {
     const aquaticCards = forPlayer
       ? state.playerHand.filter(
-          (c) => c.type === "animal" && (c.environment === "aquatic" || c.environment === "amphibian"),
+          (c) =>
+            c.type === "animal" &&
+            (c.environment === "aquatic" || c.environment === "amphibian") &&
+            (c.points || 0) <= 3,
         )
       : state.opponentHand.filter(
-          (c) => c.type === "animal" && (c.environment === "aquatic" || c.environment === "amphibian"),
+          (c) =>
+            c.type === "animal" &&
+            (c.environment === "aquatic" || c.environment === "amphibian") &&
+            (c.points || 0) <= 3,
         )
 
     if (forPlayer && aquaticCards.length > 0) {
@@ -303,7 +323,7 @@ export function applyAnimalEffect(state: GameState, card: GameCard, forPlayer: b
           type: "tuna",
           forPlayer,
         },
-        message: `You played ${card.name}. You may play an aquatic animal from your hand.`,
+        message: `You played ${card.name}. You may play an aquatic animal of 3 or fewer points from your hand.`,
       }
     } else if (!forPlayer && aquaticCards.length > 0) {
       // AI automatically selects the highest point aquatic animal
@@ -330,50 +350,15 @@ export function applyAnimalEffect(state: GameState, card: GameCard, forPlayer: b
     }
   }
 
-  // Seahorse: "On play, draw 1 card for every animal you played this turn."
+  // Seahorse: "On play, draw 1 card for every card played this turn, including this one."
   else if (card.name === "Seahorse") {
-    // Count animals played this turn, NOT including the Seahorse itself
-    let animalCount = forPlayer
-      ? state.effectsThisTurn.playerAnimalsPlayed
-      : state.effectsThisTurn.opponentAnimalsPlayed
-
-    // If no other animals were played this turn, draw exactly 1 card
-    if (animalCount === 0) {
-      if (state.sharedDeck.length > 0) {
-        const newDeck = [...state.sharedDeck]
-        const drawnCard = newDeck.shift()!
-
-        if (forPlayer) {
-          newState = {
-            ...newState,
-            playerHand: [...state.playerHand, drawnCard],
-            sharedDeck: newDeck,
-            message: `You played ${card.name} and drew 1 card.`,
-          }
-        } else {
-          newState = {
-            ...newState,
-            opponentHand: [...state.opponentHand, drawnCard],
-            sharedDeck: newDeck,
-            message: `AI played ${card.name} and drew 1 card.`,
-          }
-        }
-      } else {
-        newState = {
-          ...newState,
-          message: `${forPlayer ? "You" : "AI"} played ${card.name}, but couldn't draw any cards.`,
-        }
-      }
-      return newState
-    }
-
-    // Count animals played this turn, including the Seahorse itself
-    animalCount = forPlayer
+    // Count cards played this turn, including the Seahorse itself
+    const cardsPlayed = forPlayer
       ? state.effectsThisTurn.playerAnimalsPlayed + 1 // +1 for the Seahorse itself
       : state.effectsThisTurn.opponentAnimalsPlayed + 1 // +1 for the Seahorse itself
 
-    if (animalCount > 0 && state.sharedDeck.length > 0) {
-      const cardsToDraw = Math.min(animalCount, state.sharedDeck.length)
+    if (cardsPlayed > 0 && state.sharedDeck.length > 0) {
+      const cardsToDraw = Math.min(cardsPlayed, state.sharedDeck.length)
       const newDeck = [...state.sharedDeck]
       const drawnCards = newDeck.splice(0, cardsToDraw)
 
@@ -382,7 +367,7 @@ export function applyAnimalEffect(state: GameState, card: GameCard, forPlayer: b
           ...newState,
           playerHand: [...state.playerHand, ...drawnCards],
           sharedDeck: newDeck,
-          message: `You played ${card.name} and drew ${cardsToDraw} card${cardsToDraw > 1 ? "s" : ""} (one for each animal you played this turn).`,
+          message: `You played ${card.name} and drew ${cardsToDraw} card${cardsToDraw > 1 ? "s" : ""} (one for each card played this turn).`,
         }
       } else {
         newState = {
@@ -514,7 +499,7 @@ export function applyAnimalEffect(state: GameState, card: GameCard, forPlayer: b
     }
   }
 
-  // Octopus: "On play, look at the top 3 cards of the deck. You may rearrange them."
+  // Octopus: "On play, look at the top 3 cards of the deck."
   else if (card.name === "Octopus") {
     if (state.sharedDeck.length > 0) {
       const topCards = state.sharedDeck.slice(0, Math.min(3, state.sharedDeck.length))
@@ -529,7 +514,7 @@ export function applyAnimalEffect(state: GameState, card: GameCard, forPlayer: b
           message: `You played ${card.name}. Look at the top ${topCards.length} cards of the deck.`,
         }
       } else {
-        // AI just keeps the cards in the same order
+        // AI just looks at the cards
         newState = {
           ...newState,
           message: `AI played ${card.name} and looked at the top cards of the deck.`,
@@ -604,55 +589,75 @@ export function applyAnimalEffect(state: GameState, card: GameCard, forPlayer: b
   }
 
   // Frog: "On play, destroy the animal your opponent controls with fewer points (your choice if tied)."
-  else if (card.name === "Frog") {
-    if (forPlayer && state.opponentField.length > 0) {
-      // Find all animals with the minimum points
-      const minPoints = Math.min(...state.opponentField.map((c) => c.points || 0))
-      const minPointAnimals = state.opponentField.filter((c) => (c.points || 0) === minPoints)
-
-      if (minPointAnimals.length === 1) {
-        // Only one animal with minimum points
-        const targetIndex = state.opponentField.findIndex((c) => c.id === minPointAnimals[0].id)
-        const targetCard = state.opponentField[targetIndex]
-        const newOpponentField = [...state.opponentField]
-        newOpponentField.splice(targetIndex, 1)
-
-        newState = {
-          ...newState,
-          opponentField: newOpponentField,
-          opponentPoints: state.opponentPoints - (targetCard.points || 0),
-          sharedDiscard: [...state.sharedDiscard, targetCard],
-          message: `You played ${card.name} and destroyed the opponent's ${targetCard.name}.`,
-        }
-      } else if (minPointAnimals.length > 1) {
-        // Multiple animals with minimum points, player chooses
-        newState = {
-          ...newState,
-          pendingEffect: {
-            type: "frog",
-            forPlayer,
-          },
-          message: `You played ${card.name}. Select an opponent's animal with ${minPoints} point${minPoints !== 1 ? "s" : ""} to destroy.`,
+  // For the Frog effect
+  if (card.name === "Frog") {
+    // Find opponent's animal with the fewest points
+    if (forPlayer) {
+      if (state.opponentField.length === 0) {
+        return {
+          ...state,
+          message: "You played Frog, but there are no opponent animals on the field.",
         }
       }
-    } else if (!forPlayer && state.playerField.length > 0) {
-      // Find all animals with the minimum points
+
+      // Find the minimum points value among opponent's animals
+      const minPoints = Math.min(...state.opponentField.map((c) => c.points || 0))
+
+      // Get all animals with the minimum points (in case of ties)
+      const lowestPointAnimals = state.opponentField.filter((c) => (c.points || 0) === minPoints)
+
+      // Randomly select one if there are ties
+      const targetAnimal = lowestPointAnimals[Math.floor(Math.random() * lowestPointAnimals.length)]
+
+      // Remove the animal from opponent's field
+      const newOpponentField = state.opponentField.filter((c) => c.id !== targetAnimal.id)
+
+      // Calculate new opponent points
+      const newOpponentPoints = state.opponentPoints - (targetAnimal.points || 0)
+
+      // Add the animal to the bottom of the deck
+      const newDeck = [...state.sharedDeck, targetAnimal]
+
+      return {
+        ...state,
+        opponentField: newOpponentField,
+        opponentPoints: newOpponentPoints,
+        sharedDeck: newDeck,
+        message: `Your Frog sent the opponent's ${targetAnimal.name} (${targetAnimal.points} points) to the bottom of the deck.`,
+      }
+    } else {
+      // AI plays Frog - similar logic but targeting player's field
+      if (state.playerField.length === 0) {
+        return {
+          ...state,
+          message: "AI played Frog, but there are no animals on your field.",
+        }
+      }
+
+      // Find the minimum points value among player's animals
       const minPoints = Math.min(...state.playerField.map((c) => c.points || 0))
-      const minPointAnimals = state.playerField.filter((c) => (c.points || 0) === minPoints)
 
-      // AI chooses the animal with the highest points among those with minimum points
-      // (in case of a tie in minimum points)
-      const targetIndex = state.playerField.findIndex((c) => c.id === minPointAnimals[0].id)
-      const targetCard = state.playerField[targetIndex]
-      const newPlayerField = [...state.playerField]
-      newPlayerField.splice(targetIndex, 1)
+      // Get all animals with the minimum points (in case of ties)
+      const lowestPointAnimals = state.playerField.filter((c) => (c.points || 0) === minPoints)
 
-      newState = {
-        ...newState,
+      // Randomly select one if there are ties
+      const targetAnimal = lowestPointAnimals[Math.floor(Math.random() * lowestPointAnimals.length)]
+
+      // Remove the animal from player's field
+      const newPlayerField = state.playerField.filter((c) => c.id !== targetAnimal.id)
+
+      // Calculate new player points
+      const newPlayerPoints = state.playerPoints - (targetAnimal.points || 0)
+
+      // Add the animal to the bottom of the deck
+      const newDeck = [...state.sharedDeck, targetAnimal]
+
+      return {
+        ...state,
         playerField: newPlayerField,
-        playerPoints: state.playerPoints - (targetCard.points || 0),
-        sharedDiscard: [...state.sharedDiscard, targetCard],
-        message: `AI played ${card.name} and destroyed your ${targetCard.name}.`,
+        playerPoints: newPlayerPoints,
+        sharedDeck: newDeck,
+        message: `AI's Frog sent your ${targetAnimal.name} (${targetAnimal.points} points) to the bottom of the deck.`,
       }
     }
   }
@@ -684,7 +689,7 @@ export function applyAnimalEffect(state: GameState, card: GameCard, forPlayer: b
             sharedDeck: newDeck,
             message: `AI played ${card.name} and added the top card to its hand.`,
           }
-        } else {
+        } else if (topCards.length === 2) {
           // AI chooses the better card based on points for animals, or just the first impact card
           const betterCardIndex =
             topCards[0].type === "animal" && topCards[1].type === "animal"
@@ -696,17 +701,37 @@ export function applyAnimalEffect(state: GameState, card: GameCard, forPlayer: b
                 : 1
 
           const newDeck = [...state.sharedDeck]
-          const drawnCard = newDeck.splice(betterCardIndex, 1)[0]
-          const bottomCard = newDeck.shift()!
-          newDeck.push(bottomCard)
+          const drawnCard = newDeck.splice(0, 1)[0] // Take the first card
+          const bottomCard = newDeck.shift()! // Take the next card (now the first)
 
+          // If the better card is the second one, swap them
+          if (betterCardIndex === 1) {
+            newState = {
+              ...newState,
+              opponentHand: [...state.opponentHand, bottomCard],
+              sharedDeck: [...newDeck, drawnCard], // Put the other card at the bottom
+              message: `AI played ${card.name} and added a card to its hand.`,
+            }
+          } else {
+            newState = {
+              ...newState,
+              opponentHand: [...state.opponentHand, drawnCard],
+              sharedDeck: [...newDeck, bottomCard], // Put the other card at the bottom
+              message: `AI played ${card.name} and added a card to its hand.`,
+            }
+          }
+        } else {
+          // No cards in deck
           newState = {
             ...newState,
-            opponentHand: [...state.opponentHand, drawnCard],
-            sharedDeck: newDeck,
-            message: `AI played ${card.name} and added a card to its hand.`,
+            message: `AI played ${card.name} but there were no cards to draw.`,
           }
         }
+      }
+    } else {
+      newState = {
+        ...newState,
+        message: `${forPlayer ? "You" : "AI"} played ${card.name}, but there are no cards in the deck.`,
       }
     }
   }
@@ -751,9 +776,9 @@ export function applyAnimalEffect(state: GameState, card: GameCard, forPlayer: b
     }
   }
 
-  // Crocodile: "Send 1 animal you control to hand to play this card. On play, send 1 animal of 3 or fewer points your opponent controls to deck bottom."
+  // Crocodile: "Sacrifice 1 animal to play this card. On play, send 1 animal of 3 or fewer points your opponent controls to deck bottom."
   else if (card.name === "Crocodile") {
-    // Note: The "send to hand" part should be handled before playing the card
+    // Note: The "sacrifice" part should be handled before playing the card
     // Here we just handle the "on play" effect
     const validTargets = forPlayer
       ? state.opponentField.filter((c) => (c.points || 0) <= 3)
@@ -817,6 +842,25 @@ export function resolveAnimalEffect(state: GameState, targetIndex: number | numb
           sharedDeck: [targetCard, ...state.sharedDeck], // Add to top of deck
           pendingEffect: null,
           message: `You sent the opponent's ${targetCard.name} to the top of deck.`,
+        }
+      }
+      break
+
+    case "wolf":
+      if (forPlayer) {
+        // Player targeting opponent's terrestrial animal to send to hand
+        const targetCard = state.opponentField[targetIndex as number]
+        if (!targetCard || targetCard.environment !== "terrestrial") return state
+
+        const newOpponentField = [...state.opponentField]
+        newOpponentField.splice(targetIndex as number, 1)
+        return {
+          ...state,
+          opponentField: newOpponentField,
+          opponentHand: [...state.opponentHand, targetCard],
+          opponentPoints: state.opponentPoints - (targetCard.points || 0),
+          pendingEffect: null,
+          message: `You sent the opponent's ${targetCard.name} to their hand.`,
         }
       }
       break
@@ -892,12 +936,13 @@ export function resolveAnimalEffect(state: GameState, targetIndex: number | numb
 
     case "tuna":
       if (forPlayer) {
-        // Player selecting an aquatic animal to play
+        // Player selecting an aquatic animal of 3 or fewer points to play
         const targetCard = state.playerHand[targetIndex as number]
         if (
           !targetCard ||
           targetCard.type !== "animal" ||
-          (targetCard.environment !== "aquatic" && targetCard.environment !== "amphibian")
+          (targetCard.environment !== "aquatic" && targetCard.environment !== "amphibian") ||
+          (targetCard.points || 0) > 3
         )
           return state
 
@@ -912,8 +957,17 @@ export function resolveAnimalEffect(state: GameState, targetIndex: number | numb
             }
           }
 
+          // Ensure the card has 3 or fewer points
+          if ((targetCard.points || 0) > 3) {
+            return {
+              ...state,
+              pendingEffect: null,
+              message: `Cannot play ${targetCard.name} with Tuna effect as it has more than 3 points.`,
+            }
+          }
+
           // Set up a new pending effect to pay the cost
-          const costType = targetCard.name === "Crocodile" ? "return" : "sacrifice"
+          const costType = "sacrifice" // All three cards now use sacrifice
           return {
             ...state,
             pendingEffect: {
@@ -923,8 +977,9 @@ export function resolveAnimalEffect(state: GameState, targetIndex: number | numb
               costType: costType,
               selectedCard: targetIndex,
               sourceEffect: "tuna",
+              targetIndex: null,
             },
-            message: `Select an animal to ${costType === "return" ? "return to your hand" : "sacrifice"} to play ${targetCard.name}.`,
+            message: `Select an animal to sacrifice to play ${targetCard.name}.`,
           }
         }
 
@@ -974,7 +1029,7 @@ export function resolveAnimalEffect(state: GameState, targetIndex: number | numb
           }
 
           // Set up a new pending effect to pay the cost
-          const costType = targetCard.name === "Crocodile" ? "return" : "sacrifice"
+          const costType = "sacrifice" // All three cards now use sacrifice
           return {
             ...state,
             pendingEffect: {
@@ -985,7 +1040,7 @@ export function resolveAnimalEffect(state: GameState, targetIndex: number | numb
               selectedCard: targetIndex,
               sourceEffect: "turtle",
             },
-            message: `Select an animal to ${costType === "return" ? "return to your hand" : "sacrifice"} to play ${targetCard.name}.`,
+            message: `Select an animal to sacrifice to play ${targetCard.name}.`,
           }
         }
 
@@ -1043,21 +1098,11 @@ export function resolveAnimalEffect(state: GameState, targetIndex: number | numb
 
     case "octopus":
       if (forPlayer) {
-        // Player rearranging top cards
-        if (!Array.isArray(targetIndex)) return state
-
-        // Get the top cards
-        const topCardCount = Math.min(3, state.sharedDeck.length)
-        const remainingDeck = state.sharedDeck.slice(topCardCount)
-
-        // Rearrange according to player's selection
-        const rearrangedCards = targetIndex.map((idx) => state.sharedDeck[idx])
-
+        // Just close the effect, the UI should have shown the top cards
         return {
           ...state,
-          sharedDeck: [...rearrangedCards, ...remainingDeck],
           pendingEffect: null,
-          message: `You rearranged the top cards of the deck.`,
+          message: `You've seen the top cards of the deck.`,
         }
       }
       break
@@ -1125,7 +1170,8 @@ export function resolveAnimalEffect(state: GameState, targetIndex: number | numb
         const newOpponentField = [...state.opponentField]
         newOpponentField.splice(targetIndex as number, 1)
 
-        return {
+        // Create complete new state with updated points and deck
+        const newState = {
           ...state,
           opponentField: newOpponentField,
           opponentPoints: state.opponentPoints - (targetCard.points || 0),
@@ -1133,6 +1179,62 @@ export function resolveAnimalEffect(state: GameState, targetIndex: number | numb
           pendingEffect: null,
           message: `You sent the opponent's ${targetCard.name} to the bottom of the deck.`,
         }
+
+        return newState
+      }
+      break
+
+    case "payCost":
+      if (forPlayer && state.pendingEffect.selectedCard !== undefined) {
+        // Process sacrifice for Lion, Shark, or Crocodile
+        const selectedCardIndex = state.pendingEffect.selectedCard
+        const targetCardId = state.pendingEffect.targetCardId
+        const sourceEffect = state.pendingEffect.sourceEffect
+
+        // Find the card to be played from player's hand
+        const cardToPlay = state.playerHand.find((c) => c.id === targetCardId)
+        if (!cardToPlay) return state
+
+        // Find the index of the card to play
+        const cardToPlayIndex = state.playerHand.findIndex((c) => c.id === targetCardId)
+
+        // Get the animal being sacrificed
+        const sacrificeIndex = targetIndex as number
+        const sacrificedAnimal = state.playerField[sacrificeIndex]
+        if (!sacrificedAnimal) return state
+
+        // Create a new player field with the sacrificed animal removed
+        const newPlayerField = [...state.playerField]
+        newPlayerField.splice(sacrificeIndex, 1)
+
+        // Create a new player hand with the played card removed
+        const newPlayerHand = [...state.playerHand]
+        newPlayerHand.splice(cardToPlayIndex, 1)
+
+        // Temporarily update points
+        const newPlayerPoints = newPlayerField.reduce((sum, card) => sum + (card.points || 0), 0)
+
+        // Create a temporary new state
+        let tempState = {
+          ...state,
+          playerField: newPlayerField,
+          playerHand: newPlayerHand,
+          playerPoints: newPlayerPoints,
+          pendingEffect: null,
+          sharedDiscard: [...state.sharedDiscard, sacrificedAnimal], // Send sacrificed animal to discard
+          message: `You sacrificed ${sacrificedAnimal.name} to play ${cardToPlay.name}.`,
+        }
+
+        // Now add the played card to the field
+        tempState.playerField = [...tempState.playerField, cardToPlay]
+        tempState.playerPoints = tempState.playerField.reduce((sum, card) => sum + (card.points || 0), 0)
+
+        // Apply the card's effect
+        if (cardToPlay.type === "animal" && cardToPlay.effect) {
+          tempState = applyAnimalEffect(tempState, cardToPlay, true)
+        }
+
+        return tempState
       }
       break
 
@@ -1145,6 +1247,45 @@ export function resolveAnimalEffect(state: GameState, targetIndex: number | numb
   }
 
   return state
+}
+
+// Find the function that handles the AI's use of the Scare card and ensure it properly targets player cards
+// This is a partial update - we're focusing on the Scare effect handling
+
+export function resolveEffect(state: GameState, targetIndex: number | number[]): GameState {
+  if (!state.pendingEffect) return state
+
+  const { type, forPlayer } = state.pendingEffect
+
+  // Handle Scare effect when AI uses it
+  if (type === "scare" && !forPlayer) {
+    // When AI uses Scare, it should target a player's animal
+    if (typeof targetIndex === "number" && targetIndex >= 0 && targetIndex < state.playerField.length) {
+      const targetCard = state.playerField[targetIndex]
+
+      // Create new arrays without the targeted card
+      const newPlayerField = [...state.playerField]
+      newPlayerField.splice(targetIndex, 1)
+
+      // Add the card to the top of the deck
+      const newDeck = [targetCard, ...state.sharedDeck]
+
+      // Calculate new points
+      const newPlayerPoints = newPlayerField.reduce((sum, card) => sum + (card.points || 0), 0)
+
+      return {
+        ...state,
+        playerField: newPlayerField,
+        sharedDeck: newDeck,
+        playerPoints: newPlayerPoints,
+        pendingEffect: null,
+        message: `AI used Scare to send ${targetCard.name} to the top of the deck.`,
+      }
+    }
+  }
+
+  // Rest of the function remains the same...
+  // ...
 }
 
 // Helper function to update the game state at the end of a turn

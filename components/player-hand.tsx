@@ -4,10 +4,10 @@ import type React from "react"
 
 import { useState, useEffect, useRef } from "react"
 import type { GameCard } from "@/types/game"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Card } from "@/components/ui/card"
 import { getCardArt } from "./card-art/card-art-mapper"
 import { getCardAnimation } from "@/utils/animation-utils"
+import { GameCardTemplate } from "./game-card-template"
 
 interface PlayerHandProps {
   cards: GameCard[]
@@ -410,96 +410,16 @@ export function PlayerHand({
               opacity: isDragged ? "0.7" : "1",
             }}
           >
-            <Card
-              className={`relative h-full w-full transform transition-transform ${
-                card.type === "animal"
-                  ? card.environment === "terrestrial"
-                    ? "bg-red-900"
-                    : card.environment === "aquatic"
-                      ? "bg-blue-900"
-                      : "bg-green-900"
-                  : "bg-purple-900"
-              } ${isHovered && !disabled ? "scale-105" : ""} border-0 shadow-md`}
-            >
-              {/* Points indicator for animal cards */}
-              {card.type === "animal" && card.points && (
-                <div className="absolute top-1 left-1 bg-yellow-600 text-white rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-xs font-bold z-10 shadow-md border border-yellow-500">
-                  {card.points}
-                </div>
-              )}
-
-              {/* Add a subtle highlight for the hovered card */}
-              {isHovered && !disabled && (
-                <div className="absolute inset-0 border-2 border-white/30 rounded-md pointer-events-none z-10"></div>
-              )}
-
-              <div className="absolute inset-0 border-2 border-transparent bg-gradient-to-br from-white/10 to-black/20 pointer-events-none"></div>
-              <div className="absolute inset-0 flex flex-col items-center justify-between overflow-hidden p-1">
-                <div className="w-full text-center text-[10px] sm:text-[12px] font-bold truncate">{card.name}</div>
-                <div className="relative h-[50px] sm:h-[60px] w-full flex items-center justify-center">
-                  {getCardArt(card)}
-                </div>
-                <div className="w-full text-center text-[8px] sm:text-[10px]">
-                  {card.type === "animal" ? (
-                    <div className="flex flex-col gap-0.5">
-                      <div className="flex items-center justify-center">
-                        <span className="bg-gray-800 px-1 rounded">{card.environment}</span>
-                        {card.points && <span className="ml-1 bg-yellow-600 px-1 rounded">{card.points} pts</span>}
-                      </div>
-                      {card.effect && (
-                        <div className="text-[7px] sm:text-[8px] text-gray-300 line-clamp-2 px-0.5">{card.effect}</div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-gray-300 line-clamp-2 px-0.5">{card.effect}</div>
-                  )}
-                </div>
-              </div>
-            </Card>
+            <GameCardTemplate
+              card={card}
+              size={typeof window !== "undefined" && window.innerWidth < 640 ? "xs" : "sm"}
+              selected={isHovered && !disabled}
+            />
 
             {/* Enlarged card preview on hover - only show on desktop */}
             {isHovered && typeof window !== "undefined" && window.innerWidth >= 640 && !disabled && (
               <div className="absolute left-1/2 bottom-full mb-2 transform -translate-x-1/2 z-50 pointer-events-none">
-                <Card
-                  className={`h-[280px] w-[180px] border-2 ${
-                    card.type === "animal" ? getEnvironmentColor(card.environment) : "border-purple-600 bg-purple-900"
-                  } p-1 shadow-xl relative overflow-hidden`}
-                >
-                  {/* Card frame decoration */}
-                  <div className="absolute inset-0 border-8 border-transparent bg-gradient-to-br from-white/10 to-black/20 pointer-events-none"></div>
-                  <div className="absolute inset-0 border border-white/10 rounded-sm pointer-events-none"></div>
-
-                  <CardContent className="flex h-full flex-col items-center justify-between p-1">
-                    <div className="w-full text-center text-sm font-medium text-white">{card.name}</div>
-
-                    <div className="relative h-[160px] w-full">{getCardArt(card)}</div>
-
-                    <div className="w-full">
-                      {card.type === "animal" ? (
-                        <div className="flex items-center justify-between">
-                          <Badge
-                            variant="outline"
-                            className={`${getEnvironmentBadgeColor(card.environment)} text-[10px]`}
-                          >
-                            {card.environment}
-                          </Badge>
-                          {card.points && (
-                            <div className="absolute top-2 left-2 bg-yellow-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold">
-                              {card.points}
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="w-full">
-                          <div className="text-center text-white">
-                            <span className="text-[10px]">Impact</span>
-                          </div>
-                          {getCardEffectPreview(card)}
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+                <GameCardTemplate card={card} size="lg" />
               </div>
             )}
           </div>

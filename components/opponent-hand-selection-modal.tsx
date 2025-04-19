@@ -10,8 +10,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { getCardArt } from "./card-art/card-art-mapper"
+import { GameCardTemplate } from "./game-card-template"
 
 interface OpponentHandSelectionProps {
   open: boolean
@@ -72,36 +71,13 @@ export function OpponentHandSelectionModal({
 
         <div className="grid grid-cols-3 gap-2 mt-2 max-h-[300px] overflow-y-auto">
           {cards.map((card, index) => (
-            <Card
+            <GameCardTemplate
               key={index}
-              className={`cursor-pointer border-2 ${
-                card.type === "animal"
-                  ? card.environment === "terrestrial"
-                    ? "border-red-600 bg-red-900"
-                    : card.environment === "aquatic"
-                      ? "border-blue-600 bg-blue-900"
-                      : "border-green-600 bg-green-900"
-                  : "border-purple-600 bg-purple-900"
-              } hover:scale-105 transition-transform ${
-                selectedIndex === index ? "ring-2 ring-yellow-400 scale-105" : ""
-              }`}
+              card={card}
+              size="sm"
+              selected={selectedIndex === index}
               onClick={() => setSelectedIndex(index)}
-            >
-              <div className="p-2 flex flex-col items-center h-[120px]">
-                <div className="text-center text-xs font-bold mb-1 truncate w-full">{card.name}</div>
-                <div className="relative flex-1 w-full flex items-center justify-center">{getCardArt(card)}</div>
-                <div className="w-full text-center text-[8px] mt-1">
-                  {card.type === "animal" ? (
-                    <div className="flex items-center justify-center gap-1">
-                      <span className="bg-gray-800 px-1 rounded">{card.environment}</span>
-                      {card.points && <span className="bg-yellow-600 px-1 rounded">{card.points} pts</span>}
-                    </div>
-                  ) : (
-                    <div className="text-gray-300 line-clamp-1">{card.effect}</div>
-                  )}
-                </div>
-              </div>
-            </Card>
+            />
           ))}
         </div>
 

@@ -88,7 +88,7 @@ const tuna: GameCard = {
   name: "Tuna",
   points: 1,
   environment: "aquatic",
-  effect: "On play, play an aquatic animal from hand.",
+  effect: "On play, play an aquatic animal of 3 or fewer points from hand.",
   imageUrl: "/canned-tuna-stack.png",
 }
 
@@ -164,12 +164,12 @@ const shark: GameCard = {
 
 // Amphibian Animals
 const frog: GameCard = {
-  id: 117,
+  id: 23,
   type: "animal",
   name: "Frog",
   points: 1,
   environment: "amphibian",
-  effect: "On play, destroy the animal your opponent controls with fewer points (your choice if tied).",
+  effect: "On play, send an opponent animal with fewest points to deck bottom (random if tied).",
   imageUrl: "/serene-frog.png",
 }
 
@@ -200,7 +200,7 @@ const crocodile: GameCard = {
   points: 4,
   environment: "amphibian",
   effect:
-    "Send 1 animal you control to hand to play this card.\nOn play, send 1 animal of 3 or fewer points your opponent controls to deck bottom.",
+    "Sacrifice 1 animal to play this card.\nOn play, send 1 animal of 3 or fewer points your opponent controls to deck bottom.",
   imageUrl: "/swamp-crocodile.png",
 }
 
@@ -233,6 +233,16 @@ const scare: GameCard = {
   points: 0,
   effect: "Send 1 animal to deck top.",
   imageUrl: "/forest-fright.png",
+}
+
+const flood: GameCard = {
+  id: 220,
+  type: "impact",
+  name: "Flood",
+  environment: "any",
+  points: 0,
+  effect: "Send the 2 animal with fewest points of each player to deck bottom.",
+  imageUrl: "/flooded-street-city.png",
 }
 
 const veterinarian: GameCard = {
@@ -356,7 +366,8 @@ export const ADVANCED_DECK: GameCard[] = [
   { ...fisher, id: 218 },
   { ...fisher, id: 219 },
   scare,
-  { ...scare, id: 220 },
+  // Removed one scare card (id: 220) and replaced with flood
+  flood,
   veterinarian,
   confusion,
   domesticate,

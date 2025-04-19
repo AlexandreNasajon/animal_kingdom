@@ -1,10 +1,8 @@
 "use client"
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import type { GameCard } from "@/types/game"
-import { getCardArt } from "@/components/card-art/card-art-mapper"
+import { GameCardTemplate } from "./game-card-template"
 
 interface BoardCardZoomModalProps {
   open: boolean
@@ -60,51 +58,9 @@ export function BoardCardZoomModal({ open, onClose, card, isOpponentCard = false
         </DialogHeader>
 
         <div className="flex flex-col items-center space-y-3">
-          <Card
-            className={`w-[180px] h-[280px] border-2 ${
-              card.type === "animal" ? getEnvironmentColor(card.environment) : "border-purple-600 bg-purple-900"
-            } p-1 shadow-md transition-all relative overflow-hidden ${
-              isOpponentCard ? "border-red-500" : "border-blue-500"
-            }`}
-          >
-            {/* Card frame decoration */}
-            <div className="absolute inset-0 border-8 border-transparent bg-gradient-to-br from-white/10 to-black/20 pointer-events-none"></div>
-            <div className="absolute inset-0 border border-white/10 rounded-sm pointer-events-none"></div>
-
-            <CardContent className="flex flex-col items-center p-1 h-full">
-              <div className="text-center font-bold text-white">{card.name}</div>
-              <div className="relative h-[140px] w-full flex items-center justify-center mt-2">{getCardArt(card)}</div>
-
-              {card.type === "animal" ? (
-                <div className="w-full mt-auto">
-                  <div className="flex w-full items-center justify-between">
-                    <Badge variant="outline" className={`${getEnvironmentBadgeColor(card.environment)} text-xs`}>
-                      {card.environment}
-                    </Badge>
-                    {card.points && (
-                      <div className="absolute top-2 left-2 bg-yellow-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold">
-                        {card.points}
-                      </div>
-                    )}
-                  </div>
-                  {card.effect && (
-                    <div className="mt-2 text-xs text-center px-1 leading-tight text-white bg-black/30 rounded p-1">
-                      {card.effect}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="mt-auto w-full">
-                  <Badge variant="outline" className="bg-purple-900 text-white text-xs w-full justify-center">
-                    Impact
-                  </Badge>
-                  <div className="mt-2 text-xs text-center px-1 leading-tight text-white bg-black/30 rounded p-1">
-                    {card.effect}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <div className={`${isOpponentCard ? "ring-2 ring-red-500" : "ring-2 ring-blue-500"}`}>
+            <GameCardTemplate card={card} size="lg" />
+          </div>
 
           <div className="text-center">
             {card.type === "animal" ? (

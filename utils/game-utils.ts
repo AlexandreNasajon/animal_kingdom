@@ -263,10 +263,6 @@ export function isImpactCardWithValidTargets(card: GameCard, state: GameState, f
         ? state.opponentField.some((c) => c.environment === "aquatic" || c.environment === "amphibian")
         : state.playerField.some((c) => c.environment === "aquatic" || c.environment === "amphibian")
 
-    case "Scare":
-      // Check if there are any animals on the field
-      return state.opponentField.length > 0 || state.playerField.length > 0
-
     case "Veterinarian":
       // Check if there are animal cards in the discard pile
       return state.sharedDiscard.some((c) => c.type === "animal")
@@ -316,6 +312,10 @@ export function isImpactCardWithValidTargets(card: GameCard, state: GameState, f
     case "Earthquake":
       // Always valid as it affects all animals worth 3+ points
       return true
+
+    case "Flood":
+      // Check if there are animals on the field
+      return state.playerField.length > 0 || state.opponentField.length > 0
 
     case "Storm":
       // Always valid as it affects all animals worth 2 or fewer points
@@ -396,23 +396,6 @@ export function playImpactCard(state: GameState, cardIndex: number, forPlayer: b
           return {
             ...newState,
             message: "You played Fisher, but there are no aquatic animals to target.",
-          }
-        }
-
-      case "Scare":
-        // Check if there are any animals on the field
-        if (state.opponentField.length > 0 || state.playerField.length > 0) {
-          return {
-            ...newState,
-            pendingEffect: {
-              type: "scare",
-              forPlayer: true,
-            },
-          }
-        } else {
-          return {
-            ...newState,
-            message: "You played Scare, but there are no animals on the field.",
           }
         }
 
@@ -538,27 +521,47 @@ export function playImpactCard(state: GameState, cardIndex: number, forPlayer: b
         }
 
       case "Flood":
-        // Each player sends 2 animals from their field to the bottom
+        // Each player sends their 2 smallest animals to deck bottom (random if tied)
         const playerField = [...state.playerField]
         const opponentField = [...state.opponentField]
         let playerPoints = state.playerPoints
         let opponentPoints = state.opponentPoints
-        let cardsToBottom: GameCard[] = []
+        const cardsToBottom: GameCard[] = []
 
-        // Process player's field
+        // Process player's field - find the 2 smallest animals
         if (playerField.length > 0) {
-          const count = Math.min(2, playerField.length)
-          const removed = playerField.splice(0, count)
-          cardsToBottom = [...cardsToBottom, ...removed]
-          playerPoints -= removed.reduce((sum, card) => sum + (card.points || 0), 0)
+          // Sort by points (ascending)
+          const sortedPlayerField = [...playerField].sort((a, b) => (a.points || 0) - (b.points || 0))
+          const count = Math.min(2, sortedPlayerField.length)
+          const smallestCards = sortedPlayerField.slice(0, count)
+
+          // Remove the smallest cards from player's field
+          for (const card of smallestCards) {
+            const index = playerField.findIndex((c) => c.id === card.id)
+            if (index !== -1) {
+              playerField.splice(index, 1)
+              cardsToBottom.push(card)
+              playerPoints -= card.points || 0
+            }
+          }
         }
 
-        // Process opponent's field
+        // Process opponent's field - find the 2 smallest animals
         if (opponentField.length > 0) {
-          const count = Math.min(2, opponentField.length)
-          const removed = opponentField.splice(0, count)
-          cardsToBottom = [...cardsToBottom, ...removed]
-          opponentPoints -= removed.reduce((sum, card) => sum + (card.points || 0), 0)
+          // Sort by points (ascending)
+          const sortedOpponentField = [...opponentField].sort((a, b) => (a.points || 0) - (b.points || 0))
+          const count = Math.min(2, sortedOpponentField.length)
+          const smallestCards = sortedOpponentField.slice(0, count)
+
+          // Remove the smallest cards from opponent's field
+          for (const card of smallestCards) {
+            const index = opponentField.findIndex((c) => c.id === card.id)
+            if (index !== -1) {
+              opponentField.splice(index, 1)
+              cardsToBottom.push(card)
+              opponentPoints -= card.points || 0
+            }
+          }
         }
 
         return {
@@ -568,7 +571,7 @@ export function playImpactCard(state: GameState, cardIndex: number, forPlayer: b
           playerPoints,
           opponentPoints,
           sharedDeck: [...state.sharedDeck, ...cardsToBottom],
-          message: `You played Flood. Each player sent up to 2 animals to the bottom of the deck.`,
+          message: `You played Flood. Each player sent their 2 smallest animals to the bottom of the deck.`,
         }
 
       case "Epidemic":
@@ -787,30 +790,58 @@ export function playImpactCard(state: GameState, cardIndex: number, forPlayer: b
           }
         }
 
-      case "Scare":
-        // Send 1 animal from the field to the top of the deck
-        if (state.playerField.length > 0) {
-          // Find the highest value animal in player's field
-          const targetIndex = state.playerField
-            .map((c, i) => ({ card: c, index: i }))
-            .sort((a, b) => (b.card.points || 0) - (a.card.points || 0))[0].index
+      case "Flood":
+        // Each player sends their 2 smallest animals to deck bottom (random if tied)
+        const playerField = [...state.playerField]
+        const opponentField = [...state.opponentField]
+        let playerPoints = state.playerPoints
+        let opponentPoints = state.opponentPoints
+        const cardsToBottom: GameCard[] = []
 
-          const targetCard = state.playerField[targetIndex]
-          const newPlayerField = [...state.playerField]
-          newPlayerField.splice(targetIndex, 1)
+        // Process player's field - find the 2 smallest animals
+        if (playerField.length > 0) {
+          // Sort by points (ascending)
+          const sortedPlayerField = [...playerField].sort((a, b) => (a.points || 0) - (b.points || 0))
+          const count = Math.min(2, sortedPlayerField.length)
+          const smallestCards = sortedPlayerField.slice(0, count)
 
-          return {
-            ...newState,
-            playerField: newPlayerField,
-            playerPoints: state.playerPoints - (targetCard.points || 0),
-            sharedDeck: [targetCard, ...state.sharedDeck], // Add to top of deck
-            message: `AI played Scare and sent your ${targetCard.name} to the top of the deck.`,
+          // Remove the smallest cards from player's field
+          for (const card of smallestCards) {
+            const index = playerField.findIndex((c) => c.id === card.id)
+            if (index !== -1) {
+              playerField.splice(index, 1)
+              cardsToBottom.push(card)
+              playerPoints -= card.points || 0
+            }
           }
-        } else {
-          return {
-            ...newState,
-            message: "AI played Scare, but there are no animals to target.",
+        }
+
+        // Process opponent's field - find the 2 smallest animals
+        if (opponentField.length > 0) {
+          // Sort by points (ascending)
+          const sortedOpponentField = [...opponentField].sort((a, b) => (a.points || 0) - (b.points || 0))
+          const count = Math.min(2, sortedOpponentField.length)
+          const smallestCards = sortedOpponentField.slice(0, count)
+
+          // Remove the smallest cards from opponent's field
+          for (const card of smallestCards) {
+            const index = opponentField.findIndex((c) => c.id === card.id)
+            if (index !== -1) {
+              opponentField.splice(index, 1)
+              cardsToBottom.push(card)
+              opponentPoints -= card.points || 0
+            }
           }
+        }
+
+        return {
+          ...newState,
+          playerField,
+          opponentField,
+          playerPoints,
+          opponentPoints,
+          sharedDeck: [...state.sharedDeck, ...cardsToBottom],
+          message: `AI played Flood. Each player sent their 2 smallest animals to the bottom of the deck.`,
         }
 
       case "Veterinarian":
@@ -910,6 +941,7 @@ export function resolveEffect(state: GameState, targetIndex: number | number[]):
     "frog",
     "crab",
     "crocodile",
+    "wolf",
   ]
   if (animalEffects.includes(type)) {
     return resolveAnimalEffect(state, targetIndex)
@@ -953,47 +985,6 @@ export function resolveEffect(state: GameState, targetIndex: number | number[]):
           sharedDiscard: [...state.sharedDiscard, targetCard],
           pendingEffect: null,
           message: `You destroyed the opponent's ${targetCard.name}.`,
-        }
-      }
-      break
-
-    case "scare":
-      if (forPlayer) {
-        // Player targeting an animal to send to the top of the deck
-        const playerFieldLength = state.playerField.length
-        let targetCard, newField, pointsChange
-
-        if ((targetIndex as number) < playerFieldLength) {
-          // Player targeting their own animal
-          targetCard = state.playerField[targetIndex as number]
-          newField = [...state.playerField]
-          newField.splice(targetIndex as number, 1)
-          pointsChange = state.playerPoints - (targetCard.points || 0)
-
-          return {
-            ...state,
-            playerField: newField,
-            playerPoints: pointsChange,
-            sharedDeck: [targetCard, ...state.sharedDeck], // Add to top of deck
-            pendingEffect: null,
-            message: `You sent your ${targetCard.name} to the top of the deck.`,
-          }
-        } else {
-          // Player targeting opponent's animal
-          const opponentIndex = (targetIndex as number) - playerFieldLength
-          targetCard = state.opponentField[opponentIndex]
-          newField = [...state.opponentField]
-          newField.splice(opponentIndex, 1)
-          pointsChange = state.opponentPoints - (targetCard.points || 0)
-
-          return {
-            ...state,
-            opponentField: newField,
-            opponentPoints: pointsChange,
-            sharedDeck: [targetCard, ...state.sharedDeck], // Add to top of deck
-            pendingEffect: null,
-            message: `You sent the opponent's ${targetCard.name} to the top of the deck.`,
-          }
         }
       }
       break
@@ -1459,6 +1450,56 @@ export function makeAIDecision(state: GameState): GameState {
 
     // 70% chance to play an animal card if we have one
     if (Math.random() < 0.7) {
+      // Check if the highest value card is a Lion, Shark, or Crocodile that requires a cost
+      const highestCard = playableAnimalCards[0]
+
+      if (["Lion", "Shark", "Crocodile"].includes(highestCard.card.name)) {
+        // Check if AI has animals on the field to pay the cost
+        if (state.opponentField.length === 0) {
+          // Can't play the card, try the next best card or draw
+          if (playableAnimalCards.length > 1) {
+            return playAnimalCard(state, playableAnimalCards[1].index, false)
+          } else {
+            // No other animal cards, so draw
+            return drawCards(state, 2, false)
+          }
+        }
+
+        // AI has animals on the field, so it can pay the cost
+        // First, sacrifice an animal (choose the lowest value one)
+        const sacrificeIndex = state.opponentField
+          .map((card, index) => ({ card, index }))
+          .sort((a, b) => (a.card.points || 0) - (b.card.points || 0))[0].index
+
+        const sacrificedAnimal = state.opponentField[sacrificeIndex]
+        const newOpponentField = [...state.opponentField]
+        newOpponentField.splice(sacrificeIndex, 1)
+
+        // Remove the card from hand
+        const newOpponentHand = [...state.opponentHand]
+        newOpponentHand.splice(highestCard.index, 1)
+
+        // Calculate new points after sacrifice
+        const newOpponentPoints = state.opponentPoints - (sacrificedAnimal.points || 0)
+
+        // Create a new state with the sacrificed animal removed and the card played
+        const newState = {
+          ...state,
+          opponentField: [...newOpponentField, highestCard.card],
+          opponentHand: newOpponentHand,
+          opponentPoints: newOpponentPoints + (highestCard.card.points || 0),
+          sharedDiscard: [...state.sharedDiscard, sacrificedAnimal],
+          message: `AI sacrificed ${sacrificedAnimal.name} to play ${highestCard.card.name}.`,
+          effectsThisTurn: {
+            ...state.effectsThisTurn,
+            opponentAnimalsPlayed: state.effectsThisTurn.opponentAnimalsPlayed + 1,
+          },
+        }
+
+        // Apply the card's effect
+        return applyAnimalEffect(newState, highestCard.card, false)
+      }
+
       // Play the highest value animal card
       return playAnimalCard(state, playableAnimalCards[0].index, false)
     }

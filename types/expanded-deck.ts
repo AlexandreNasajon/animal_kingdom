@@ -63,7 +63,8 @@ export const EXPANDED_DECK: GameCard[] = [
     name: "Wolf",
     points: 3,
     environment: "terrestrial",
-    effect: "On play, each player discards 1 card at random.",
+    effect:
+      "On play, if your opponent has 5 or fewer cards in hand, send 1 terrestrial animal they control to their hand.",
     imageUrl: "/lone-howler.png",
   },
   {
@@ -82,7 +83,7 @@ export const EXPANDED_DECK: GameCard[] = [
     name: "Tuna",
     points: 1,
     environment: "aquatic",
-    effect: "On play, play an aquatic animal from hand.",
+    effect: "On play, play a 3 or fewer points aquatic animal from hand.",
     imageUrl: "/canned-tuna-stack.png",
   },
   {
@@ -91,7 +92,7 @@ export const EXPANDED_DECK: GameCard[] = [
     name: "Seahorse",
     points: 1,
     environment: "aquatic",
-    effect: "On play, draw 1 card for every played animal.",
+    effect: "On play, draw 1 card for every card played this turn, including this one.",
     imageUrl: "/camouflaged-seahorse.png",
   },
   {
@@ -127,7 +128,7 @@ export const EXPANDED_DECK: GameCard[] = [
     name: "Octopus",
     points: 3,
     environment: "aquatic",
-    effect: "On play, look at the top 3 cards of the deck. You may rearrange them.",
+    effect: "On play, look at the top 3 cards of the deck.",
     imageUrl: "/curious-octopus.png",
   },
   {
@@ -146,7 +147,7 @@ export const EXPANDED_DECK: GameCard[] = [
     points: 4,
     environment: "aquatic",
     effect: "Sacrifice 1 animal to play this card. On play, draw cards until you have 4.",
-    imageUrl: "/placeholder.svg?height=120&width=80&query=shark underwater",
+    imageUrl: "/reef-shark-patrol.png",
   },
   // Amphibian Animals
   {
@@ -156,7 +157,7 @@ export const EXPANDED_DECK: GameCard[] = [
     points: 1,
     environment: "amphibian",
     effect: "On play, destroy the animal your opponent controls with fewer points (your choice if tied).",
-    imageUrl: "/placeholder.svg?height=120&width=80&query=frog on lily pad",
+    imageUrl: "/serene-frog.png",
   },
   {
     id: 118,
@@ -165,7 +166,7 @@ export const EXPANDED_DECK: GameCard[] = [
     points: 2,
     environment: "amphibian",
     effect: "On play, look at the top 2 cards: add 1 to hand and send the other to deck bottom.",
-    imageUrl: "/placeholder.svg?height=120&width=80&query=crab on beach",
+    imageUrl: "/beach-crab-close-up.png",
   },
   {
     id: 119,
@@ -174,7 +175,7 @@ export const EXPANDED_DECK: GameCard[] = [
     points: 3,
     environment: "amphibian",
     effect: "On play, draw 1 card and you may play 1 animal from your hand.",
-    imageUrl: "/placeholder.svg?height=120&width=80&query=otter in river",
+    imageUrl: "/playful-river-otter.png",
   },
   {
     id: 120,
@@ -183,8 +184,8 @@ export const EXPANDED_DECK: GameCard[] = [
     points: 4,
     environment: "amphibian",
     effect:
-      "Send 1 animal you control to hand to play this card. On play, send 1 animal of 3 or fewer points your opponent controls to deck bottom.",
-    imageUrl: "/placeholder.svg?height=120&width=80&query=crocodile in swamp",
+      "Sacrifice 1 animal to play this card. On play, send 1 animal of 3 or fewer points your opponent controls to deck bottom.",
+    imageUrl: "/swamp-crocodile.png",
   },
   // Impact Cards
   {
@@ -192,42 +193,36 @@ export const EXPANDED_DECK: GameCard[] = [
     type: "impact",
     name: "Hunter",
     effect: "Destroy 1 terrestrial animal.",
-    imageUrl: "/placeholder.svg?height=120&width=80&query=hunter with rifle",
+    imageUrl: "/vigilant-watcher.png",
   },
   {
     id: 122,
     type: "impact",
     name: "Fisher",
     effect: "Destroy 1 aquatic animal.",
-    imageUrl: "/placeholder.svg?height=120&width=80&query=fisherman with net",
+    imageUrl: "/weathered-net-caster.png",
   },
-  {
-    id: 123,
-    type: "impact",
-    name: "Scare",
-    effect: "Send 1 animal to deck top.",
-    imageUrl: "/placeholder.svg?height=120&width=80&query=scared animals",
-  },
+  // Removed Scare card (ID 123)
   {
     id: 124,
     type: "impact",
     name: "Veterinarian",
     effect: "Play an animal from discard.",
-    imageUrl: "/placeholder.svg?height=120&width=80&query=veterinarian with animals",
+    imageUrl: "/compassionate-vet-care.png",
   },
   {
     id: 125,
     type: "impact",
     name: "Confusion",
     effect: "Exchange control between 2 animals.",
-    imageUrl: "/placeholder.svg?height=120&width=80&query=confused animals",
+    imageUrl: "/bewildered-critters.png",
   },
   {
     id: 126,
     type: "impact",
     name: "Domesticate",
     effect: "Gain control over an animal of 2 points.",
-    imageUrl: "/placeholder.svg?height=120&width=80&query=domesticated animal",
+    imageUrl: "/farm-friends.png",
   },
   {
     id: 127,
@@ -256,5 +251,13 @@ export const EXPANDED_DECK: GameCard[] = [
     name: "Earthquake",
     effect: "Send all animals worth 3 or more points to deck bottom.",
     imageUrl: "/placeholder.svg?height=120&width=80&query=earthquake destruction",
+  },
+  // Added Flood card
+  {
+    id: 131,
+    type: "impact",
+    name: "Flood",
+    effect: "Each player sends their 2 smallest animals to deck bottom (random if tied).",
+    imageUrl: "/flooded-street-city.png",
   },
 ]

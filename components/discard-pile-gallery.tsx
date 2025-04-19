@@ -11,10 +11,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Search, X } from "lucide-react"
-import { getCardArt } from "./card-art/card-art-mapper"
+import { GameCardTemplate } from "./game-card-template"
 
 interface DiscardPileGalleryProps {
   open: boolean
@@ -83,33 +81,9 @@ export function DiscardPileGallery({ open, onClose, cards }: DiscardPileGalleryP
               <X className="h-4 w-4" />
             </Button>
 
-            <Card
-              className={`w-[220px] border-2 ${
-                selectedCard.type === "animal"
-                  ? getEnvironmentColor(selectedCard.environment)
-                  : "border-purple-600 bg-purple-900"
-              } p-1 shadow-md transition-all animate-flip`}
-            >
-              <CardContent className="flex flex-col items-center space-y-2 p-1">
-                <div className="relative h-[150px] w-full">{getCardArt(selectedCard)}</div>
-
-                {selectedCard.type === "animal" ? (
-                  <div className="flex w-full items-center justify-between">
-                    <Badge
-                      variant="outline"
-                      className={`${getEnvironmentBadgeColor(selectedCard.environment)} text-xs`}
-                    >
-                      {selectedCard.environment}
-                    </Badge>
-                    <Badge className="bg-yellow-600 text-xs text-white">{selectedCard.points} pts</Badge>
-                  </div>
-                ) : (
-                  <Badge variant="outline" className="bg-purple-900 text-white text-xs">
-                    Impact
-                  </Badge>
-                )}
-              </CardContent>
-            </Card>
+            <div className="animate-flip">
+              <GameCardTemplate card={selectedCard} size="lg" />
+            </div>
 
             <div className="text-center">
               <h3 className="font-bold text-sm text-white">{selectedCard.name}</h3>
@@ -154,37 +128,7 @@ export function DiscardPileGallery({ open, onClose, cards }: DiscardPileGalleryP
                     className="relative cursor-pointer group"
                     onClick={() => setSelectedCard(card)}
                   >
-                    <Card
-                      className={`h-[90px] w-full border-2 ${
-                        card.type === "animal"
-                          ? getEnvironmentColor(card.environment)
-                          : "border-purple-600 bg-purple-900"
-                      } p-0.5 shadow-md transition-all hover:ring-2 hover:ring-green-400`}
-                    >
-                      <CardContent className="flex h-full flex-col items-center justify-between p-0.5">
-                        <div className="w-full text-center text-[8px] font-medium text-white">{card.name}</div>
-
-                        <div className="relative h-[40px] w-full">{getCardArt(card)}</div>
-
-                        <div className="w-full">
-                          {card.type === "animal" ? (
-                            <div className="flex items-center justify-between">
-                              <Badge
-                                variant="outline"
-                                className={`${getEnvironmentBadgeColor(card.environment)} text-[6px] px-0.5 py-0`}
-                              >
-                                {card.environment}
-                              </Badge>
-                              <Badge className="bg-yellow-600 text-[6px] px-0.5 py-0 text-white">
-                                {card.points} pts
-                              </Badge>
-                            </div>
-                          ) : (
-                            <div className="text-center text-[6px] text-white line-clamp-1">Impact</div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
+                    <GameCardTemplate card={card} size="xs" className="hover:ring-2 hover:ring-green-400" />
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                       <div className="rounded-full bg-black/50 p-1">
                         <Search className="h-4 w-4 text-white" />

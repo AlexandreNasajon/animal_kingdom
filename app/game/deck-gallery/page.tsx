@@ -1,178 +1,140 @@
 "use client"
-
-import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Grid, Mountain, Droplets, Fish, Zap } from "lucide-react"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { getCardArt } from "@/components/card-art/card-art-mapper"
+import { GameCardTemplate } from "@/components/game-card-template"
 import { ADVANCED_DECK } from "@/types/advanced-deck"
-import type { GameCard } from "@/types/game"
-import { CardZoomModal } from "@/components/card-zoom-modal"
+import { useState } from "react"
+import { ChevronLeft, Filter } from "lucide-react"
 
 export default function DeckGallery() {
-  const [filter, setFilter] = useState<string>("all")
-  const [selectedCard, setSelectedCard] = useState<GameCard | null>(null)
+  const [filters, setFilters] = useState({
+    type: "all", // all, animal, impact
+    environment: "all", // all, terrestrial, aquatic, amphibian
+  })
 
-  // Use the advanced deck
-  const allCards = ADVANCED_DECK
+  // Apply filters to the deck
+  const filteredCards = ADVANCED_DECK.filter((card) => {
+    // Filter by type
+    if (filters.type !== "all" && card.type !== filters.type) {
+      return false
+    }
 
-  const filteredCards = allCards.filter((card: GameCard) => {
-    if (filter === "all") return true
-    if (filter === "terrestrial") return card.type === "animal" && card.environment === "terrestrial"
-    if (filter === "aquatic") return card.type === "animal" && card.environment === "aquatic"
-    if (filter === "amphibian") return card.type === "animal" && card.environment === "amphibian"
-    if (filter === "impact") return card.type === "impact"
+    // Filter by environment (only for animal cards)
+    if (filters.environment !== "all" && card.type === "animal" && card.environment !== filters.environment) {
+      return false
+    }
+
     return true
   })
 
-  // Count cards by type for display
-  const terrestrialCount = allCards.filter(
-    (card) => card.type === "animal" && card.environment === "terrestrial",
-  ).length
-  const aquaticCount = allCards.filter((card) => card.type === "animal" && card.environment === "aquatic").length
-  const amphibianCount = allCards.filter((card) => card.type === "animal" && card.environment === "amphibian").length
-  const impactCount = allCards.filter((card) => card.type === "impact").length
-
-  const handleCardClick = (card: GameCard) => {
-    setSelectedCard(card)
-  }
-
-  // Helper function to get card border color
-  const getCardBorderColor = (card: GameCard) => {
-    if (card.type !== "animal") return "border-purple-600 bg-green-800"
-
-    switch (card.environment) {
-      case "terrestrial":
-        return "border-red-600 hover:border-red-400 bg-green-800"
-      case "aquatic":
-        return "border-blue-600 hover:border-blue-400 bg-green-800"
-      case "amphibian":
-        return "border-green-600 hover:border-green-400 bg-green-800"
-      default:
-        return "border-green-600 hover:border-green-400 bg-green-800"
-    }
-  }
-
   return (
-    <div className="min-h-screen h-full bg-gradient-to-b from-green-800 to-green-950 p-4 text-white overflow-auto">
-      <div className="container mx-auto max-w-6xl pb-8">
-        <div className="mb-6 flex items-center justify-between">
-          <Link href="/">
-            <Button variant="outline" size="sm" className="gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Back to Menu
+    <div className="min-h-screen bg-green-800 p-4 text-white">
+      <div className="container mx-auto">
+        <div className="mb-6">
+          <Link href="/game/play-options">
+            <Button variant="outline" size="sm" className="mb-4">
+              <ChevronLeft className="mr-1 h-4 w-4" />
+              Back to Game Menu
             </Button>
           </Link>
-          <h1 className="text-3xl font-bold">Card Gallery</h1>
-          <div className="w-24"></div> {/* Spacer for alignment */}
-        </div>
 
-        <Card className="border-2 border-green-700 bg-green-900/60 shadow-xl mb-6">
-          <CardHeader>
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <CardTitle className="text-2xl text-white">Advanced Deck</CardTitle>
-              <div className="text-green-300">
-                <span className="mr-3">Terrestrial: {terrestrialCount}</span>
-                <span className="mr-3">Aquatic: {aquaticCount}</span>
-                <span className="mr-3">Amphibian: {amphibianCount}</span>
-                <span>Impact: {impactCount}</span>
+          <h1 className="text-3xl font-bold mt-2 mb-4">Card Gallery</h1>
+
+          <div className="bg-green-900/80 p-4 rounded-lg mb-4">
+            <div className="flex items-center mb-2">
+              <Filter className="mr-2 h-5 w-5" />
+              <h2 className="text-xl font-semibold">Filters</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <h3 className="text-sm font-medium mb-2">Card Type</h3>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant={filters.type === "all" ? "default" : "outline"}
+                    onClick={() => setFilters({ ...filters, type: "all" })}
+                  >
+                    All
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={filters.type === "animal" ? "default" : "outline"}
+                    onClick={() => setFilters({ ...filters, type: "animal" })}
+                  >
+                    Animals
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={filters.type === "impact" ? "default" : "outline"}
+                    onClick={() => setFilters({ ...filters, type: "impact" })}
+                  >
+                    Impacts
+                  </Button>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-medium mb-2">Environment</h3>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant={filters.environment === "all" ? "default" : "outline"}
+                    onClick={() => setFilters({ ...filters, environment: "all" })}
+                  >
+                    All
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={filters.environment === "terrestrial" ? "default" : "outline"}
+                    onClick={() => setFilters({ ...filters, environment: "terrestrial" })}
+                    className="border-red-500 text-red-500 hover:bg-red-500/20"
+                  >
+                    Terrestrial
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={filters.environment === "aquatic" ? "default" : "outline"}
+                    onClick={() => setFilters({ ...filters, environment: "aquatic" })}
+                    className="border-blue-500 text-blue-500 hover:bg-blue-500/20"
+                  >
+                    Aquatic
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={filters.environment === "amphibian" ? "default" : "outline"}
+                    onClick={() => setFilters({ ...filters, environment: "amphibian" })}
+                    className="border-green-500 text-green-500 hover:bg-green-500/20"
+                  >
+                    Amphibian
+                  </Button>
+                </div>
               </div>
             </div>
-          </CardHeader>
-        </Card>
+          </div>
 
-        <Card className="border-2 border-green-700 bg-green-900/60 shadow-xl">
-          <CardHeader>
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <CardTitle className="text-2xl text-white">Browse Cards</CardTitle>
-              <Tabs defaultValue="all" className="w-[400px] max-w-full" onValueChange={setFilter}>
-                <TabsList className="grid w-full grid-cols-5 gap-2 bg-green-900/40 p-1">
-                  <TabsTrigger
-                    value="all"
-                    className="bg-green-700 text-white data-[state=active]:bg-green-500 data-[state=active]:text-white"
-                    title="All Cards"
-                  >
-                    <Grid className="h-5 w-5" />
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="terrestrial"
-                    className="bg-green-700 text-white data-[state=active]:bg-green-500 data-[state=active]:text-white"
-                    title="Terrestrial Animals"
-                  >
-                    <Mountain className="h-5 w-5" />
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="aquatic"
-                    className="bg-green-700 text-white data-[state=active]:bg-green-500 data-[state=active]:text-white"
-                    title="Aquatic Animals"
-                  >
-                    <Droplets className="h-5 w-5" />
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="amphibian"
-                    className="bg-green-700 text-white data-[state=active]:bg-green-500 data-[state=active]:text-white"
-                    title="Amphibian Animals"
-                  >
-                    <Fish className="h-5 w-5" />
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="impact"
-                    className="bg-green-700 text-white data-[state=active]:bg-green-500 data-[state=active]:text-white"
-                    title="Impact Cards"
-                  >
-                    <Zap className="h-5 w-5" />
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
-          </CardHeader>
-          <CardContent className="max-h-[calc(100vh-300px)] overflow-y-auto">
-            <div className="mb-4">
-              <h2 className="text-xl font-semibold text-green-300">
-                {filter === "all"
-                  ? "All Cards"
-                  : filter === "terrestrial"
-                    ? "Terrestrial Animals"
-                    : filter === "aquatic"
-                      ? "Aquatic Animals"
-                      : filter === "amphibian"
-                        ? "Amphibian Animals"
-                        : "Impact Cards"}{" "}
-                - {filteredCards.length} cards
-              </h2>
-            </div>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-              {filteredCards.map((card) => (
-                <div key={card.id} className="relative">
-                  <div
-                    className={`group relative h-[240px] w-[160px] cursor-pointer overflow-hidden rounded-lg border-2 ${getCardBorderColor(card)} p-2 transition-all hover:scale-105 hover:shadow-lg`}
-                    onClick={() => handleCardClick(card)}
-                  >
-                    {card.points > 0 && (
-                      <div className="absolute left-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-yellow-500 text-xs font-bold text-black">
-                        {card.points}
-                      </div>
-                    )}
-                    <div className="mb-1 text-center text-sm font-bold truncate">{card.name}</div>
-                    <div className="h-[120px] w-full overflow-hidden rounded bg-green-700/50">{getCardArt(card)}</div>
-                    <div className="mt-2 text-xs space-y-1">
-                      <div className="font-semibold text-green-300">
-                        {card.type === "animal" ? card.environment || "Animal" : "Impact"}
-                      </div>
-                      {card.effect && <div className="line-clamp-3 text-[10px] text-green-100">{card.effect}</div>}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+          <div className="flex justify-between items-center mb-2">
+            <h2 className="text-xl">Deck</h2>
+            <span className="text-sm bg-green-700 px-2 py-1 rounded">
+              Showing {filteredCards.length} of {ADVANCED_DECK.length} cards
+            </span>
+          </div>
+        </div>
+
+        <div className="h-[60vh] overflow-y-auto pr-2 bg-green-900/50 rounded-lg p-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            {filteredCards.map((card) => (
+              <div key={card.id} className="flex justify-center">
+                <GameCardTemplate card={card} size="md" />
+              </div>
+            ))}
+          </div>
+
+          {filteredCards.length === 0 && (
+            <div className="text-center py-10 text-gray-300">No cards match the selected filters</div>
+          )}
+        </div>
       </div>
-
-      {/* Card zoom modal */}
-      <CardZoomModal open={selectedCard !== null} onClose={() => setSelectedCard(null)} card={selectedCard} />
     </div>
   )
 }
