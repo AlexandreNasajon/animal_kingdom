@@ -351,21 +351,21 @@ export function PlayerHand({
   const getCardSize = () => {
     if (viewportWidth < 360) {
       return {
-        height: "90px",
-        width: "60px",
-        overlap: "-35px",
+        height: "180px", // Doubled from 90px
+        width: "120px", // Doubled from 60px
+        overlap: "-35px", // Keep the same overlap
       }
     } else if (viewportWidth < 640) {
       return {
-        height: "110px",
-        width: "75px",
-        overlap: "-40px",
+        height: "220px", // Doubled from 110px
+        width: "150px", // Doubled from 75px
+        overlap: "-40px", // Keep the same overlap
       }
     } else {
       return {
-        height: "120px",
-        width: "80px",
-        overlap: "-25px",
+        height: "240px", // Doubled from 120px
+        width: "160px", // Doubled from 80px
+        overlap: "-25px", // Keep the same overlap
       }
     }
   }
