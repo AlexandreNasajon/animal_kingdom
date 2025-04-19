@@ -62,7 +62,7 @@ export function OpponentHandSelectionModal({
   }
 
   return (
-    <Dialog open={open} onOpenChange={(open) => !open && handleClose()}>
+    <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent className="border-2 border-green-700 bg-green-900/90 text-white max-w-[90%] sm:max-w-[400px] p-4">
         <DialogHeader>
           <DialogTitle className="text-lg">{title}</DialogTitle>
@@ -84,8 +84,8 @@ export function OpponentHandSelectionModal({
         <DialogFooter className="mt-4">
           <Button
             variant="outline"
-            onClick={onClose}
-            className="border-red-700 text-red-400 hover:bg-red-900/30 hover:text-red-300"
+            onClick={() => {}}
+            className="border-red-700 text-red-400 hover:bg-red-900/30 hover:text-red-300 hidden"
           >
             Cancel
           </Button>

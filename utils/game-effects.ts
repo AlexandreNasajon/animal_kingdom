@@ -350,15 +350,16 @@ export function applyAnimalEffect(state: GameState, card: GameCard, forPlayer: b
     }
   }
 
-  // Seahorse: "On play, draw 1 card for every card played this turn, including this one."
+  // Seahorse: "On play, draw 1 card for every animal you played this turn."
   else if (card.name === "Seahorse") {
-    // Count cards played this turn, including the Seahorse itself
-    const cardsPlayed = forPlayer
-      ? state.effectsThisTurn.playerAnimalsPlayed + 1 // +1 for the Seahorse itself
-      : state.effectsThisTurn.opponentAnimalsPlayed + 1 // +1 for the Seahorse itself
+    // Count animals played this turn by the player who played the Seahorse
+    // Don't add +1 for the Seahorse itself, as it should be already counted in the animals played this turn
+    const animalsPlayed = forPlayer
+      ? state.effectsThisTurn.playerAnimalsPlayed
+      : state.effectsThisTurn.opponentAnimalsPlayed
 
-    if (cardsPlayed > 0 && state.sharedDeck.length > 0) {
-      const cardsToDraw = Math.min(cardsPlayed, state.sharedDeck.length)
+    if (animalsPlayed > 0 && state.sharedDeck.length > 0) {
+      const cardsToDraw = Math.min(animalsPlayed, state.sharedDeck.length)
       const newDeck = [...state.sharedDeck]
       const drawnCards = newDeck.splice(0, cardsToDraw)
 
@@ -367,7 +368,7 @@ export function applyAnimalEffect(state: GameState, card: GameCard, forPlayer: b
           ...newState,
           playerHand: [...state.playerHand, ...drawnCards],
           sharedDeck: newDeck,
-          message: `You played ${card.name} and drew ${cardsToDraw} card${cardsToDraw > 1 ? "s" : ""} (one for each card played this turn).`,
+          message: `You played ${card.name} and drew ${cardsToDraw} card${cardsToDraw > 1 ? "s" : ""} (one for each animal you played this turn).`,
         }
       } else {
         newState = {
@@ -1285,7 +1286,7 @@ export function resolveEffect(state: GameState, targetIndex: number | number[]):
   }
 
   // Rest of the function remains the same...
-  // ...
+  return state
 }
 
 // Helper function to update the game state at the end of a turn

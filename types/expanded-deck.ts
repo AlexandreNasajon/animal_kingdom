@@ -92,7 +92,7 @@ export const EXPANDED_DECK: GameCard[] = [
     name: "Seahorse",
     points: 1,
     environment: "aquatic",
-    effect: "On play, draw 1 card for every card played this turn, including this one.",
+    effect: "On play, draw 1 card for every animal you played this turn.",
     imageUrl: "/camouflaged-seahorse.png",
   },
   {
@@ -229,28 +229,28 @@ export const EXPANDED_DECK: GameCard[] = [
     type: "impact",
     name: "Epidemic",
     effect: "Send 1 animal you control and all animals of same environment to deck bottom.",
-    imageUrl: "/placeholder.svg?height=120&width=80&query=disease spreading",
+    imageUrl: "/interconnected-disease-spread.png",
   },
   {
     id: 128,
     type: "impact",
     name: "Compete",
     effect: "Discard 1 animal to send all animals of same points to deck bottom.",
-    imageUrl: "/placeholder.svg?height=120&width=80&query=animals competing",
+    imageUrl: "/cheetah-gazelle-chase.png",
   },
   {
     id: 129,
     type: "impact",
     name: "Prey Upon",
     effect: "Select 1 animal on your field: send all other animals of same environment and fewer points to the bottom.",
-    imageUrl: "/placeholder.svg?height=120&width=80&query=predator hunting",
+    imageUrl: "/stealthy-stalker.png",
   },
   {
     id: 130,
     type: "impact",
     name: "Earthquake",
     effect: "Send all animals worth 3 or more points to deck bottom.",
-    imageUrl: "/placeholder.svg?height=120&width=80&query=earthquake destruction",
+    imageUrl: "/shattered-cityscape.png",
   },
   // Added Flood card
   {
