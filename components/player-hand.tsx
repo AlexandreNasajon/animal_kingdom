@@ -351,20 +351,20 @@ export function PlayerHand({
   const getCardSize = () => {
     if (viewportWidth < 360) {
       return {
-        height: "153px", // 90px * 1.7
-        width: "102px", // 60px * 1.7
+        height: "210px", // Even larger size
+        width: "140px", // Even larger size
         overlap: "-35px",
       }
     } else if (viewportWidth < 640) {
       return {
-        height: "187px", // 110px * 1.7
-        width: "127.5px", // 75px * 1.7
+        height: "255px", // Even larger size
+        width: "170px", // Even larger size
         overlap: "-40px",
       }
     } else {
       return {
-        height: "204px", // 120px * 1.7
-        width: "136px", // 80px * 1.7
+        height: "285px", // Even larger size
+        width: "190px", // Even larger size
         overlap: "-25px",
       }
     }
@@ -373,7 +373,17 @@ export function PlayerHand({
   const cardSize = getCardSize()
 
   return (
-    <div ref={containerRef} className="flex justify-center overflow-visible p-0 min-h-[100px] sm:min-h-[110px]">
+    <div
+      ref={containerRef}
+      className="flex justify-center overflow-visible mt-36 relative"
+      style={{
+        padding: 0,
+        minHeight: "1px",
+        height: "1px",
+        maxHeight: "1px",
+        overflow: "visible",
+      }}
+    >
       {cards.map((card, index) => {
         const isHovered = hoveredCardIndex === index
         const isPlaying = card.id === playingCardId
@@ -408,6 +418,9 @@ export function PlayerHand({
               zIndex: isHovered ? 10 : index,
               transform: isDragged ? "scale(1.05)" : "",
               opacity: isDragged ? "0.7" : "1",
+              marginTop: "-10px",
+              position: "relative",
+              top: "-100px",
             }}
           >
             <GameCardTemplate

@@ -164,7 +164,7 @@ export default function OriginalGameMatch() {
   const [playingCardId, setPlayingCardId] = useState<number | null>(null)
   const [aiPlayingCardId, setAiPlayingCardId] = useState<number | null>(null)
   const [aiDrawingCards, setAiDrawingCards] = useState(false)
-  const [aiDiscardingCards, setAiDiscardingCards] = useState(false)
+  const [aiDiscardingCards, setAiDiscardingCards] = useState<number[]>([])
   const [aiDiscardedCardIds, setAiDiscardedCardIds] = useState<number[]>([])
   const [aiDrawnCardCount, setAiDrawnCardCount] = useState(0)
 
@@ -752,6 +752,7 @@ export default function OriginalGameMatch() {
     if (!gameState || !gameState.pendingEffect) return
 
     // Find the last played card in the discard pile
+    // We need to find the most recently added impact card
     // We need to find the most recently added impact card
     const lastPlayedCard = lastPlayedCardRef.current
 
@@ -1592,7 +1593,11 @@ export default function OriginalGameMatch() {
           tempState.playerHand.push(sacrificedAnimal)
           tempState.message = `You returned ${sacrificedAnimal.name} to your hand and played ${cardToPlay.name}.`
         } else {
-          // For Lion, Shark, and Crocodile, send to discard
+          // For Lion, Shark, and Crocodile, send to discard\
+          tempState.sharedDiscard = [...gameState.sharedDiscard, sacrificedAnimal]
+          const send = null
+          const to = null
+          const discard = null
           tempState.sharedDiscard = [...gameState.sharedDiscard, sacrificedAnimal]
           tempState.message = `You sacrificed ${sacrificedAnimal.name} to play ${cardToPlay.name}.`
         }
@@ -1945,7 +1950,7 @@ export default function OriginalGameMatch() {
               }
             } else {
               // If card play failed, update the action message
-              console.log(newState.message)
+              console.log(`You played ${card.name}: ${card.effect}`)
 
               // Clear animation states
               setPlayingCardId(null)
@@ -2085,7 +2090,6 @@ export default function OriginalGameMatch() {
                   // Find the card element
                   const cardElement = document.querySelector(`[data-card-id="${card.id}"]`)
                   if (cardElement instanceof HTMLElement && discardPileRef.current) {
-                    // Use our new animation function
                     createCardToDiscardAnimation(card, cardElement, discardPileRef.current)
                   }
                 }
@@ -2406,11 +2410,11 @@ export default function OriginalGameMatch() {
         </div>
 
         {/* Deck and discard area */}
-        <div className="flex items-center justify-between gap-2 mb-2">
+        <div className="flex items-center justify-between px-16 mb-4 relative z-20">
           {/* Discard pile on the left */}
           <div className="w-[70px] flex-shrink-0">
             <Card
-              className={`h-[100px] w-[65px] border-2 border-green-700 bg-gradient-to-br from-green-800 to-green-950 shadow-md relative overflow-hidden cursor-pointer hover:scale-105 transition-transform`}
+              className={`h-[100px] w-[120px] border-2 border-green-700 bg-gradient-to-br from-green-800 to-green-950 shadow-md relative overflow-hidden cursor-pointer hover:scale-105 transition-transform`}
               onClick={() => setShowDiscardGallery(true)}
               ref={discardPileRef}
             >
@@ -2441,7 +2445,7 @@ export default function OriginalGameMatch() {
           <div className="w-[70px] flex-shrink-0">
             <Card
               ref={deckPileRef}
-              className={`h-[100px] w-[65px] ${
+              className={`h-[100px] w-[120px] ${
                 gameState.currentTurn === "player" && gameState.gameStatus === "playing" && !gameState.pendingEffect
                   ? "cursor-pointer hover:scale-105 transition-transform"
                   : "cursor-not-allowed opacity-70"
@@ -2469,7 +2473,7 @@ export default function OriginalGameMatch() {
                 </div>
               )}
 
-              <div className="absolute inset-0 flex items-center justify-center">
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <div className="card-back-pattern"></div>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <Layers className="h-5 w-5 text-green-400 mb-0 drop-shadow-md" />
@@ -2479,21 +2483,22 @@ export default function OriginalGameMatch() {
             </Card>
           </div>
         </div>
-      </div>
-
-      {/* Player hand - positioned higher on screen with enhanced styling */}
-      <div className="w-full px-2 pb-1 pt-0 bg-gradient-to-r from-green-950/90 via-green-900/90 to-green-950/90 border-t border-green-800/50 absolute bottom-[10%] left-0 right-0 shadow-lg">
-        <PlayerHand
-          cards={gameState.playerHand}
-          onSelectCard={handleSelectCard}
-          onPlayCard={handleCardDrop}
-          disabled={
-            gameState.currentTurn !== "player" || gameState.gameStatus !== "playing" || !!gameState.pendingEffect
-          }
-          newCardIds={newCardIds}
-          playingCardId={playingCardId}
-          size="lg"
-        />
+        <div
+          className="w-full px-2 pb-0.5 bg-gradient-to-r from-green-950/90 via-green-900/90 to-green-950/90 border-t border-green-800/50 shadow-lg z-10"
+          style={{ height: "200px", minHeight: "200px", overflow: "visible", paddingTop: "20px" }}
+        >
+          <PlayerHand
+            cards={gameState.playerHand}
+            onSelectCard={handleSelectCard}
+            onPlayCard={handleCardDrop}
+            disabled={
+              gameState.currentTurn !== "player" || gameState.gameStatus !== "playing" || !!gameState.pendingEffect
+            }
+            newCardIds={newCardIds}
+            playingCardId={playingCardId}
+            size="lg"
+          />
+        </div>
       </div>
 
       {/* Add a subtle background pattern to the entire game */}
@@ -2506,19 +2511,17 @@ export default function OriginalGameMatch() {
       ></div>
 
       {/* Animation error message with improved styling */}
-      {animationError && (
-        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-red-800/90 to-red-900/90 text-white px-4 py-2 rounded-md z-50 text-sm shadow-lg border border-red-700/50">
-          <div className="flex items-center gap-2">
-            <span>{animationError}</span>
-            <button
-              onClick={handleDismissError}
-              className="text-xs bg-red-700 hover:bg-red-600 px-2 py-1 rounded transition-colors"
-            >
-              Dismiss
-            </button>
-          </div>
+      <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-red-800/90 to-red-900/90 text-white px-4 py-2 rounded-md z-50 text-sm shadow-lg border border-red-700/50">
+        <div className="flex items-center gap-2">
+          <span>{animationError}</span>
+          <button
+            onClick={handleDismissError}
+            className="text-xs bg-red-700 hover:bg-red-600 px-2 py-1 rounded transition-colors"
+          >
+            Dismiss
+          </button>
         </div>
-      )}
+      </div>
 
       {/* Card Detail Modal */}
       <CardDetailModal
@@ -2553,6 +2556,9 @@ export default function OriginalGameMatch() {
         onClose={() => setShowDiscardModal(false)}
         cards={gameState.playerHand}
         onConfirm={handleDiscardConfirm}
+        title="Discard Cards"
+        description={`You need to send ${discardCount} card${discardCount > 1 ? "s" : ""} to the bottom of the deck before drawing.`}
+        selectionCount={discardCount}
         title="Discard Cards"
         description={`You need to send ${discardCount} card${discardCount > 1 ? "s" : ""} to the bottom of the deck before drawing.`}
         selectionCount={discardCount}
