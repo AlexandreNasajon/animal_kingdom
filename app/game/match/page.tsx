@@ -40,6 +40,7 @@ import {
 // Import the new animation function
 import { createCardToDiscardAnimation, createCardToDeckAnimation } from "@/utils/animation-utils"
 import { applyAnimalEffect } from "@/utils/game-effects"
+import { DiscardPileGallery } from "@/components/discard-pile-gallery"
 
 // Let's completely revise the AI card animation approach to make sure it falls onto the AI field.
 
@@ -2704,6 +2705,13 @@ export default function OriginalGameMatch() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Discard pile gallery */}
+      <DiscardPileGallery
+        open={showDiscardGallery}
+        onClose={() => setShowDiscardGallery(false)}
+        cards={gameState.sharedDiscard}
+      />
     </div>
   )
 }

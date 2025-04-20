@@ -61,8 +61,7 @@ export interface GameState {
     playerCardsDrawn: number
     opponentCardsDrawn: number
     playerExtraDraws: number
-    opponentExtraDraws: number
-    playerExtraPlays: number
+    opponentExtraPlays: number
     opponentExtraPlays: number
     limitInEffect: boolean
     droughtInEffect: boolean

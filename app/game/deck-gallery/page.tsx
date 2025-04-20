@@ -2,18 +2,40 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { GameCardTemplate } from "@/components/game-card-template"
-import { ADVANCED_DECK } from "@/types/advanced-deck"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ChevronLeft, Filter } from "lucide-react"
+import type { Card } from "@/types/game" // Use the core Card type instead
 
 export default function DeckGallery() {
+  const [deckCards, setDeckCards] = useState<Card[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
   const [filters, setFilters] = useState({
     type: "all", // all, animal, impact
     environment: "all", // all, terrestrial, aquatic, amphibian
   })
 
+  // Safely load the advanced deck
+  useEffect(() => {
+    const loadDeck = async () => {
+      try {
+        // Dynamic import to prevent parsing errors at build/load time
+        const { ADVANCED_DECK } = await import("@/types/advanced-deck")
+        setDeckCards(ADVANCED_DECK || [])
+        setLoading(false)
+      } catch (err) {
+        console.error("Error loading deck:", err)
+        setError("Could not load the card deck. Please try again later.")
+        setLoading(false)
+      }
+    }
+
+    loadDeck()
+  }, [])
+
   // Apply filters to the deck
-  const filteredCards = ADVANCED_DECK.filter((card) => {
+  const filteredCards = deckCards.filter((card) => {
     // Filter by type
     if (filters.type !== "all" && card.type !== filters.type) {
       return false
@@ -27,8 +49,36 @@ export default function DeckGallery() {
     return true
   })
 
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-green-800 text-white">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
+          <p className="mt-4">Loading card gallery...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-green-800 text-white">
+        <div className="text-center max-w-md mx-auto p-6 bg-red-900/60 rounded-lg">
+          <h2 className="text-xl font-bold mb-4">Error</h2>
+          <p>{error}</p>
+          <Link href="/game/play-options">
+            <Button variant="outline" className="mt-4">
+              <ChevronLeft className="mr-1 h-4 w-4" />
+              Back to Game Menu
+            </Button>
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="h-screen overflow-y-scroll bg-green-800 p-4 text-white">
+    <div className="h-screen overflow-y-auto bg-green-800 p-4 text-white">
       <div className="container mx-auto">
         <div className="mb-6">
           <Link href="/game/play-options">
@@ -116,7 +166,7 @@ export default function DeckGallery() {
           <div className="flex justify-between items-center mb-2">
             <h2 className="text-xl">Deck</h2>
             <span className="text-sm bg-green-700 px-2 py-1 rounded">
-              Showing {filteredCards.length} of {ADVANCED_DECK.length} cards
+              Showing {filteredCards.length} of {deckCards.length} cards
             </span>
           </div>
         </div>

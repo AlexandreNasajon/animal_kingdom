@@ -9,7 +9,7 @@ export const EXPANDED_DECK: GameCard[] = [
     name: "Mouse",
     points: 1,
     environment: "terrestrial",
-    effect: "On play, send a terrestrial animal your opponent controls to deck top.",
+    effect: "On play, send a terrestrial or amphibian animal your opponent controls to deck top.",
     imageUrl: "/forest-mouse-foraging.png",
   },
   {
@@ -54,7 +54,7 @@ export const EXPANDED_DECK: GameCard[] = [
     name: "Deer",
     points: 3,
     environment: "terrestrial",
-    effect: "On play, if you have 7 or more points, your opponent discards 1 card.",
+    effect: "On play, if you have 7 or more points, your opponent discards 1 card at random.",
     imageUrl: "/forest-deer.png",
   },
   {
@@ -83,7 +83,7 @@ export const EXPANDED_DECK: GameCard[] = [
     name: "Tuna",
     points: 1,
     environment: "aquatic",
-    effect: "On play, play a 3 or fewer points aquatic animal from hand.",
+    effect: "On play, play an aquatic or amphibian animal of 3 or fewer points from hand.",
     imageUrl: "/canned-tuna-stack.png",
   },
   {
@@ -110,7 +110,7 @@ export const EXPANDED_DECK: GameCard[] = [
     name: "Turtle",
     points: 2,
     environment: "aquatic",
-    effect: "On play, play an aquatic animal of 2 or fewer points from hand.",
+    effect: "On play, play an aquatic or amphibian animal of 2 or fewer points from hand.",
     imageUrl: "/serene-sea-turtle.png",
   },
   {
@@ -156,7 +156,7 @@ export const EXPANDED_DECK: GameCard[] = [
     name: "Frog",
     points: 1,
     environment: "amphibian",
-    effect: "On play, destroy the animal your opponent controls with fewer points (your choice if tied).",
+    effect: "On play, send the animal with the lowest points your opponent controls to the deck bottom.",
     imageUrl: "/serene-frog.png",
   },
   {
@@ -174,7 +174,7 @@ export const EXPANDED_DECK: GameCard[] = [
     name: "Otter",
     points: 3,
     environment: "amphibian",
-    effect: "On play, draw 1 card and you may play 1 animal from your hand.",
+    effect: "On play, if you have 7 or more points, take a random card from your opponent's hand.",
     imageUrl: "/playful-river-otter.png",
   },
   {
