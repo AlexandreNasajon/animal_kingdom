@@ -246,18 +246,18 @@ export function GameBoard({
   const getCardSize = () => {
     if (viewportWidth < 360) {
       return {
-        height: isOpponent ? "70px" : "75px",
-        width: isOpponent ? "45px" : "50px",
+        height: isOpponent ? "70px" : "65px", // Reduced from 75px to 65px for player
+        width: isOpponent ? "45px" : "42px", // Reduced from 50px to 42px for player
       }
     } else if (viewportWidth < 640) {
       return {
-        height: isOpponent ? "85px" : "90px",
-        width: isOpponent ? "55px" : "60px",
+        height: isOpponent ? "85px" : "75px", // Reduced from 90px to 75px for player
+        width: isOpponent ? "55px" : "48px", // Reduced from 60px to 48px for player
       }
     } else {
       return {
-        height: isOpponent ? "100px" : "110px",
-        width: isOpponent ? "65px" : "70px",
+        height: isOpponent ? "100px" : "90px", // Reduced from 110px to 90px for player
+        width: isOpponent ? "65px" : "58px", // Reduced from 70px to 58px for player
       }
     }
   }

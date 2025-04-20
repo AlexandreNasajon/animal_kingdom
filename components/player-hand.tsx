@@ -351,20 +351,20 @@ export function PlayerHand({
   const getCardSize = () => {
     if (viewportWidth < 360) {
       return {
-        height: "90px",
-        width: "60px",
+        height: "153px", // 90px * 1.7
+        width: "102px", // 60px * 1.7
         overlap: "-35px",
       }
     } else if (viewportWidth < 640) {
       return {
-        height: "110px",
-        width: "75px",
+        height: "187px", // 110px * 1.7
+        width: "127.5px", // 75px * 1.7
         overlap: "-40px",
       }
     } else {
       return {
-        height: "120px",
-        width: "80px",
+        height: "204px", // 120px * 1.7
+        width: "136px", // 80px * 1.7
         overlap: "-25px",
       }
     }
