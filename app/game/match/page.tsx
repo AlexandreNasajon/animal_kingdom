@@ -583,29 +583,34 @@ export default function OriginalGameMatch() {
 
       // Check if AI played Trap card
       if (afterAIMove.message.includes("AI played Trap")) {
-        console.log("AI played Trap. You must choose an animal to give.")
+        console.log("AI played Trap and selects one of your animals.")
+
+        // AI automatically selects the highest value animal
+        const highestValueIndex = afterAIMove.playerField
+          .map((card, index) => ({ card, index }))
+          .sort((a, b) => (b.card.points || 0) - (a.card.points || 0))[0].index
 
         // End AI thinking state
         setIsAIThinking(false)
 
-        // Set up the trap selection modal
-        setTargetTitle("Choose Animal to Give")
-        setTargetDescription("AI played Trap. Select one of your animals to give to the AI.")
-        setTargetFilter(undefined)
-        setTargetCards(afterAIMove.playerField)
-        setPlayerCardIndices(Array.from({ length: afterAIMove.playerField.length }, (_, i) => i))
-
-        // Show the trap selection modal
-        setShowAITrapModal(true)
-
-        // Store the current state but don't end AI turn yet
-        setGameState({
-          ...afterAIMove,
-          pendingEffect: {
-            type: "trap",
-            forPlayer: false,
+        // Resolve the effect with the AI's choice
+        const resolvedState = resolveEffect(
+          {
+            ...afterAIMove,
+            pendingEffect: {
+              type: "trap",
+              forPlayer: false,
+            },
           },
-        })
+          highestValueIndex,
+        )
+
+        if (resolvedState.message !== afterAIMove.message) {
+          console.log(resolvedState.message)
+        }
+
+        // End AI turn
+        setGameState(endAITurn(resolvedState))
       }
       // Check if player played Trap - need to let AI choose an animal
       else if (
