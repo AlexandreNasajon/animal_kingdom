@@ -56,7 +56,8 @@ export function createNewGameState(): GameState {
       playerCardsDrawn: 0,
       opponentCardsDrawn: 0,
       playerExtraDraws: 0,
-      opponentExtraPlays: 0,
+      opponentExtraDraws: 0,
+      playerExtraPlays: 0,
       opponentExtraPlays: 0,
       limitInEffect: false,
       droughtInEffect: false,
@@ -1555,11 +1556,28 @@ export function makeAIDecision(state: GameState): GameState {
     .filter((item) => item.card.type === "impact" && isImpactCardWithValidTargets(item.card, state, false))
 
   if (playableImpactCards.length > 0) {
+    // Sort by strategic importance (customize this logic as needed)
+    const strategicOrder = ["Trap", "Flood", "Drought", "Limit", "Confuse"]
+    playableImpactCards.sort((a, b) => {
+      const aIndex = strategicOrder.indexOf(a.card.name)
+      const bIndex = strategicOrder.indexOf(b.card.name)
+
+      // If both cards are in the strategic order, sort by their order
+      if (aIndex !== -1 && bIndex !== -1) {
+        return aIndex - bIndex
+      }
+      // If only one card is in the strategic order, prioritize it
+      if (aIndex !== -1) return -1
+      if (bIndex !== -1) return 1
+
+      // Default sort - random
+      return Math.random() - 0.5
+    })
+
     // 60% chance to play an impact card if we have one with valid targets
     if (Math.random() < 0.6) {
-      // Play a random impact card
-      const randomIndex = Math.floor(Math.random() * playableImpactCards.length)
-      return playImpactCard(state, playableImpactCards[randomIndex].index, false)
+      // Play the highest priority impact card
+      return playImpactCard(state, playableImpactCards[0].index, false)
     }
   }
 

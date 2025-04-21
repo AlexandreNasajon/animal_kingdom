@@ -1724,8 +1724,7 @@ export default function OriginalGameMatch() {
         setTargetTitle("Exchange Animals")
         setTargetDescription("Select one of your animals and one of the opponent's animals to exchange control.")
         // For Confuse, we need to set the isConfuseEffect flag to true in the TargetSelectionModal
-        setShowTargetModal(true)
-        // We don't need these for the Confuse effect as we're using a different UI
+        setShowTargetModal(true) // We don't need these for the Confuse effect as we're using a different UI
         setTargetCards([])
         setTargetFilter(undefined)
         playerCardIndices = []
