@@ -20,7 +20,7 @@ export interface GameState {
   sharedDeck: GameCard[]
   sharedDiscard: GameCard[]
   currentTurn: "player" | "opponent"
-  gameStatus: "waiting" | "playing" | "completed" | "playerWin" | "opponentWin"
+  gameStatus: "playing" | "playerWin" | "opponentWin"
   message: string
   pendingEffect: {
     type: string
@@ -28,6 +28,7 @@ export interface GameState {
     targetCardId?: number
     costType?: string
     selectedCard?: number
+    targetIndex?: number | number[]
   } | null
   effectsThisTurn: {
     playerAnimalsPlayed: number
@@ -35,6 +36,7 @@ export interface GameState {
     playerCardsDrawn: number
     opponentCardsDrawn: number
     playerExtraDraws: number
+    opponentExtraPlays: number
     opponentExtraPlays: number
     limitInEffect: boolean
     droughtInEffect: boolean

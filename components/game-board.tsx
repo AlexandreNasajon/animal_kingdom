@@ -283,7 +283,7 @@ export function GameBoard({
         ref={boardRef}
         className={`flex ${isOpponent ? "min-h-[100px] sm:min-h-[120px] max-w-[95%] mx-auto" : "min-h-[110px] sm:min-h-[130px]"} items-center justify-center gap-1 sm:gap-2 rounded-lg border-2 ${getFieldBackground()} p-1 transition-all duration-300 ${
           dropHighlight && !isOpponent ? "ring-4 ring-green-400 bg-green-900/50" : ""
-        } shadow-lg backdrop-blur-sm`}
+        } shadow-lg backdrop-blur-sm overflow-hidden`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}

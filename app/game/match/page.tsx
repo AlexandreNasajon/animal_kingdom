@@ -2510,19 +2510,6 @@ export default function OriginalGameMatch() {
         }}
       ></div>
 
-      {/* Animation error message with improved styling */}
-      <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-red-800/90 to-red-900/90 text-white px-4 py-2 rounded-md z-50 text-sm shadow-lg border border-red-700/50">
-        <div className="flex items-center gap-2">
-          <span>{animationError}</span>
-          <button
-            onClick={handleDismissError}
-            className="text-xs bg-red-700 hover:bg-red-600 px-2 py-1 rounded transition-colors"
-          >
-            Dismiss
-          </button>
-        </div>
-      </div>
-
       {/* Card Detail Modal */}
       <CardDetailModal
         open={showCardDetail}
