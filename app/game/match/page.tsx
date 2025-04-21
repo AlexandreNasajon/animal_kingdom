@@ -916,15 +916,26 @@ export default function OriginalGameMatch() {
             return
           }
         }
+        // Find the section that handles AI effects for other cards and ensure they're properly handled
+        // Add this to the AI effect handling section:
+
         // Add this default case to handle any other animal effects that weren't explicitly handled
         // This ensures all AI effects are resolved and AI thinking state is cleared
+        else {
+          // End AI thinking state
+          setIsAIThinking(false)
 
-        // End AI thinking state
-        setIsAIThinking(false)
+          // For any other effect, resolve it automatically
+          const resolvedState = {
+            ...afterAIMove,
+            pendingEffect: null,
+            message: `AI resolved its ${effectType} effect.`,
+          }
 
-        // End AI turn with original state if we couldn't handle a specific effect
-        setGameState(endAITurn(afterAIMove))
-        return
+          // End AI turn
+          setGameState(endAITurn(resolvedState))
+          return
+        }
       } else {
         // Log AI's action if no card was played or drawn
         if (afterAIMove.message !== gameState.message) {
