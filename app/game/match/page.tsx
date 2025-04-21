@@ -654,6 +654,9 @@ export default function OriginalGameMatch() {
               console.log(resolvedState.message)
             }
 
+            // End AI thinking state
+            setIsAIThinking(false)
+
             // End AI turn
             setGameState(endAITurn(resolvedState))
             return
@@ -673,14 +676,253 @@ export default function OriginalGameMatch() {
               console.log(resolvedState.message)
             }
 
+            // End AI thinking state
+            setIsAIThinking(false)
+
+            // End AI turn
+            setGameState(endAITurn(resolvedState))
+            return
+          }
+        } else if (effectType === "zebra") {
+          // For Zebra effect, AI just looks at player's hand and continues
+          // No need to make any choice, just resolve the effect
+          const resolvedState = {
+            ...afterAIMove,
+            pendingEffect: null,
+            message: "AI looked at your hand using Zebra.",
+          }
+
+          // End AI thinking state
+          setIsAIThinking(false)
+
+          // End AI turn
+          setGameState(endAITurn(resolvedState))
+          return
+        } else if (effectType === "tuna") {
+          // For Tuna effect, AI selects an aquatic animal of 3 or fewer points to play
+          const aquaticAnimals = afterAIMove.opponentHand.filter(
+            (c) =>
+              c.type === "animal" &&
+              (c.environment === "aquatic" || c.environment === "amphibian") &&
+              (c.points || 0) <= 3,
+          )
+
+          if (aquaticAnimals.length > 0) {
+            // Find the highest value aquatic animal that meets criteria
+            const targetCard = aquaticAnimals.sort((a, b) => (b.points || 0) - (a.points || 0))[0]
+            const targetIndex = afterAIMove.opponentHand.findIndex((c) => c.id === targetCard.id)
+
+            // Create a new state with the card played
+            const newOpponentHand = [...afterAIMove.opponentHand]
+            newOpponentHand.splice(targetIndex, 1)
+
+            const resolvedState = {
+              ...afterAIMove,
+              opponentHand: newOpponentHand,
+              opponentField: [...afterAIMove.opponentField, targetCard],
+              opponentPoints: afterAIMove.opponentPoints + (targetCard.points || 0),
+              pendingEffect: null,
+              message: `AI played Tuna and then played ${targetCard.name} from hand.`,
+            }
+
+            // End AI thinking state
+            setIsAIThinking(false)
+
+            // End AI turn
+            setGameState(endAITurn(resolvedState))
+            return
+          }
+        } else if (effectType === "turtle") {
+          // For Turtle effect, AI selects an aquatic animal of 2 or fewer points to play
+          const aquaticAnimals = afterAIMove.opponentHand.filter(
+            (c) =>
+              c.type === "animal" &&
+              (c.environment === "aquatic" || c.environment === "amphibian") &&
+              (c.points || 0) <= 2,
+          )
+
+          if (aquaticAnimals.length > 0) {
+            // Find the highest value aquatic animal that meets criteria
+            const targetCard = aquaticAnimals.sort((a, b) => (b.points || 0) - (a.points || 0))[0]
+            const targetIndex = afterAIMove.opponentHand.findIndex((c) => c.id === targetCard.id)
+
+            // Create a new state with the card played
+            const newOpponentHand = [...afterAIMove.opponentHand]
+            newOpponentHand.splice(targetIndex, 1)
+
+            const resolvedState = {
+              ...afterAIMove,
+              opponentHand: newOpponentHand,
+              opponentField: [...afterAIMove.opponentField, targetCard],
+              opponentPoints: afterAIMove.opponentPoints + (targetCard.points || 0),
+              pendingEffect: null,
+              message: `AI played Turtle and then played ${targetCard.name} from hand.`,
+            }
+
+            // End AI thinking state
+            setIsAIThinking(false)
+
+            // End AI turn
+            setGameState(endAITurn(resolvedState))
+            return
+          }
+        } else if (effectType === "squirrel") {
+          // For Squirrel effect, AI just looks at player's hand and chooses a card to discard
+          if (afterAIMove.playerHand.length > 0) {
+            // Choose highest value card or first impact card to discard
+            const animalCards = afterAIMove.playerHand.filter((c) => c.type === "animal")
+            const impactCards = afterAIMove.playerHand.filter((c) => c.type === "impact")
+
+            let targetIndex = 0
+            let targetCard = afterAIMove.playerHand[0]
+
+            if (impactCards.length > 0) {
+              // Prefer to discard impact cards
+              targetCard = impactCards[0]
+              targetIndex = afterAIMove.playerHand.findIndex((c) => c.id === targetCard.id)
+            } else if (animalCards.length > 0) {
+              // If no impact cards, discard highest point animal
+              targetCard = animalCards.sort((a, b) => (b.points || 0) - (a.points || 0))[0]
+              targetIndex = afterAIMove.playerHand.findIndex((c) => c.id === targetCard.id)
+            }
+
+            // Create a new player hand with the chosen card removed
+            const newPlayerHand = [...afterAIMove.playerHand]
+            newPlayerHand.splice(targetIndex, 1)
+
+            const resolvedState = {
+              ...afterAIMove,
+              playerHand: newPlayerHand,
+              sharedDiscard: [...afterAIMove.sharedDiscard, targetCard],
+              pendingEffect: null,
+              message: `AI used Squirrel to make you discard ${targetCard.name}.`,
+            }
+
+            // End AI thinking state
+            setIsAIThinking(false)
+
+            // End AI turn
+            setGameState(endAITurn(resolvedState))
+            return
+          }
+        } else if (effectType === "dolphin") {
+          // For Dolphin effect, AI sends a card to bottom of deck and draws one
+          if (afterAIMove.opponentHand.length > 0 && afterAIMove.sharedDeck.length > 0) {
+            // Choose lowest value card to send to bottom
+            const sortedHand = [...afterAIMove.opponentHand].sort((a, b) => {
+              if (a.type === "animal" && b.type === "animal") {
+                return (a.points || 0) - (b.points || 0)
+              }
+              return a.type === "impact" ? -1 : 1 // Prefer sending impact cards to bottom
+            })
+
+            const targetCard = sortedHand[0]
+            const targetIndex = afterAIMove.opponentHand.findIndex((c) => c.id === targetCard.id)
+
+            // Remove card from hand
+            const newOpponentHand = [...afterAIMove.opponentHand]
+            newOpponentHand.splice(targetIndex, 1)
+
+            // Draw a card
+            const drawnCard = afterAIMove.sharedDeck[0]
+            const newDeck = [...afterAIMove.sharedDeck.slice(1), targetCard]
+
+            const resolvedState = {
+              ...afterAIMove,
+              opponentHand: [...newOpponentHand, drawnCard],
+              sharedDeck: newDeck,
+              pendingEffect: null,
+              message: `AI played Dolphin, sent a card to bottom of deck, and drew a card.`,
+            }
+
+            // End AI thinking state
+            setIsAIThinking(false)
+
+            // End AI turn
+            setGameState(endAITurn(resolvedState))
+            return
+          }
+        } else if (effectType === "crab") {
+          // For Crab effect, AI selects one card to add to hand, sends other to bottom
+          if (afterAIMove.sharedDeck.length >= 2) {
+            const topCards = afterAIMove.sharedDeck.slice(0, 2)
+
+            // Sort cards by value (prefer animals with higher points)
+            const sortedCards = [...topCards].sort((a, b) => {
+              if (a.type === "animal" && b.type === "animal") {
+                return (b.points || 0) - (a.points || 0)
+              }
+              return a.type === "animal" ? 1 : -1 // Prefer animals over impacts
+            })
+
+            const selectedCard = sortedCards[0]
+            const otherCard = sortedCards[1]
+
+            // Create a new state
+            const resolvedState = {
+              ...afterAIMove,
+              opponentHand: [...afterAIMove.opponentHand, selectedCard],
+              sharedDeck: [...afterAIMove.sharedDeck.slice(2), otherCard],
+              pendingEffect: null,
+              message: `AI played Crab, selected a card for its hand, and sent another to the bottom of the deck.`,
+            }
+
+            // End AI thinking state
+            setIsAIThinking(false)
+
+            // End AI turn
+            setGameState(endAITurn(resolvedState))
+            return
+          } else if (afterAIMove.sharedDeck.length === 1) {
+            // If there's only one card, just draw it
+            const drawnCard = afterAIMove.sharedDeck[0]
+
+            const resolvedState = {
+              ...afterAIMove,
+              opponentHand: [...afterAIMove.opponentHand, drawnCard],
+              sharedDeck: [],
+              pendingEffect: null,
+              message: `AI played Crab and drew the last card from the deck.`,
+            }
+
+            // End AI thinking state
+            setIsAIThinking(false)
+
+            // End AI turn
+            setGameState(endAITurn(resolvedState))
+            return
+          }
+        } else if (effectType === "crocodile") {
+          // For Crocodile effect, AI targets a player animal with 3 or fewer points
+          const targetableCards = gameState.playerField.filter((c) => (c.points || 0) <= 3)
+
+          if (targetableCards.length > 0) {
+            // Target the highest value animal that meets the criteria
+            const targetCard = targetableCards.sort((a, b) => (b.points || 0) - (a.points || 0))[0]
+            const targetIndex = gameState.playerField.findIndex((c) => c.id === targetCard.id)
+
+            // Resolve the effect
+            const resolvedState = resolveEffect(afterAIMove, targetIndex)
+
+            if (resolvedState.message !== afterAIMove.message) {
+              console.log(resolvedState.message)
+            }
+
+            // End AI thinking state
+            setIsAIThinking(false)
+
             // End AI turn
             setGameState(endAITurn(resolvedState))
             return
           }
         }
-        // Add other AI effect handlers here as needed
+        // Add this default case to handle any other animal effects that weren't explicitly handled
+        // This ensures all AI effects are resolved and AI thinking state is cleared
 
-        // If we couldn't handle the effect specifically, just end AI's turn
+        // End AI thinking state
+        setIsAIThinking(false)
+
+        // End AI turn with original state if we couldn't handle a specific effect
         setGameState(endAITurn(afterAIMove))
         return
       } else {
@@ -1038,7 +1280,7 @@ export default function OriginalGameMatch() {
 
           // Now apply the card's effect, if it has one
           if (targetCard.type === "animal" && targetCard.effect) {
-            tempState = applyAnimalEffect(tempState, card, true)
+            tempState = applyAnimalEffect(tempState, targetCard, true)
           }
 
           // Log the effect resolution

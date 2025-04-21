@@ -1435,7 +1435,51 @@ export function makeAIDecision(state: GameState): GameState {
   )
 
   if (winningAnimalIndex !== -1) {
-    // Play the winning animal card
+    // Check if it's a card that requires sacrifice (Lion, Shark, Crocodile)
+    const cardToPlay = state.opponentHand[winningAnimalIndex]
+    if (["Lion", "Shark", "Crocodile"].includes(cardToPlay.name)) {
+      // Check if AI has animals on the field to pay the cost
+      if (state.opponentField.length === 0) {
+        // Can't play the card, try to draw instead
+        return drawCards(state, 2, false)
+      }
+
+      // AI has animals on the field, so it can pay the cost
+      // First, sacrifice an animal (choose the lowest value one)
+      const sacrificeIndex = state.opponentField
+        .map((card, index) => ({ card, index }))
+        .sort((a, b) => (a.card.points || 0) - (b.card.points || 0))[0].index
+
+      const sacrificedAnimal = state.opponentField[sacrificeIndex]
+      const newOpponentField = [...state.opponentField]
+      newOpponentField.splice(sacrificeIndex, 1)
+
+      // Remove the card from hand
+      const newOpponentHand = [...state.opponentHand]
+      newOpponentHand.splice(winningAnimalIndex, 1)
+
+      // Calculate new points after sacrifice
+      const newOpponentPoints = state.opponentPoints - (sacrificedAnimal.points || 0)
+
+      // Create a new state with the sacrificed animal removed and the card played
+      const newState = {
+        ...state,
+        opponentField: [...newOpponentField, cardToPlay],
+        opponentHand: newOpponentHand,
+        opponentPoints: newOpponentPoints + (cardToPlay.points || 0),
+        sharedDiscard: [...state.sharedDiscard, sacrificedAnimal],
+        message: `AI sacrificed ${sacrificedAnimal.name} to play ${cardToPlay.name}.`,
+        effectsThisTurn: {
+          ...state.effectsThisTurn,
+          opponentAnimalsPlayed: state.effectsThisTurn.opponentAnimalsPlayed + 1,
+        },
+      }
+
+      // Apply the card's effect
+      return applyAnimalEffect(newState, cardToPlay, false)
+    }
+
+    // Play the winning animal card (not a cost card)
     return playAnimalCard(state, winningAnimalIndex, false)
   }
 
