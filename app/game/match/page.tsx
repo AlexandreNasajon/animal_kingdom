@@ -633,7 +633,10 @@ export default function OriginalGameMatch() {
 
         // End AI turn
         setGameState(endAITurn(resolvedState))
-      } else if (afterAIMove.pendingEffect && !afterAIMove.pendingEffect.forPlayer) {
+      }
+      // Find the section that handles AI effects for other cards and ensure they're properly handled
+      // Replace the entire section that handles AI effects with this updated version that handles all card effects:
+      else if (afterAIMove.pendingEffect && !afterAIMove.pendingEffect.forPlayer) {
         console.log("AI is resolving its own effect automatically.")
 
         // Get the effect type
@@ -920,27 +923,314 @@ export default function OriginalGameMatch() {
             setGameState(endAITurn(resolvedState))
             return
           }
+        } else if (effectType === "wolf") {
+          // For Wolf effect, AI targets a terrestrial animal to send back to player's hand
+          const targetableCards = gameState.playerField.filter((c) => c.environment === "terrestrial")
+
+          if (targetableCards.length > 0) {
+            // Target the highest value terrestrial animal
+            const targetCard = targetableCards.sort((a, b) => (b.points || 0) - (a.points || 0))[0]
+            const targetIndex = gameState.playerField.findIndex((c) => c.id === targetCard.id)
+
+            // Resolve the effect
+            const resolvedState = resolveEffect(afterAIMove, targetIndex)
+
+            if (resolvedState.message !== afterAIMove.message) {
+              console.log(resolvedState.message)
+            }
+
+            // End AI thinking state
+            setIsAIThinking(false)
+
+            // End AI turn
+            setGameState(endAITurn(resolvedState))
+            return
+          }
+        } else if (effectType === "snake") {
+          // For Snake effect, AI targets a 1-point animal to destroy
+          const targetableCards = gameState.playerField.filter((c) => c.points === 1)
+
+          if (targetableCards.length > 0) {
+            // If there are multiple 1-point animals, choose one (first one for simplicity)
+            const targetIndex = gameState.playerField.findIndex((c) => c.points === 1)
+
+            // Resolve the effect
+            const resolvedState = resolveEffect(afterAIMove, targetIndex)
+
+            if (resolvedState.message !== afterAIMove.message) {
+              console.log(resolvedState.message)
+            }
+
+            // End AI thinking state
+            setIsAIThinking(false)
+
+            // End AI turn
+            setGameState(endAITurn(resolvedState))
+            return
+          }
+        } else if (effectType === "confuse") {
+          // For Confuse effect, AI exchanges animals strategically
+          if (gameState.playerField.length > 0 && gameState.opponentField.length > 0) {
+            // AI chooses its lowest value animal and player's highest value animal
+            const aiLowestValueIndex = afterAIMove.opponentField
+              .map((card, index) => ({ card, index }))
+              .sort((a, b) => (a.card.points || 0) - (b.card.points || 0))[0].index
+
+            const playerHighestValueIndex = gameState.playerField
+              .map((card, index) => ({ card, index }))
+              .sort((a, b) => (b.card.points || 0) - (a.card.points || 0))[0].index
+
+            // Create new arrays with the cards exchanged
+            const newPlayerField = [...gameState.playerField]
+            const newOpponentField = [...afterAIMove.opponentField]
+
+            const playerCard = newPlayerField[playerHighestValueIndex]
+            const aiCard = newOpponentField[aiLowestValueIndex]
+
+            // Remove the cards from their original positions
+            newPlayerField.splice(playerHighestValueIndex, 1)
+            newOpponentField.splice(aiLowestValueIndex, 1)
+
+            // Add the cards to their new positions
+            newPlayerField.push(aiCard)
+            newOpponentField.push(playerCard)
+
+            // Calculate new points
+            const newPlayerPoints = newPlayerField.reduce((sum, card) => sum + (card.points || 0), 0)
+            const newOpponentPoints = newOpponentField.reduce((sum, card) => sum + (card.points || 0), 0)
+
+            const resolvedState = {
+              ...afterAIMove,
+              playerField: newPlayerField,
+              opponentField: newOpponentField,
+              playerPoints: newPlayerPoints,
+              opponentPoints: newOpponentPoints,
+              pendingEffect: null,
+              message: `AI played Confuse and exchanged ${aiCard.name} with your ${playerCard.name}.`,
+            }
+
+            // End AI thinking state
+            setIsAIThinking(false)
+
+            // End AI turn
+            setGameState(endAITurn(resolvedState))
+            return
+          }
+        } else if (effectType === "hunter" || effectType === "fisher") {
+          // For Hunter/Fisher effect, AI targets the highest value animal of the appropriate environment
+          const environment = effectType === "hunter" ? "terrestrial" : "aquatic"
+          const targetableCards = gameState.playerField.filter(
+            (card) => card.environment === environment || card.environment === "amphibian",
+          )
+
+          if (targetableCards.length > 0) {
+            // Find the highest value target
+            const targetIndex = gameState.playerField.findIndex(
+              (card) => card.id === targetableCards.sort((a, b) => (b.points || 0) - (a.points || 0))[0].id,
+            )
+
+            // Resolve the effect
+            const resolvedState = resolveEffect(afterAIMove, targetIndex)
+
+            if (resolvedState.message !== afterAIMove.message) {
+              console.log(resolvedState.message)
+            }
+
+            // End AI thinking state
+            setIsAIThinking(false)
+
+            // End AI turn
+            setGameState(endAITurn(resolvedState))
+            return
+          }
+        } else if (effectType === "limit") {
+          // For Limit effect, AI targets the highest value animal
+          if (gameState.playerField.length > 0) {
+            // Find the highest value animal
+            const targetIndex = gameState.playerField
+              .map((card, index) => ({ card, index }))
+              .sort((a, b) => (b.card.points || 0) - (a.card.points || 0))[0].index
+
+            // Resolve the effect
+            const resolvedState = resolveEffect(afterAIMove, targetIndex)
+
+            if (resolvedState.message !== afterAIMove.message) {
+              console.log(resolvedState.message)
+            }
+
+            // End AI thinking state
+            setIsAIThinking(false)
+
+            // End AI turn
+            setGameState(endAITurn(resolvedState))
+            return
+          }
+        } else if (effectType === "domesticate") {
+          // For Domesticate effect, AI targets a 2-point animal
+          const targetableCards = gameState.playerField.filter((c) => c.points === 2)
+
+          if (targetableCards.length > 0) {
+            // Find the index of the first 2-point animal
+            const targetIndex = gameState.playerField.findIndex((c) => c.points === 2)
+
+            // Resolve the effect
+            const resolvedState = resolveEffect(afterAIMove, targetIndex)
+
+            if (resolvedState.message !== afterAIMove.message) {
+              console.log(resolvedState.message)
+            }
+
+            // End AI thinking state
+            setIsAIThinking(false)
+
+            // End AI turn
+            setGameState(endAITurn(resolvedState))
+            return
+          }
+        } else if (effectType === "cage") {
+          // For Cage effect, AI sacrifices its lowest value animal to gain control of player's highest value animal
+          if (afterAIMove.opponentField.length > 0 && gameState.playerField.length > 0) {
+            if (!afterAIMove.pendingEffect.firstSelection) {
+              // First selection: AI chooses its lowest value animal to sacrifice
+              const aiLowestValueIndex = afterAIMove.opponentField
+                .map((card, index) => ({ card, index }))
+                .sort((a, b) => (a.card.points || 0) - (b.card.points || 0))[0].index
+
+              // Create a new state with the first selection made
+              const firstSelectionState = {
+                ...afterAIMove,
+                pendingEffect: {
+                  ...afterAIMove.pendingEffect,
+                  firstSelection: aiLowestValueIndex,
+                },
+              }
+
+              // Now make the second selection
+              const playerHighestValueIndex = gameState.playerField
+                .map((card, index) => ({ card, index }))
+                .sort((a, b) => (b.card.points || 0) - (a.card.points || 0))[0].index
+
+              // Resolve the effect with both selections
+              const resolvedState = resolveEffect(firstSelectionState, playerHighestValueIndex)
+
+              if (resolvedState.message !== afterAIMove.message) {
+                console.log(resolvedState.message)
+              }
+
+              // End AI thinking state
+              setIsAIThinking(false)
+
+              // End AI turn
+              setGameState(endAITurn(resolvedState))
+              return
+            }
+          }
+        } else if (effectType === "epidemic") {
+          // For Epidemic effect, AI selects one of its animals strategically
+          if (afterAIMove.opponentField.length > 0) {
+            // AI chooses its lowest value animal to minimize its own losses
+            const targetIndex = afterAIMove.opponentField
+              .map((card, index) => ({ card, index }))
+              .sort((a, b) => (a.card.points || 0) - (b.card.points || 0))[0].index
+
+            // Resolve the effect
+            const resolvedState = resolveEffect(afterAIMove, targetIndex)
+
+            if (resolvedState.message !== afterAIMove.message) {
+              console.log(resolvedState.message)
+            }
+
+            // End AI thinking state
+            setIsAIThinking(false)
+
+            // End AI turn
+            setGameState(endAITurn(resolvedState))
+            return
+          }
+        } else if (effectType === "compete") {
+          // For Compete effect, AI selects an animal from its hand
+          const animalCards = afterAIMove.opponentHand.filter((c) => c.type === "animal")
+
+          if (animalCards.length > 0) {
+            // AI chooses its lowest value animal to minimize its own losses
+            const targetCard = animalCards.sort((a, b) => (a.points || 0) - (b.points || 0))[0]
+            const targetIndex = afterAIMove.opponentHand.findIndex((c) => c.id === targetCard.id)
+
+            // Resolve the effect
+            const resolvedState = resolveEffect(afterAIMove, targetIndex)
+
+            if (resolvedState.message !== afterAIMove.message) {
+              console.log(resolvedState.message)
+            }
+
+            // End AI thinking state
+            setIsAIThinking(false)
+
+            // End AI turn
+            setGameState(endAITurn(resolvedState))
+            return
+          }
+        } else if (effectType === "prey") {
+          // For Prey effect, AI selects one of its animals strategically
+          if (afterAIMove.opponentField.length > 0) {
+            // AI chooses its highest value animal to maximize player's losses
+            const targetIndex = afterAIMove.opponentField
+              .map((card, index) => ({ card, index }))
+              .sort((a, b) => (b.card.points || 0) - (a.card.points || 0))[0].index
+
+            // Resolve the effect
+            const resolvedState = resolveEffect(afterAIMove, targetIndex)
+
+            if (resolvedState.message !== afterAIMove.message) {
+              console.log(resolvedState.message)
+            }
+
+            // End AI thinking state
+            setIsAIThinking(false)
+
+            // End AI turn
+            setGameState(endAITurn(resolvedState))
+            return
+          }
+        } else if (effectType === "payCost") {
+          // For payCost effect (Lion, Shark, Crocodile), AI selects an animal to sacrifice
+          if (afterAIMove.opponentField.length > 0) {
+            // AI chooses its lowest value animal to sacrifice
+            const targetIndex = afterAIMove.opponentField
+              .map((card, index) => ({ card, index }))
+              .sort((a, b) => (a.card.points || 0) - (b.card.points || 0))[0].index
+
+            // Resolve the effect
+            const resolvedState = resolveEffect(afterAIMove, targetIndex)
+
+            if (resolvedState.message !== afterAIMove.message) {
+              console.log(resolvedState.message)
+            }
+
+            // End AI thinking state
+            setIsAIThinking(false)
+
+            // End AI turn
+            setGameState(endAITurn(resolvedState))
+            return
+          }
         }
-        // Find the section that handles AI effects for other cards and ensure they're properly handled
-        // Add this to the AI effect handling section:
 
         // Add this default case to handle any other animal effects that weren't explicitly handled
         // This ensures all AI effects are resolved and AI thinking state is cleared
-        else {
-          // End AI thinking state
-          setIsAIThinking(false)
+        // End AI thinking state
+        setIsAIThinking(false)
 
-          // For any other effect, resolve it automatically
-          const resolvedState = {
-            ...afterAIMove,
-            pendingEffect: null,
-            message: `AI resolved its ${effectType} effect.`,
-          }
-
-          // End AI turn
-          setGameState(endAITurn(resolvedState))
-          return
+        // For any other effect, resolve it automatically
+        const resolvedState = {
+          ...afterAIMove,
+          pendingEffect: null,
+          message: `AI resolved its ${effectType} effect.`,
         }
+
+        // End AI turn
+        setGameState(endAITurn(resolvedState))
+        return
       } else {
         // Log AI's action if no card was played or drawn
         if (afterAIMove.message !== gameState.message) {
