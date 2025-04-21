@@ -628,6 +628,42 @@ export default function OriginalGameMatch() {
 
         // End AI turn
         setGameState(endAITurn(resolvedState))
+      } else if (afterAIMove.pendingEffect && !afterAIMove.pendingEffect.forPlayer) {
+        console.log("AI is resolving its own effect automatically.")
+
+        // Get the effect type
+        const effectType = afterAIMove.pendingEffect.type
+
+        // Handle different effect types
+        if (effectType === "mouse") {
+          // For Mouse effect, AI targets the highest value terrestrial animal
+          const targetableCards = gameState.playerField.filter(
+            (card) => card.environment === "terrestrial" || card.environment === "amphibian",
+          )
+
+          if (targetableCards.length > 0) {
+            // Find the highest value target
+            const targetIndex = gameState.playerField.findIndex(
+              (card) => card.id === targetableCards.sort((a, b) => (b.points || 0) - (a.points || 0))[0].id,
+            )
+
+            // Resolve the effect
+            const resolvedState = resolveEffect(afterAIMove, targetIndex)
+
+            if (resolvedState.message !== afterAIMove.message) {
+              console.log(resolvedState.message)
+            }
+
+            // End AI turn
+            setGameState(endAITurn(resolvedState))
+            return
+          }
+        }
+        // Add other AI effect handlers here as needed
+
+        // If we couldn't handle the effect specifically, just end AI's turn
+        setGameState(endAITurn(afterAIMove))
+        return
       } else {
         // Log AI's action if no card was played or drawn
         if (afterAIMove.message !== gameState.message) {
@@ -2612,11 +2648,22 @@ export default function OriginalGameMatch() {
         />
       )}
 
-      {/* Tuna effect modal */}
+      {/* Find the Tuna effect modal and add a cancel button by modifying it: */}
       {showTunaModal && gameState && (
         <TargetSelectionModal
           open={showTunaModal}
-          onClose={() => setShowTunaModal(false)}
+          onClose={() => {
+            // When closed without selection, skip the effect
+            setShowTunaModal(false)
+            // End player's turn without applying the effect
+            setGameState(
+              endPlayerTurn({
+                ...gameState,
+                pendingEffect: null,
+                message: "You chose not to play an aquatic animal from your hand.",
+              }),
+            )
+          }}
           cards={gameState.playerHand.filter(
             (card) =>
               card.type === "animal" &&
@@ -2625,17 +2672,28 @@ export default function OriginalGameMatch() {
           )}
           onConfirm={handleTunaSelection}
           title="Play Aquatic Animal"
-          description="Select an aquatic or amphibian animal with 3 or fewer points from your hand to play."
+          description="Select an aquatic or amphibian animal with 3 or fewer points from your hand to play, or close to skip this effect."
           filter={undefined}
           playerCardIndices={[]}
         />
       )}
 
-      {/* Turtle effect modal */}
+      {/* Find the Turtle effect modal and add a cancel button by modifying it: */}
       {showTurtleModal && gameState && (
         <TargetSelectionModal
           open={showTurtleModal}
-          onClose={() => setShowTurtleModal(false)}
+          onClose={() => {
+            // When closed without selection, skip the effect
+            setShowTurtleModal(false)
+            // End player's turn without applying the effect
+            setGameState(
+              endPlayerTurn({
+                ...gameState,
+                pendingEffect: null,
+                message: "You chose not to play an aquatic animal from your hand.",
+              }),
+            )
+          }}
           cards={gameState.playerHand.filter(
             (card) =>
               card.type === "animal" &&
@@ -2644,7 +2702,7 @@ export default function OriginalGameMatch() {
           )}
           onConfirm={handleTurtleSelection}
           title="Play Aquatic Animal"
-          description="Select an aquatic or amphibian animal with 2 or fewer points from your hand to play."
+          description="Select an aquatic or amphibian animal with 2 or fewer points from your hand to play, or close to skip this effect."
           filter={undefined}
           playerCardIndices={[]}
         />
