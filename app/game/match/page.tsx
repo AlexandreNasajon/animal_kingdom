@@ -658,6 +658,25 @@ export default function OriginalGameMatch() {
             setGameState(endAITurn(resolvedState))
             return
           }
+        } else if (effectType === "octopus") {
+          // For Octopus effect, AI just looks at the top cards and randomly rearranges them
+          const topCards = gameState.sharedDeck.slice(0, Math.min(3, gameState.sharedDeck.length))
+
+          if (topCards.length > 0) {
+            // Randomly shuffle the top cards (AI doesn't need to make strategic choices here)
+            const shuffledIndices = Array.from({ length: topCards.length }, (_, i) => i).sort(() => Math.random() - 0.5)
+
+            // Resolve the effect with the shuffled indices
+            const resolvedState = resolveEffect(afterAIMove, shuffledIndices)
+
+            if (resolvedState.message !== afterAIMove.message) {
+              console.log(resolvedState.message)
+            }
+
+            // End AI turn
+            setGameState(endAITurn(resolvedState))
+            return
+          }
         }
         // Add other AI effect handlers here as needed
 
@@ -1019,7 +1038,7 @@ export default function OriginalGameMatch() {
 
           // Now apply the card's effect, if it has one
           if (targetCard.type === "animal" && targetCard.effect) {
-            tempState = applyAnimalEffect(tempState, targetCard, true)
+            tempState = applyAnimalEffect(tempState, card, true)
           }
 
           // Log the effect resolution
