@@ -1022,6 +1022,44 @@ export default function OriginalGameMatch() {
     return () => clearTimeout(aiTimer)
   }, [gameState])
 
+  // Add a safety timeout to prevent AI turn from freezing
+  useEffect(() => {
+    if (!gameState || gameState.currentTurn !== "opponent" || gameState.gameStatus !== "playing") {
+      return
+    }
+
+    // Add a timeout to force-end AI turn if it's taking too long
+    const safetyTimer = setTimeout(() => {
+      if (gameState.currentTurn === "opponent") {
+        console.error("AI turn safety timeout triggered - AI turn was taking too long")
+
+        // Force end the AI turn and clear any pending effects
+        setIsAIThinking(false)
+        setAnimationQueue([])
+        setIsAnimating(false)
+
+        // Reset animation states
+        setAiPlayingCardId(null)
+        setShowAiCardAnimation(false)
+        setNewOpponentFieldCardId(null)
+        setAiDrawingCards(false)
+        setAiDiscardingCards(false)
+
+        // Create a safe state without any pending effects
+        const safeState = {
+          ...gameState,
+          currentTurn: "player",
+          pendingEffect: null,
+          message: "Your turn. AI action was interrupted.",
+        }
+
+        setGameState(safeState)
+      }
+    }, 8000) // 8 second timeout
+
+    return () => clearTimeout(safetyTimer)
+  }, [gameState])
+
   // Add this effect to handle the squirrel, tuna, and turtle effects
   // Add this with the other useEffect hooks that check for pending effects
   useEffect(() => {
