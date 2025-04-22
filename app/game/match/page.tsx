@@ -1082,8 +1082,8 @@ export default function OriginalGameMatch() {
   useEffect(() => {
     if (!gameState || !gameState.pendingEffect) return
 
-    // Check if we have a pending effect
-    if (gameState.pendingEffect.type === "crab" && gameState.pendingEffect.forPlayer) {
+    // Check if we have a pending effect that belongs to the player
+    if (gameState.pendingEffect.type === "crab" && gameState.pendingEffect.forPlayer === true) {
       setShowCrabModal(true)
     }
   }, [gameState])
