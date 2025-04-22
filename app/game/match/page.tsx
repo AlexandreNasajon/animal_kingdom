@@ -247,6 +247,11 @@ export default function OriginalGameMatch() {
   // Add a state to track animation errors
   const [animationError, setAnimationError] = useState<string | null>(null)
 
+  // Add these state variables to track AI drawing and discarding
+  const [aiDrawing, setAiDrawing] = useState(false)
+  const [aiDrawCount, setAiDrawCount] = useState(0)
+  const [aiDiscarding, setAiDiscarding] = useState(false)
+
   // Add a global error recovery function
   const recoverFromError = useCallback(() => {
     // Reset all animation and modal states
@@ -2787,6 +2792,10 @@ export default function OriginalGameMatch() {
             cardCount={gameState.opponentHand.length}
             isThinking={isAIThinking}
             playingCardId={aiPlayingCardId}
+            aiDrawingCards={aiDrawingCards}
+            aiDiscardingCards={aiDiscardingCards}
+            aiDrawnCardCount={aiDrawnCardCount}
+            aiDiscardedCardIds={aiDiscardedCardIds}
           />
         </div>
 

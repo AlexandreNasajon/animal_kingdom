@@ -791,40 +791,6 @@ export function resolveAnimalEffect(state: GameState, targetIndex: number | numb
         }
       }
 
-    case "wolf":
-      // If your opponent has 5 or fewer cards in hand, send 1 terrestrial animal they control to their hand
-      if (forPlayer) {
-        const targetCard = state.opponentField[targetIndex as number]
-        if (!targetCard || targetCard.environment !== "terrestrial") return state
-
-        const newOpponentField = [...state.opponentField]
-        newOpponentField.splice(targetIndex as number, 1)
-
-        return {
-          ...state,
-          opponentField: newOpponentField,
-          opponentHand: [...state.opponentHand, targetCard],
-          opponentPoints: state.opponentPoints - (targetCard.points || 0),
-          pendingEffect: null,
-          message: `You sent ${targetCard.name} back to your opponent's hand.`,
-        }
-      } else {
-        const targetCard = state.playerField[targetIndex as number]
-        if (!targetCard || targetCard.environment !== "terrestrial") return state
-
-        const newPlayerField = [...state.playerField]
-        newPlayerField.splice(targetIndex as number, 1)
-
-        return {
-          ...state,
-          playerField: newPlayerField,
-          playerHand: [...state.playerHand, targetCard],
-          playerPoints: state.playerPoints - (targetCard.points || 0),
-          pendingEffect: null,
-          message: `AI sent ${targetCard.name} back to your hand.`,
-        }
-      }
-
     case "crocodile":
       // Send 1 animal of 3 or fewer points your opponent controls to deck bottom
       if (forPlayer) {
@@ -856,6 +822,40 @@ export function resolveAnimalEffect(state: GameState, targetIndex: number | numb
           sharedDeck: [...state.sharedDeck, targetCard],
           pendingEffect: null,
           message: `AI sent ${targetCard.name} to the bottom of the deck.`,
+        }
+      }
+
+    case "wolf":
+      // If your opponent has 5 or fewer cards in hand, send 1 terrestrial animal they control to their hand
+      if (forPlayer) {
+        const targetCard = state.opponentField[targetIndex as number]
+        if (!targetCard || targetCard.environment !== "terrestrial") return state
+
+        const newOpponentField = [...state.opponentField]
+        newOpponentField.splice(targetIndex as number, 1)
+
+        return {
+          ...state,
+          opponentField: newOpponentField,
+          opponentHand: [...state.opponentHand, targetCard],
+          opponentPoints: state.opponentPoints - (targetCard.points || 0),
+          pendingEffect: null,
+          message: `You sent ${targetCard.name} back to your opponent's hand.`,
+        }
+      } else {
+        const targetCard = state.playerField[targetIndex as number]
+        if (!targetCard || targetCard.environment !== "terrestrial") return state
+
+        const newPlayerField = [...state.playerField]
+        newPlayerField.splice(targetIndex as number, 1)
+
+        return {
+          ...state,
+          playerField: newPlayerField,
+          playerHand: [...state.playerHand, targetCard],
+          playerPoints: state.playerPoints - (targetCard.points || 0),
+          pendingEffect: null,
+          message: `AI sent ${targetCard.name} back to your hand.`,
         }
       }
 
@@ -964,6 +964,8 @@ export function updateGameStateEndOfTurn(state: GameState): GameState {
     opponentCardsDrawn: 0,
     playerExtraDraws: 0,
     opponentExtraDraws: 0,
+    playerExtraPlays: 0,
+    opponentExtraPlays: 0,
     limitInEffect: false,
     droughtInEffect: false,
   }

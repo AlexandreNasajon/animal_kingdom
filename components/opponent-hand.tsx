@@ -1,65 +1,179 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 
 interface OpponentHandProps {
   cardCount: number
   isThinking: boolean
-  playingCardId?: number // ID of card being played
+  playingCardId: number | null
+  aiDrawingCards: boolean
+  aiDiscardingCards: boolean | number[]
+  aiDrawnCardCount: number
+  aiDiscardedCardIds: number[]
 }
 
-export function OpponentHand({ cardCount, isThinking, playingCardId }: OpponentHandProps) {
-  const [animatedIndex, setAnimatedIndex] = useState<number | null>(null)
+export function OpponentHand({
+  cardCount,
+  isThinking,
+  playingCardId,
+  aiDrawingCards,
+  aiDiscardingCards,
+  aiDrawnCardCount,
+  aiDiscardedCardIds,
+}: OpponentHandProps) {
+  const [animatingCards, setAnimatingCards] = useState<number[]>([])
 
-  // Set up animation for playing card
+  // Set up animation for AI drawing cards
   useEffect(() => {
-    if (playingCardId !== undefined) {
-      // For simplicity, we'll just animate the first card
-      setAnimatedIndex(0)
+    if (aiDrawingCards && aiDrawnCardCount > 0) {
+      // Create animation card IDs
+      const newAnimatingCards = Array.from({ length: aiDrawnCardCount }, (_, i) => i + 1)
+      setAnimatingCards(newAnimatingCards)
 
-      // Clear animation class after animation completes
+      // Clean up animation after it completes
       const timer = setTimeout(() => {
-        setAnimatedIndex(null)
-      }, 800)
+        setAnimatingCards([])
+      }, 1000)
 
       return () => clearTimeout(timer)
     }
-  }, [playingCardId])
+  }, [aiDrawingCards, aiDrawnCardCount])
+
+  // Calculate a fan-like spread for the cards
+  const getCardStyles = (index: number, total: number) => {
+    const maxRotation = 6
+    const maxTranslateY = 5
+
+    // Calculate rotation and position based on position in hand
+    const middleIndex = (total - 1) / 2
+    const offset = index - middleIndex
+    const rotation = (offset / middleIndex) * maxRotation
+    const translateY = Math.abs(offset) * maxTranslateY
+
+    return {
+      transform: `rotate(${rotation}deg) translateY(${translateY}px)`,
+      zIndex: total - Math.abs(offset),
+    }
+  }
 
   return (
-    <div className="flex items-center justify-center p-1 pb-0">
-      <div className="flex justify-center">
-        {Array.from({ length: cardCount }).map((_, index) => (
-          <div
-            key={index}
-            className={`relative transform transition-all ${index === playingCardId ? "animate-play-card" : ""}`}
-            style={{
-              marginLeft:
-                index > 0 ? (typeof window !== "undefined" && window.innerWidth < 640 ? "-40px" : "-25px") : "0",
-              zIndex: index,
-            }}
-          >
-            <Card className="h-[70px] w-[50px] sm:h-[80px] sm:w-[55px] border-2 border-red-700 bg-red-900 shadow-md relative overflow-hidden">
-              <div className="absolute inset-0 border-4 border-transparent bg-gradient-to-br from-red-800/20 to-black/30 pointer-events-none"></div>
-              <div className="absolute inset-0 border border-red-400/10 rounded-sm pointer-events-none"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="card-back-pattern"></div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="h-6 w-6 rounded-full border-2 border-red-400 flex items-center justify-center">
-                    <span className="text-xs font-bold text-red-400">AI</span>
+    <div className="w-full relative">
+      {/* AI hand display with better animations */}
+      <div className="flex items-center justify-center relative h-[40px] sm:h-[50px]">
+        <div className="flex justify-center items-center gap-0.5 relative">
+          {[...Array(cardCount)].map((_, i) => {
+            // Determine if this is a card being played
+            const isPlayingCard = playingCardId !== null && i === cardCount - 1
+
+            return (
+              <Card
+                key={`opponent-card-${i}`}
+                className={`h-[40px] w-[24px] sm:h-[50px] sm:w-[30px] border border-red-800 bg-green-950 shadow-md rounded-sm transition-all duration-300 overflow-hidden ${
+                  isPlayingCard ? "animate-card-play" : ""
+                }`}
+                style={getCardStyles(i, cardCount)}
+              >
+                {/* Card back pattern */}
+                <div className="h-full w-full bg-gradient-to-br from-green-900 to-green-950">
+                  <div className="h-full w-full flex items-center justify-center">
+                    <div className="h-[80%] w-[80%] border border-green-500/30 rounded-sm"></div>
                   </div>
                 </div>
+              </Card>
+            )
+          })}
+
+          {/* AI's thinking indicator */}
+          {isThinking && (
+            <div className="absolute top-[-20px] left-1/2 transform -translate-x-1/2 text-xs text-yellow-300">
+              <div className="flex gap-1 items-center">
+                <span className="animate-pulse">●</span>
+                <span className="animate-pulse delay-100">●</span>
+                <span className="animate-pulse delay-200">●</span>
               </div>
-            </Card>
-          </div>
-        ))}
-      </div>
-      {isThinking && (
-        <div className="absolute right-2 top-2 flex items-center justify-center">
-          <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-t-2 border-red-500"></div>
+            </div>
+          )}
+
+          {/* Animated AI drawing cards */}
+          {aiDrawingCards && animatingCards.length > 0 && (
+            <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+              {animatingCards.map((id) => (
+                <div
+                  key={`draw-anim-${id}`}
+                  className="absolute top-[-100px] left-1/2 transform -translate-x-1/2 h-[40px] w-[24px] sm:h-[50px] sm:w-[30px] border border-red-800 bg-green-950 rounded-sm"
+                  style={{
+                    animation: `ai-draw-card 1s forwards ${id * 0.2}s`,
+                    boxShadow: "0 0 10px rgba(0, 255, 0, 0.3)",
+                    zIndex: 50 + id,
+                  }}
+                >
+                  <div className="h-full w-full bg-gradient-to-br from-green-900 to-green-950">
+                    <div className="h-full w-full flex items-center justify-center">
+                      <div className="h-[80%] w-[80%] border border-green-500/30 rounded-sm"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* AI discarding cards animation */}
+          {aiDiscardingCards && aiDiscardedCardIds.length > 0 && (
+            <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+              {aiDiscardedCardIds.map((id, index) => (
+                <div
+                  key={`discard-anim-${id}`}
+                  className="absolute top-0 left-1/2 transform -translate-x-1/2 h-[40px] w-[24px] sm:h-[50px] sm:w-[30px] border border-red-800 bg-green-950 rounded-sm"
+                  style={{
+                    animation: `ai-discard-card 1s forwards ${index * 0.2}s`,
+                    boxShadow: "0 0 10px rgba(255, 0, 0, 0.3)",
+                    zIndex: 50 + index,
+                  }}
+                >
+                  <div className="h-full w-full bg-gradient-to-br from-green-900 to-green-950">
+                    <div className="h-full w-full flex items-center justify-center">
+                      <div className="h-[80%] w-[80%] border border-green-500/30 rounded-sm"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </div>
+
+      {/* Add the new animations */}
+      <style jsx global>{`
+        @keyframes ai-draw-card {
+          0% {
+            opacity: 0;
+            transform: translate(-50%, -100px) scale(1.5) rotate(10deg);
+          }
+          70% {
+            opacity: 1;
+            transform: translate(-50%, 0) scale(1.2) rotate(-5deg);
+          }
+          85% {
+            transform: translate(-50%, -10px) scale(1.1) rotate(2deg);
+          }
+          100% {
+            opacity: 1;
+            transform: translate(-50%, 0) scale(1) rotate(0);
+          }
+        }
+        
+        @keyframes ai-discard-card {
+          0% {
+            opacity: 1;
+            transform: translate(-50%, 0) rotate(0);
+          }
+          100% {
+            opacity: 0;
+            transform: translate(-50%, 100px) rotate(15deg);
+          }
+        }
+      `}</style>
     </div>
   )
 }
