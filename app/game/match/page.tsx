@@ -2646,6 +2646,35 @@ export default function OriginalGameMatch() {
                 }
               }
             }
+            // Find the section in handleTargetConfirm that handles the "epidemic" effect
+            // Inside the handleTargetConfirm function, in the try block, add this case for epidemic:
+            if (type === "epidemic") {
+              const idx = targetIndex as number
+              if (idx >= 0 && idx < gameState.playerField.length) {
+                const selectedCard = gameState.playerField[idx]
+                if (selectedCard && selectedCard.environment) {
+                  // Find all cards with the same environment (including the selected card)
+                  const cardsToRemove = gameState.playerField.filter(
+                    (card) =>
+                      card.environment === selectedCard.environment ||
+                      (selectedCard.environment === "amphibian" &&
+                        (card.environment === "terrestrial" || card.environment === "aquatic")) ||
+                      (card.environment === "amphibian" &&
+                        (selectedCard.environment === "terrestrial" || selectedCard.environment === "aquatic")),
+                  )
+
+                  // Animate each card being sent to the deck bottom
+                  cardsToRemove.forEach((card) => {
+                    if (card && card.id) {
+                      const cardElement = document.querySelector(`[data-card-id="${card.id}"]`)
+                      if (cardElement instanceof HTMLElement && deckPileRef.current) {
+                        createCardToDeckAnimation(card, cardElement, deckPileRef.current)
+                      }
+                    }
+                  })
+                }
+              }
+            }
           }
 
           // Delay the effect resolution to allow animation to complete
