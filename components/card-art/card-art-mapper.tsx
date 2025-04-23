@@ -35,6 +35,14 @@ import { JellyfishArt } from "./animal-arts/jellyfish-art"
 import { TurtleArt } from "./animal-arts/turtle-art"
 import { StingrayArt } from "./animal-arts/stingray-art"
 import { SharkArt } from "./animal-arts/shark-art"
+import { FloodArt } from "./impact-arts/flood-art"
+import { StormArt } from "./impact-arts/storm-art"
+import { DroughtArt } from "./impact-arts/drought-art"
+import { ReleaseArt } from "./impact-arts/release-art"
+import { TrapArt } from "./impact-arts/trap-art"
+import { CageArt } from "./impact-arts/cage-art"
+import { LimitArt } from "./impact-arts/limit-art"
+import { FlourishArt } from "./impact-arts/flourish-art"
 
 export function getCardArt(card: GameCard) {
   // Handle undefined or null card
@@ -86,6 +94,30 @@ export function getCardArt(card: GameCard) {
   }
   if (card.name === "Earthquake") {
     return <EarthquakeArt />
+  }
+  if (card.name === "Flood") {
+    return <FloodArt />
+  }
+  if (card.name === "Storm") {
+    return <StormArt />
+  }
+  if (card.name === "Drought") {
+    return <DroughtArt />
+  }
+  if (card.name === "Release") {
+    return <ReleaseArt />
+  }
+  if (card.name === "Trap") {
+    return <TrapArt />
+  }
+  if (card.name === "Cage") {
+    return <CageArt />
+  }
+  if (card.name === "Limit") {
+    return <LimitArt />
+  }
+  if (card.name === "Flourish") {
+    return <FlourishArt />
   }
 
   // Animal cards - Terrestrial

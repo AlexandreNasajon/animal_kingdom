@@ -139,9 +139,13 @@ export function applyAnimalEffect(state: GameState, card: GameCard, forPlayer: b
             type: "zebra",
             forPlayer,
           },
+          message: `${forPlayer ? "You" : "AI"} played Zebra and can look at your opponent's hand.`,
         }
       }
-      return state
+      return {
+        ...state,
+        message: `${forPlayer ? "You" : "AI"} played Zebra, but your opponent has no cards in hand.`,
+      }
 
     case "Deer":
       // If you have 7 or more points, your opponent discards 1 card at random
@@ -297,8 +301,8 @@ export function applyAnimalEffect(state: GameState, card: GameCard, forPlayer: b
         ? state.effectsThisTurn.playerAnimalsPlayed
         : state.effectsThisTurn.opponentAnimalsPlayed
 
-      // Only draw 1 card if this is the only animal played this turn
-      const cardsToDrawBase = animalsPlayed === 1 ? 1 : animalsPlayed
+      // Draw cards equal to the number of animals played this turn (including this one)
+      const cardsToDrawBase = animalsPlayed
 
       if (cardsToDrawBase > 0 && state.sharedDeck.length > 0) {
         const maxDraw = Math.min(cardsToDrawBase, state.sharedDeck.length)
@@ -351,6 +355,43 @@ export function applyAnimalEffect(state: GameState, card: GameCard, forPlayer: b
 
     case "Jellyfish":
       // Draw 1 card
+      if (state.sharedDeck.length > 0) {
+        const drawnCard = state.sharedDeck[0]
+        const newDeck = state.sharedDeck.slice(1)
+
+        if (forPlayer) {
+          // Check if player's hand would exceed 6 cards
+          if (state.playerHand.length >= 6) {
+            return {
+              ...state,
+              message: `${forPlayer ? "You" : "AI"} played Jellyfish but your hand is full.`,
+            }
+          }
+
+          return {
+            ...state,
+            playerHand: [...state.playerHand, drawnCard],
+            sharedDeck: newDeck,
+            message: `${forPlayer ? "You" : "AI"} played Jellyfish and drew a card.`,
+          }
+        } else {
+          // Check if AI's hand would exceed 6 cards
+          if (state.opponentHand.length >= 6) {
+            return {
+              ...state,
+              message: `${forPlayer ? "You" : "AI"} played Jellyfish but your hand is full.`,
+            }
+          }
+
+          return {
+            ...state,
+            opponentHand: [...state.opponentHand, drawnCard],
+            sharedDeck: newDeck,
+            message: `${forPlayer ? "You" : "AI"} played Jellyfish and drew a card.`,
+          }
+        }
+      }
+      return state
       if (state.sharedDeck.length > 0) {
         const drawnCard = state.sharedDeck[0]
         const newDeck = state.sharedDeck.slice(1)
@@ -468,10 +509,15 @@ export function applyAnimalEffect(state: GameState, card: GameCard, forPlayer: b
           pendingEffect: {
             type: "octopus",
             forPlayer,
+            topCards,
           },
+          message: `${forPlayer ? "You" : "AI"} played Octopus and can look at the top ${topCards.length} cards of the deck.`,
         }
       }
-      return state
+      return {
+        ...state,
+        message: `${forPlayer ? "You" : "AI"} played Octopus, but there are no cards in the deck.`,
+      }
 
     case "Stingray":
       // If you have 7 or more points, draw 1 card
@@ -586,7 +632,9 @@ export function applyAnimalEffect(state: GameState, card: GameCard, forPlayer: b
           pendingEffect: {
             type: "crab",
             forPlayer,
+            topCards: state.sharedDeck.slice(0, 2),
           },
+          message: `${forPlayer ? "You" : "AI"} played Crab and can look at the top 2 cards of the deck.`,
         }
       } else if (state.sharedDeck.length === 1) {
         // If there's only 1 card, just draw it
@@ -757,6 +805,38 @@ export function resolveAnimalEffect(state: GameState, targetIndex: number | numb
         }
       }
 
+    case "squirrel":
+      // Look at your opponent's hand and select a card to be discarded
+      if (forPlayer) {
+        const targetCard = state.opponentHand[targetIndex as number]
+        if (!targetCard) return state
+
+        const newOpponentHand = [...state.opponentHand]
+        newOpponentHand.splice(targetIndex as number, 1)
+
+        return {
+          ...state,
+          opponentHand: newOpponentHand,
+          sharedDiscard: [...state.sharedDiscard, targetCard],
+          pendingEffect: null,
+          message: `You made your opponent discard ${targetCard.name}.`,
+        }
+      } else {
+        const targetCard = state.playerHand[targetIndex as number]
+        if (!targetCard) return state
+
+        const newPlayerHand = [...state.playerHand]
+        newPlayerHand.splice(targetIndex as number, 1)
+
+        return {
+          ...state,
+          playerHand: newPlayerHand,
+          sharedDiscard: [...state.sharedDiscard, targetCard],
+          pendingEffect: null,
+          message: `AI made you discard ${targetCard.name}.`,
+        }
+      }
+
     case "snake":
       // Destroy an animal of 1 point your opponent controls
       if (forPlayer) {
@@ -789,6 +869,15 @@ export function resolveAnimalEffect(state: GameState, targetIndex: number | numb
           pendingEffect: null,
           message: `AI destroyed ${targetCard.name}.`,
         }
+      }
+
+    case "zebra":
+      // Look at your opponent's hand
+      // Just return state with pendingEffect set to null since we're just looking
+      return {
+        ...state,
+        pendingEffect: null,
+        message: `${forPlayer ? "You" : "AI"} looked at your opponent's hand.`,
       }
 
     case "crocodile":
@@ -922,8 +1011,8 @@ export function resolveAnimalEffect(state: GameState, targetIndex: number | numb
     case "octopus":
       // Look at the top 3 cards of the deck and rearrange them
       if (Array.isArray(targetIndex) && targetIndex.length > 0) {
-        const topCards = state.sharedDeck.slice(0, Math.min(3, state.sharedDeck.length))
-        const restOfDeck = state.sharedDeck.slice(Math.min(3, state.sharedDeck.length))
+        const topCards = state.pendingEffect.topCards || []
+        const restOfDeck = state.sharedDeck.slice(topCards.length)
 
         // Rearrange the top cards based on the selected order
         const rearrangedCards: GameCard[] = []
@@ -945,6 +1034,114 @@ export function resolveAnimalEffect(state: GameState, targetIndex: number | numb
           sharedDeck: [...rearrangedCards, ...restOfDeck],
           pendingEffect: null,
           message: `${forPlayer ? "You" : "AI"} looked at the top ${topCards.length} cards of the deck and rearranged them.`,
+        }
+      }
+      return {
+        ...state,
+        pendingEffect: null,
+        message: `${forPlayer ? "You" : "AI"} looked at the top cards of the deck.`,
+      }
+
+    case "crab":
+      // Look at the top 2 cards: add 1 to hand and send the other to deck bottom
+      if (typeof targetIndex === "number") {
+        const topCards = state.pendingEffect.topCards || []
+        if (topCards.length < 2 || targetIndex >= topCards.length) return state
+
+        const cardToHand = topCards[targetIndex]
+        const cardToBottom = topCards[targetIndex === 0 ? 1 : 0]
+        const restOfDeck = state.sharedDeck.slice(2)
+
+        if (forPlayer) {
+          // Check if player's hand would exceed 6 cards
+          if (state.playerHand.length >= 6) {
+            return {
+              ...state,
+              sharedDeck: [...restOfDeck, cardToHand, cardToBottom],
+              pendingEffect: null,
+              message: `Your hand is full, so both cards were sent to the bottom of the deck.`,
+            }
+          }
+
+          return {
+            ...state,
+            playerHand: [...state.playerHand, cardToHand],
+            sharedDeck: [...restOfDeck, cardToBottom],
+            pendingEffect: null,
+            message: `You added ${cardToHand.name} to your hand and sent ${cardToBottom.name} to the bottom of the deck.`,
+          }
+        } else {
+          // Check if AI's hand would exceed 6 cards
+          if (state.opponentHand.length >= 6) {
+            return {
+              ...state,
+              sharedDeck: [...restOfDeck, cardToHand, cardToBottom],
+              pendingEffect: null,
+              message: `AI's hand is full, so both cards were sent to the bottom of the deck.`,
+            }
+          }
+
+          return {
+            ...state,
+            opponentHand: [...state.opponentHand, cardToHand],
+            sharedDeck: [...restOfDeck, cardToBottom],
+            pendingEffect: null,
+            message: `AI added a card to their hand and sent the other to the bottom of the deck.`,
+          }
+        }
+      }
+      return state
+
+    case "tuna":
+      // Play an aquatic animal of 3 or fewer points from hand
+      if (forPlayer) {
+        const targetCard = state.playerHand[targetIndex as number]
+        if (
+          !targetCard ||
+          targetCard.type !== "animal" ||
+          (targetCard.environment !== "aquatic" && targetCard.environment !== "amphibian") ||
+          (targetCard.points || 0) > 3
+        ) {
+          return state
+        }
+
+        const newPlayerHand = [...state.playerHand]
+        newPlayerHand.splice(targetIndex as number, 1)
+
+        return {
+          ...state,
+          playerHand: newPlayerHand,
+          playerField: [...state.playerField, targetCard],
+          playerPoints: state.playerPoints + (targetCard.points || 0),
+          pendingEffect: null,
+          message: `You played ${targetCard.name} from your hand.`,
+        }
+      }
+      return state
+
+    case "turtle":
+      // Play an aquatic animal of 2 or fewer points from hand
+      if (forPlayer) {
+        const targetCard = state.playerHand[targetIndex as number]
+        if (
+          !targetCard ||
+          targetCard.type !== "animal" ||
+          (targetCard.environment !== "aquatic" && targetCard.environment !== "amphibian") ||
+          (targetCard.points || 0) > 2
+        ) {
+          return state
+        }
+
+        const newPlayerHand = [...state.playerHand]
+        newPlayerHand.splice(targetIndex as number, 1)
+
+        return {
+          ...state,
+          playerHand: newPlayerHand,
+          playerField: [...state.playerField, targetCard],
+          playerPoints: state.playerPoints + (targetCard.points || 0),
+          pendingEffect: null,
+          message: `You played ${targetCard.name} from your hand.`,
         }
       }
       return state

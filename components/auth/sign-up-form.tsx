@@ -5,7 +5,6 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
-import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { AlertCircle, CheckCircle, Loader2 } from "lucide-react"
 
@@ -65,12 +64,12 @@ export function SignUpForm({ onSuccess, showLinks = true }: SignUpFormProps) {
         {showLinks && (
           <div className="flex gap-4 justify-center">
             <Link href="/auth/sign-in">
-              <Button variant="outline" className="border-green-600 hover:bg-green-700/50 text-white">
+              <button variant="outline" className="menu-button !bg-transparent !text-white">
                 Sign In
-              </Button>
+              </button>
             </Link>
             <Link href="/">
-              <Button className="bg-green-700 hover:bg-green-600 text-white">Return to Main Menu</Button>
+              <button className="menu-button">Return to Main Menu</button>
             </Link>
           </div>
         )}
@@ -130,11 +129,7 @@ export function SignUpForm({ onSuccess, showLinks = true }: SignUpFormProps) {
         )}
 
         <div className="pt-2">
-          <Button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-green-700 hover:bg-green-600 text-white flex items-center justify-center"
-          >
+          <button type="submit" className="menu-button w-full" disabled={isLoading}>
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -143,7 +138,7 @@ export function SignUpForm({ onSuccess, showLinks = true }: SignUpFormProps) {
             ) : (
               "Sign Up"
             )}
-          </Button>
+          </button>
         </div>
       </form>
 
@@ -151,8 +146,8 @@ export function SignUpForm({ onSuccess, showLinks = true }: SignUpFormProps) {
         <div className="mt-4 text-center">
           <p className="text-green-300">
             Already have an account?{" "}
-            <Link href="/auth/sign-in" className="text-green-400 hover:underline">
-              Sign In
+            <Link href="/auth/sign-in" className="text-[#005803] font-bold hover:underline">
+              Sign in
             </Link>
           </p>
         </div>

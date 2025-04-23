@@ -5,9 +5,8 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
-import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { AlertCircle, Loader2, Mail } from "lucide-react"
+import { AlertCircle, Mail } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { ensureUserRegistered } from "@/lib/utils"
 
@@ -104,20 +103,9 @@ export function SignInForm({ onSuccess, showLinks = true }: SignInFormProps) {
         )}
 
         <div className="pt-2">
-          <Button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-green-700 hover:bg-green-600 text-white flex items-center justify-center"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Signing In...
-              </>
-            ) : (
-              "Sign In"
-            )}
-          </Button>
+          <button type="submit" className="menu-button w-full" disabled={isLoading}>
+            {isLoading ? "Signing in..." : "Sign In"}
+          </button>
         </div>
       </form>
 
@@ -126,8 +114,8 @@ export function SignInForm({ onSuccess, showLinks = true }: SignInFormProps) {
           <div className="mt-4 text-center">
             <p className="text-green-300">
               Don't have an account?{" "}
-              <Link href="/auth/sign-up" className="text-green-400 hover:underline">
-                Sign Up
+              <Link href="/auth/sign-up" className="text-[#005803] font-bold hover:underline">
+                Sign up
               </Link>
             </p>
           </div>
@@ -137,16 +125,15 @@ export function SignInForm({ onSuccess, showLinks = true }: SignInFormProps) {
               <Mail className="inline-block mr-1 h-4 w-4" />
               Didn't receive verification email?
             </p>
-            <Button
-              variant="outline"
-              className="text-sm border-green-600 hover:bg-green-700/50 text-white"
+            <button
+              className="menu-button-outline text-sm"
               onClick={() => {
                 // This would typically trigger a resend verification email function
                 alert("Verification email resend functionality would go here")
               }}
             >
               Resend Verification Email
-            </Button>
+            </button>
           </div>
         </>
       )}
