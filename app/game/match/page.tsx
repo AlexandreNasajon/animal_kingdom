@@ -1339,6 +1339,9 @@ export default function OriginalGameMatch() {
   const handleZebraEffectClose = () => {
     if (!gameState || !gameState.pendingEffect) return
 
+    // Close the modal immediately to prevent UI freezing
+    setShowZebraModal(false)
+
     // Add the animation to the queue
     setAnimationQueue((prev) => [
       ...prev,
@@ -1356,7 +1359,6 @@ export default function OriginalGameMatch() {
 
           // End player's turn
           setGameState(endPlayerTurn(newState))
-          setShowZebraModal(false)
         } catch (error) {
           console.error("Zebra effect error:", error)
           // Clear the pending effect and continue
@@ -1365,7 +1367,6 @@ export default function OriginalGameMatch() {
             pendingEffect: null,
             message: "Zebra effect completed. Your turn ends.",
           })
-          setShowZebraModal(false)
         }
       },
     ])
@@ -2507,6 +2508,12 @@ export default function OriginalGameMatch() {
       return
     }
 
+    // Special handling for Octopus effect
+    if (gameState.pendingEffect.type === "octopus" && Array.isArray(targetIndex)) {
+      handleOctopusSelection(targetIndex)
+      return
+    }
+
     // Add the animation to the queue
     setAnimationQueue((prev) => [
       ...prev,
@@ -2664,7 +2671,7 @@ export default function OriginalGameMatch() {
                       card.environment === selectedCard.environment ||
                       (selectedCard.environment === "amphibian" &&
                         (card.environment === "terrestrial" || card.environment === "aquatic")) ||
-                      (card.environment === "amphibian" &&
+                      (selectedCard.environment === "amphibian" &&
                         (selectedCard.environment === "terrestrial" || selectedCard.environment === "aquatic")),
                   )
 
@@ -2740,6 +2747,62 @@ export default function OriginalGameMatch() {
   // Handle animation error dismissal
   const handleDismissError = () => {
     setAnimationError(null)
+  }
+
+  // Add a new function to handle Octopus effect specifically
+  // Add this after the other handler functions
+  const handleOctopusSelection = (selectedIndices: number[]) => {
+    if (!gameState || !gameState.pendingEffect || gameState.pendingEffect.type !== "octopus") return
+
+    // Close the modal immediately to prevent UI freezing
+    setShowTargetModal(false)
+
+    // Add the animation to the queue
+    setAnimationQueue((prev) => [
+      ...prev,
+      async () => {
+        try {
+          const topCards = gameState.sharedDeck.slice(0, Math.min(3, gameState.sharedDeck.length))
+          const restOfDeck = gameState.sharedDeck.slice(topCards.length)
+
+          // Rearrange the top cards based on the selected order
+          const rearrangedCards: GameCard[] = []
+          for (const idx of selectedIndices) {
+            if (idx >= 0 && idx < topCards.length) {
+              rearrangedCards.push(topCards[idx])
+            }
+          }
+
+          // Add any cards that weren't selected
+          for (let i = 0; i < topCards.length; i++) {
+            if (!selectedIndices.includes(i)) {
+              rearrangedCards.push(topCards[i])
+            }
+          }
+
+          const newState = {
+            ...gameState,
+            sharedDeck: [...rearrangedCards, ...restOfDeck],
+            pendingEffect: null,
+            message: `You looked at the top ${topCards.length} cards of the deck and rearranged them.`,
+          }
+
+          // Log the effect resolution
+          console.log(newState.message)
+
+          // End player's turn
+          setGameState(endPlayerTurn(newState))
+        } catch (error) {
+          console.error("Octopus effect error:", error)
+          // Clear the pending effect and continue
+          setGameState({
+            ...gameState,
+            pendingEffect: null,
+            message: "Octopus effect completed. Your turn ends.",
+          })
+        }
+      },
+    ])
   }
 
   if (!gameState) {
@@ -3157,17 +3220,19 @@ export default function OriginalGameMatch() {
         />
       )}
 
+      {/* Find the section where we render the Zebra effect modal and replace it with this: */}
       {/* Zebra effect modal */}
       {showZebraModal && gameState && (
         <TargetSelectionModal
           open={showZebraModal}
           onClose={handleZebraEffectClose}
           cards={gameState.opponentHand}
-          onConfirm={() => {}}
+          onConfirm={handleZebraEffectClose}
           title="Opponent's Hand"
           description="You can see your opponent's hand. Click Close when done."
           filter={undefined}
           playerCardIndices={[]}
+          actionText="Done"
         />
       )}
 

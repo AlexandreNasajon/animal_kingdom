@@ -1,5 +1,5 @@
 import type { GameCard, GameState } from "@/types/game"
-import { ADVANCED_DECK } from "@/types/advanced-deck"
+import { ORIGINAL_DECK } from "@/types/original-deck"
 // Import the applyAnimalEffect function from game-effects
 import { applyAnimalEffect, updateGameStateEndOfTurn, resolveAnimalEffect } from "./game-effects"
 
@@ -15,18 +15,18 @@ export function shuffleArray<T>(array: T[]): T[] {
 
 // Get all cards for the deck
 export function getAllCards(): GameCard[] {
-  return ADVANCED_DECK
+  return ORIGINAL_DECK
 }
 
 // Get the appropriate deck based on the deck ID
 export function getDeckById(deckId = 1): GameCard[] {
-  return ADVANCED_DECK
+  return ORIGINAL_DECK
 }
 
-// Initialize a new game with the advanced deck
+// Initialize a new game with the original deck
 // Function to create a new game state
 export function createNewGameState(): GameState {
-  const shuffledDeck = shuffleDeck([...ADVANCED_DECK])
+  const shuffledDeck = shuffleDeck([...ORIGINAL_DECK])
 
   // Deal 5 cards to each player
   const player1Hand: GameCard[] = []
@@ -81,7 +81,7 @@ export function shuffleDeck(deck: GameCard[]): GameCard[] {
 }
 
 export function initializeGame(deckId = 1): GameState {
-  const deck = ADVANCED_DECK
+  const deck = ORIGINAL_DECK
   const shuffledDeck = shuffleArray(deck)
 
   // First player draws 5 cards

@@ -1,0 +1,39 @@
+/* Force scrollbar to always be visible ONLY on deck gallery pages */
+.deck-gallery-layout html,
+.deck-gallery-layout body,
+.deck-gallery-layout {
+  overflow-y: scroll !important;
+  scrollbar-width: auto !important;
+  scrollbar-color: #005803 #4eea53 !important;
+}
+
+/* WebKit browsers (Chrome, Safari, Edge) */
+.deck-gallery-layout::-webkit-scrollbar,
+.deck-gallery-layout *::-webkit-scrollbar {
+  width: 16px !important;
+  background-color: #4eea53 !important;
+}
+
+.deck-gallery-layout::-webkit-scrollbar-track,
+.deck-gallery-layout *::-webkit-scrollbar-track {
+  background-color: #4eea53 !important;
+  border-radius: 0 !important;
+}
+
+.deck-gallery-layout::-webkit-scrollbar-thumb,
+.deck-gallery-layout *::-webkit-scrollbar-thumb {
+  background-color: #005803 !important;
+  border: 3px solid #4eea53 !important;
+  border-radius: 8px !important;
+}
+
+.deck-gallery-layout::-webkit-scrollbar-thumb:hover,
+.deck-gallery-layout *::-webkit-scrollbar-thumb:hover {
+  background-color: #004702 !important;
+}
+
+/* Firefox */
+.deck-gallery-layout * {
+  scrollbar-width: auto !important;
+  scrollbar-color: #005803 #4eea53 !important;
+}

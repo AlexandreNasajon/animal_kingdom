@@ -22,8 +22,8 @@ export function GameCardTemplate({
   orderNumber,
   className = "",
 }: GameCardTemplateProps) {
-  // Get card type label based on card type and environment
-  const getCardTypeLabel = () => {
+  // Get environment label based on card environment - translated to English
+  const getEnvironmentLabel = () => {
     if (card.type === "impact") return "IMPACT"
 
     switch (card.environment) {
@@ -44,9 +44,9 @@ export function GameCardTemplate({
       case "xs":
         return {
           card: "h-[80px] w-[60px]",
-          points: "text-[8px] w-4 h-4",
-          typeLabel: "text-[6px] px-1",
-          name: "text-[7px] mb-0.5",
+          points: "text-[10px] font-bold",
+          typeLabel: "text-[6px] px-1 py-0.5",
+          name: "text-[6px] mb-0.5", // Reduced from text-[7px]
           art: "h-[30px]",
           effect: "text-[5px] mt-0.5 max-h-[15px]",
           border: selected ? "border-2" : "border",
@@ -54,9 +54,9 @@ export function GameCardTemplate({
       case "sm":
         return {
           card: "h-[120px] w-[90px]",
-          points: "text-[10px] w-5 h-5",
-          typeLabel: "text-[8px] px-1.5",
-          name: "text-[9px] mb-1",
+          points: "text-[14px] font-bold",
+          typeLabel: "text-[8px] px-1.5 py-0.5",
+          name: "text-[8px] mb-1", // Reduced from text-[9px]
           art: "h-[50px]",
           effect: "text-[7px] mt-1 max-h-[25px]",
           border: selected ? "border-2" : "border",
@@ -64,9 +64,9 @@ export function GameCardTemplate({
       case "md":
         return {
           card: "h-[160px] w-[120px]",
-          points: "text-xs w-6 h-6",
-          typeLabel: "text-[10px] px-2",
-          name: "text-xs mb-1",
+          points: "text-[18px] font-bold",
+          typeLabel: "text-[10px] px-2 py-0.5",
+          name: "text-[10px] mb-1", // Reduced from text-xs
           art: "h-[70px]",
           effect: "text-[9px] mt-1 max-h-[35px]",
           border: selected ? "border-3" : "border-2",
@@ -74,9 +74,9 @@ export function GameCardTemplate({
       case "lg":
         return {
           card: "h-[200px] w-[150px]",
-          points: "text-sm w-7 h-7",
-          typeLabel: "text-xs px-2",
-          name: "text-sm mb-1.5",
+          points: "text-[22px] font-bold",
+          typeLabel: "text-xs px-2 py-0.5",
+          name: "text-xs mb-1.5", // Reduced from text-sm
           art: "h-[90px]",
           effect: "text-[10px] mt-1.5 max-h-[45px]",
           border: selected ? "border-4" : "border-2",
@@ -84,9 +84,9 @@ export function GameCardTemplate({
       case "xl":
         return {
           card: "h-[280px] w-[210px]",
-          points: "text-base w-8 h-8",
-          typeLabel: "text-sm px-2.5",
-          name: "text-base mb-2",
+          points: "text-[30px] font-bold",
+          typeLabel: "text-sm px-2.5 py-0.5",
+          name: "text-sm mb-2", // Reduced from text-base
           art: "h-[130px]",
           effect: "text-xs mt-2 max-h-[60px]",
           border: selected ? "border-4" : "border-2",
@@ -94,9 +94,9 @@ export function GameCardTemplate({
       default:
         return {
           card: "h-[160px] w-[120px]",
-          points: "text-xs w-6 h-6",
-          typeLabel: "text-[10px] px-2",
-          name: "text-xs mb-1",
+          points: "text-[18px] font-bold",
+          typeLabel: "text-[10px] px-2 py-0.5",
+          name: "text-[10px] mb-1", // Reduced from text-xs
           art: "h-[70px]",
           effect: "text-[9px] mt-1 max-h-[35px]",
           border: selected ? "border-3" : "border-2",
@@ -107,99 +107,91 @@ export function GameCardTemplate({
   // Get background color based on card type and environment
   const getCardBackground = () => {
     if (card.type === "impact") {
-      return "bg-black"
+      return "bg-purple-700"
     }
 
     switch (card.environment) {
       case "aquatic":
-        return "bg-gradient-to-b from-blue-900 to-blue-700"
+        return "bg-blue-600"
       case "terrestrial":
-        return "bg-gradient-to-b from-red-900 to-red-700"
+        return "bg-red-600"
       case "amphibian":
-        return "bg-gradient-to-b from-green-900 to-green-700"
+        return "bg-green-600"
       default:
-        return "bg-gradient-to-b from-gray-900 to-gray-700"
+        return "bg-gray-600"
     }
   }
 
-  // Get type label background color
-  const getTypeLabelBackground = () => {
+  // Get name background color
+  const getNameBackground = () => {
     if (card.type === "impact") {
-      return "bg-black"
+      return "bg-purple-900/90"
     }
 
     switch (card.environment) {
       case "aquatic":
-        return "bg-blue-800"
+        return "bg-blue-900/90"
       case "terrestrial":
-        return "bg-red-800"
+        return "bg-red-900/90"
       case "amphibian":
-        return "bg-green-800"
+        return "bg-green-900/90"
       default:
-        return "bg-gray-800"
+        return "bg-gray-900/90"
+    }
+  }
+
+  // Get effect background color
+  const getEffectBackground = () => {
+    if (card.type === "impact") {
+      return "bg-purple-900/90"
+    }
+
+    switch (card.environment) {
+      case "terrestrial":
+        return "bg-red-900/90"
+      default:
+        return "bg-blue-900/90"
     }
   }
 
   const styles = getSizeStyles()
   const cardBackground = getCardBackground()
-  const typeLabelBackground = getTypeLabelBackground()
-  const typeLabel = getCardTypeLabel()
-
-  // Get smaller font size for specific cards with longer text
-  const getEffectFontSize = () => {
-    if (card.name && ["crocodile", "shark", "lion"].includes(card.name.toLowerCase())) {
-      switch (size) {
-        case "xs":
-          return "text-[4px]"
-        case "sm":
-          return "text-[6px]"
-        case "md":
-          return "text-[8px]"
-        case "lg":
-          return "text-[9px]"
-        case "xl":
-          return "text-[11px]"
-        default:
-          return "text-[8px]"
-      }
-    }
-    return styles.effect
-  }
+  const nameBackground = getNameBackground()
+  const effectBackground = getEffectBackground()
+  const environmentLabel = getEnvironmentLabel()
 
   return (
     <Card
       className={`${styles.card} ${styles.border} border-black ${selected ? "ring-2 ring-yellow-500 scale-105" : ""} ${
         disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:scale-105"
-      } transition-all relative overflow-hidden shadow-lg ${className}`}
+      } transition-all relative overflow-hidden shadow-lg ${className} rounded-xl`}
       onClick={disabled ? undefined : onClick}
     >
       {/* Black border frame */}
-      <div className={`absolute inset-0 ${cardBackground} overflow-hidden`}>
-        {/* Type label at top */}
-        <div className={`absolute top-0 right-0 ${typeLabelBackground} ${styles.typeLabel} text-white font-bold`}>
-          {typeLabel}
+      <div className={`absolute inset-0 ${cardBackground} overflow-hidden rounded-lg`}>
+        {/* Points in top left */}
+        <div className="absolute top-0 left-0 p-1">
+          <div className={`${styles.points} text-white`}>{card.points || ""}</div>
         </div>
 
-        {/* Points in top left for animal cards */}
-        {card.type === "animal" && (
-          <div className="absolute top-0 left-0 bg-black p-1">
-            <div className={`${styles.points} flex items-center justify-center bg-black text-white font-bold`}>
-              {card.points}
-            </div>
-          </div>
-        )}
+        {/* Name bar at top */}
+        <div className={`absolute top-0 right-0 left-8 ${nameBackground} py-1 px-2 rounded-b-lg`}>
+          <div className="text-center font-bold text-white uppercase">{card.name}</div>
+        </div>
+
+        {/* Type label */}
+        <div className={`absolute top-8 left-0 bg-black ${styles.typeLabel} text-white font-bold rounded-r-lg`}>
+          {environmentLabel}
+        </div>
 
         {/* Card art */}
-        <div className={`${styles.art} mt-6 mx-auto relative overflow-hidden`}>{getCardArt(card)}</div>
+        <div className={`${styles.art} mt-12 mx-auto relative overflow-hidden`}>{getCardArt(card)}</div>
 
-        {/* Card name */}
-        <div className={`${styles.name} text-center font-bold text-white uppercase mt-1 px-1`}>{card.name}</div>
-
-        {/* Card effect/description */}
-        <div
-          className={`${getEffectFontSize()} text-center text-white px-2 mx-1 mt-1 max-h-[${styles.effect.split("max-h-[")[1]}`}
-        >
-          {card.effect || (card.type === "animal" ? `${card.environment} animal` : "Impact card")}
+        {/* Card effect/description - bottom area with dynamic color */}
+        <div className={`absolute bottom-0 left-0 right-0 ${effectBackground} p-2 rounded-t-lg`}>
+          <div className={`${styles.effect} text-center text-white`}>
+            {card.effect || (card.type === "animal" ? `${card.environment} animal` : "Impact card")}
+          </div>
         </div>
 
         {/* Order number for Octopus effect */}

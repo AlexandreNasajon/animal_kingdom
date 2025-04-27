@@ -97,17 +97,7 @@ export const ORIGINAL_DECK: GameCard[] = [
     effect: "On play, destroy an animal of 1 point your opponent controls.",
     imageUrl: "/coiled-python.png",
   },
-  // 1x Zebra
-  {
-    id: 105,
-    type: "animal",
-    name: "Zebra",
-    points: 3,
-    environment: "terrestrial",
-    effect: "On play, look at your opponent's hand.",
-    imageUrl: "/savanna-zebra.png",
-  },
-  // 1x Deer
+  // 3x Deer (was 1x, added 2 more)
   {
     id: 106,
     type: "animal",
@@ -117,16 +107,23 @@ export const ORIGINAL_DECK: GameCard[] = [
     effect: "On play, if you have 7 or more points, your opponent sends a random card from hand to deck bottom.",
     imageUrl: "/forest-deer.png",
   },
-  // 1x Wolf
   {
-    id: 107,
+    id: 106,
     type: "animal",
-    name: "Wolf",
+    name: "Deer",
     points: 3,
     environment: "terrestrial",
-    effect:
-      "On play, if your opponent has 5 or fewer cards in hand, send 1 terrestrial animal they control to their hand.",
-    imageUrl: "/lone-howler.png",
+    effect: "On play, if you have 7 or more points, your opponent sends a random card from hand to deck bottom.",
+    imageUrl: "/forest-deer.png",
+  },
+  {
+    id: 106,
+    type: "animal",
+    name: "Deer",
+    points: 3,
+    environment: "terrestrial",
+    effect: "On play, if you have 7 or more points, your opponent sends a random card from hand to deck bottom.",
+    imageUrl: "/forest-deer.png",
   },
   // 1x Lion
   {
@@ -235,31 +232,29 @@ export const ORIGINAL_DECK: GameCard[] = [
     effect: "On play, play an aquatic animal of 2 or fewer points from hand.",
     imageUrl: "/serene-sea-turtle.png",
   },
-  // 1x Dolphin
+  // 3x Dolphin (renamed from Stingray)
   {
-    id: 113,
+    id: 115,
     type: "animal",
     name: "Dolphin",
     points: 3,
     environment: "aquatic",
-    effect: "On play, you may send 1 card from hand to deck bottom to draw 1 card.",
-    imageUrl: "/playful-dolphin-pod.png",
+    effect: "On play, if you have 7 or more points, draw 1 card.",
+    imageUrl: "/graceful-glider.png",
   },
-  // 1x Octopus
-  {
-    id: 114,
-    type: "animal",
-    name: "Octopus",
-    points: 3,
-    environment: "aquatic",
-    effect: "On play, look at the top 3 cards of the deck.",
-    imageUrl: "/curious-octopus.png",
-  },
-  // 1x Stingray
   {
     id: 115,
     type: "animal",
-    name: "Stingray",
+    name: "Dolphin",
+    points: 3,
+    environment: "aquatic",
+    effect: "On play, if you have 7 or more points, draw 1 card.",
+    imageUrl: "/graceful-glider.png",
+  },
+  {
+    id: 115,
+    type: "animal",
+    name: "Dolphin",
     points: 3,
     environment: "aquatic",
     effect: "On play, if you have 7 or more points, draw 1 card.",
