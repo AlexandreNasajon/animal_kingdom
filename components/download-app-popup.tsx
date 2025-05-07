@@ -39,10 +39,8 @@ export default function DownloadAppPopup() {
         // Store the event for later use
         setDeferredPrompt(e as BeforeInstallPromptEvent)
 
-        // Show popup after 5 seconds of page load
-        setTimeout(() => {
-          setShowPopup(true)
-        }, 5000)
+        // Show popup immediately
+        setShowPopup(true)
       } catch (error) {
         console.error("Error in beforeinstallprompt handler:", error)
       }
@@ -59,6 +57,14 @@ export default function DownloadAppPopup() {
     if (typeof window !== "undefined") {
       window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt)
       window.addEventListener("appinstalled", handleAppInstalled)
+
+      // Check if we should show the popup immediately on page load
+      // This is for browsers that fired the beforeinstallprompt event before our listener was attached
+      const showInstallPrompt = sessionStorage.getItem("bioduel_show_install_prompt")
+      if (showInstallPrompt === "true" && !isInstalled) {
+        // We'll show a simulated prompt since we don't have the actual event
+        setShowPopup(true)
+      }
     }
 
     return () => {
@@ -67,10 +73,26 @@ export default function DownloadAppPopup() {
         window.removeEventListener("appinstalled", handleAppInstalled)
       }
     }
-  }, [])
+  }, [isInstalled])
+
+  // Add a second useEffect to handle the case where the component mounts
+  // after the beforeinstallprompt event has already fired
+  useEffect(() => {
+    if (typeof window !== "undefined" && !isInstalled) {
+      // Set a flag in sessionStorage to show the prompt on next page load
+      // if the beforeinstallprompt event already fired
+      sessionStorage.setItem("bioduel_show_install_prompt", "true")
+    }
+  }, [isInstalled])
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) return
+    if (!deferredPrompt) {
+      // If we don't have the deferred prompt, try to show the native prompt
+      // This is a fallback for when the beforeinstallprompt event wasn't captured
+      alert("To install BioDuel, tap the browser menu button and select 'Add to Home Screen' or 'Install App'")
+      setShowPopup(false)
+      return
+    }
 
     try {
       // Show the install prompt
@@ -90,6 +112,8 @@ export default function DownloadAppPopup() {
       // Clear the saved prompt as it can't be used again
       setDeferredPrompt(null)
       setShowPopup(false)
+      // Clear the session flag
+      sessionStorage.removeItem("bioduel_show_install_prompt")
     } catch (error) {
       console.error("Error installing PWA:", error)
       setShowPopup(false)
@@ -100,13 +124,15 @@ export default function DownloadAppPopup() {
     setShowPopup(false)
     // Store dismissal time
     localStorage.setItem("bioduel_install_dismissed", Date.now().toString())
+    // Clear the session flag
+    sessionStorage.removeItem("bioduel_show_install_prompt")
   }
 
   if (!showPopup || isInstalled) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full overflow-hidden animate-fade-in">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fade-in">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full overflow-hidden animate-slide-up">
         <div className="relative p-6">
           <button
             onClick={handleDismiss}
