@@ -11,6 +11,10 @@ interface OpponentHandProps {
   aiDiscardingCards: boolean | number[]
   aiDrawnCardCount: number
   aiDiscardedCardIds: number[]
+  squirrelSelectable?: boolean
+  onSquirrelSelection?: (index: number) => void
+  setShowSquirrelModal?: (show: boolean) => void
+  cards?: any[]
 }
 
 export function OpponentHand({
@@ -21,6 +25,10 @@ export function OpponentHand({
   aiDiscardingCards,
   aiDrawnCardCount,
   aiDiscardedCardIds,
+  squirrelSelectable,
+  onSquirrelSelection,
+  setShowSquirrelModal,
+  cards,
 }: OpponentHandProps) {
   const [animatingCards, setAnimatingCards] = useState<number[]>([])
 
@@ -142,6 +150,24 @@ export function OpponentHand({
           )}
         </div>
       </div>
+      {squirrelSelectable && cards && (
+        <div className="flex flex-wrap justify-center gap-2 p-2">
+          {cards.map((card, index) => (
+            <div
+              key={index}
+              className="relative cursor-pointer hover:scale-110 transition-transform"
+              onClick={() => onSquirrelSelection && onSquirrelSelection(index)}
+            >
+              <div className="w-16 h-24 bg-gradient-to-br from-green-700 to-green-900 rounded-md border border-green-500 flex items-center justify-center shadow-md">
+                <div className="text-xs text-center text-white p-1">{card.name || "Card"}</div>
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[8px] text-white font-bold">
+                ?
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Add the new animations */}
       <style jsx global>{`

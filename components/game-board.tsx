@@ -246,18 +246,18 @@ export function GameBoard({
   const getCardSize = () => {
     if (viewportWidth < 360) {
       return {
-        height: isOpponent ? "70px" : "60px", // Smaller for player field
-        width: isOpponent ? "45px" : "40px", // Smaller for player field
+        height: isOpponent ? "70px" : "70px", // Adjusted to fit field
+        width: isOpponent ? "45px" : "45px", // Adjusted to fit field
       }
     } else if (viewportWidth < 640) {
       return {
-        height: isOpponent ? "85px" : "70px", // Smaller for player field
-        width: isOpponent ? "55px" : "45px", // Smaller for player field
+        height: isOpponent ? "85px" : "85px", // Adjusted to fit field
+        width: isOpponent ? "55px" : "55px", // Adjusted to fit field
       }
     } else {
       return {
-        height: isOpponent ? "100px" : "80px", // Smaller for player field
-        width: isOpponent ? "65px" : "50px", // Smaller for player field
+        height: isOpponent ? "100px" : "100px", // Adjusted to fit field
+        width: isOpponent ? "65px" : "65px", // Adjusted to fit field
       }
     }
   }
@@ -281,7 +281,7 @@ export function GameBoard({
     <>
       <div
         ref={boardRef}
-        className={`flex ${isOpponent ? "min-h-[100px] sm:min-h-[120px] max-w-[95%] mx-auto" : "min-h-[110px] sm:min-h-[130px]"} items-center justify-center ${isOpponent ? "gap-1 sm:gap-2" : "gap-2 sm:gap-3 md:gap-4"} rounded-lg border-2 ${getFieldBackground()} p-1 transition-all duration-300 ${
+        className={`flex ${isOpponent ? "min-h-[100px] sm:min-h-[120px] max-w-[95%] mx-auto" : "min-h-[120px] sm:min-h-[140px]"} items-center justify-center ${isOpponent ? "gap-1 sm:gap-2" : "gap-2 sm:gap-3 md:gap-4"} rounded-lg border-2 ${getFieldBackground()} p-1 transition-all duration-300 ${
           dropHighlight && !isOpponent ? "ring-4 ring-green-400 bg-green-900/50" : ""
         } shadow-lg backdrop-blur-sm overflow-hidden`}
         onDragOver={handleDragOver}

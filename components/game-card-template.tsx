@@ -38,7 +38,7 @@ export function GameCardTemplate({
     }
   }
 
-  // Size-based styles
+  // Update the getSizeStyles function to ensure proper art display in all card sizes
   const getSizeStyles = () => {
     switch (size) {
       case "xs":
@@ -46,18 +46,18 @@ export function GameCardTemplate({
           card: "h-[80px] w-[60px]",
           points: "text-[10px] font-bold",
           typeLabel: "text-[6px] px-1 py-0.5",
-          name: "text-[6px] mb-0.5", // Reduced from text-[7px]
-          art: "h-[30px]",
+          name: "text-[7px] mb-0 leading-tight",
+          art: "h-[30px] w-full flex items-center justify-center",
           effect: "text-[5px] mt-0.5 max-h-[15px]",
           border: selected ? "border-2" : "border",
         }
       case "sm":
         return {
-          card: "h-[120px] w-[90px]",
+          card: "h-full w-full",
           points: "text-[14px] font-bold",
           typeLabel: "text-[8px] px-1.5 py-0.5",
-          name: "text-[8px] mb-1", // Reduced from text-[9px]
-          art: "h-[50px]",
+          name: "text-[9px] mb-0 leading-tight",
+          art: "h-[40px] w-full flex items-center justify-center mt-1", // Adjusted margin
           effect: "text-[7px] mt-1 max-h-[25px]",
           border: selected ? "border-2" : "border",
         }
@@ -66,8 +66,8 @@ export function GameCardTemplate({
           card: "h-[160px] w-[120px]",
           points: "text-[18px] font-bold",
           typeLabel: "text-[10px] px-2 py-0.5",
-          name: "text-[10px] mb-1", // Reduced from text-xs
-          art: "h-[70px]",
+          name: "text-[10px] mb-1",
+          art: "h-[70px] w-full flex items-center justify-center mt-2", // Adjusted margin
           effect: "text-[9px] mt-1 max-h-[35px]",
           border: selected ? "border-3" : "border-2",
         }
@@ -76,8 +76,8 @@ export function GameCardTemplate({
           card: "h-[200px] w-[150px]",
           points: "text-[22px] font-bold",
           typeLabel: "text-xs px-2 py-0.5",
-          name: "text-xs mb-1.5", // Reduced from text-sm
-          art: "h-[90px]",
+          name: "text-xs mb-1.5",
+          art: "h-[90px] w-full flex items-center justify-center mt-3", // Adjusted margin
           effect: "text-[10px] mt-1.5 max-h-[45px]",
           border: selected ? "border-4" : "border-2",
         }
@@ -86,8 +86,8 @@ export function GameCardTemplate({
           card: "h-[280px] w-[210px]",
           points: "text-[30px] font-bold",
           typeLabel: "text-sm px-2.5 py-0.5",
-          name: "text-sm mb-2", // Reduced from text-base
-          art: "h-[130px]",
+          name: "text-sm mb-2",
+          art: "h-[130px] w-full flex items-center justify-center mt-4", // Adjusted margin
           effect: "text-xs mt-2 max-h-[60px]",
           border: selected ? "border-4" : "border-2",
         }
@@ -96,8 +96,8 @@ export function GameCardTemplate({
           card: "h-[160px] w-[120px]",
           points: "text-[18px] font-bold",
           typeLabel: "text-[10px] px-2 py-0.5",
-          name: "text-[10px] mb-1", // Reduced from text-xs
-          art: "h-[70px]",
+          name: "text-[10px] mb-1",
+          art: "h-[70px] w-full flex items-center justify-center mt-2", // Adjusted margin
           effect: "text-[9px] mt-1 max-h-[35px]",
           border: selected ? "border-3" : "border-2",
         }
@@ -149,6 +149,10 @@ export function GameCardTemplate({
     switch (card.environment) {
       case "terrestrial":
         return "bg-red-900/90"
+      case "aquatic":
+        return "bg-blue-900/90"
+      case "amphibian":
+        return "bg-green-900/90"
       default:
         return "bg-blue-900/90"
     }
@@ -160,6 +164,20 @@ export function GameCardTemplate({
   const effectBackground = getEffectBackground()
   const environmentLabel = getEnvironmentLabel()
 
+  // Define left position offset for the name bar based on card size
+  const getNameBarOffset = () => {
+    switch (size) {
+      case "xs":
+        return "left-2" // Smaller offset for xs size
+      case "sm":
+        return "left-3" // Smaller offset for sm size
+      default:
+        return "left-8" // Original offset for larger sizes
+    }
+  }
+
+  const nameBarOffset = getNameBarOffset()
+
   return (
     <Card
       className={`${styles.card} ${styles.border} border-black ${selected ? "ring-2 ring-yellow-500 scale-105" : ""} ${
@@ -170,25 +188,31 @@ export function GameCardTemplate({
       {/* Black border frame */}
       <div className={`absolute inset-0 ${cardBackground} overflow-hidden rounded-lg`}>
         {/* Points in top left */}
-        <div className="absolute top-0 left-0 p-1">
+        <div className="absolute top-0 left-0 p-1 z-10">
           <div className={`${styles.points} text-white`}>{card.points || ""}</div>
         </div>
 
-        {/* Name bar at top */}
-        <div className={`absolute top-0 right-0 left-8 ${nameBackground} py-1 px-2 rounded-b-lg`}>
-          <div className="text-center font-bold text-white uppercase">{card.name}</div>
+        {/* Name bar at top - Extended with height to allow for better text display */}
+        <div className={`absolute top-0 right-0 ${nameBarOffset} ${nameBackground} py-1 px-1 rounded-b-lg z-0`}>
+          <div
+            className={`text-center font-bold text-white uppercase truncate text-ellipsis overflow-hidden ${styles.name}`}
+          >
+            {card.name}
+          </div>
         </div>
 
         {/* Type label */}
-        <div className={`absolute top-8 left-0 bg-black ${styles.typeLabel} text-white font-bold rounded-r-lg`}>
+        <div className={`absolute top-8 left-0 bg-black ${styles.typeLabel} text-white font-bold rounded-r-lg z-10`}>
           {environmentLabel}
         </div>
 
-        {/* Card art */}
-        <div className={`${styles.art} mt-12 mx-auto relative overflow-hidden`}>{getCardArt(card)}</div>
+        {/* Card art - Using the styles.art class which now includes margin-top */}
+        <div className={`${styles.art} mx-auto relative overflow-visible flex items-center justify-center`}>
+          {getCardArt(card)}
+        </div>
 
         {/* Card effect/description - bottom area with dynamic color */}
-        <div className={`absolute bottom-0 left-0 right-0 ${effectBackground} p-2 rounded-t-lg`}>
+        <div className={`absolute bottom-0 left-0 right-0 ${effectBackground} p-1 rounded-t-lg`}>
           <div className={`${styles.effect} text-center text-white`}>
             {card.effect || (card.type === "animal" ? `${card.environment} animal` : "Impact card")}
           </div>

@@ -1,29 +1,10 @@
 "use client"
 
-import type { GameCard } from "@/types/game"
-import { AquaticArt } from "./aquatic-art"
-import { TerrestrialArt } from "./terrestrial-art"
-import { AmphibianArt } from "./amphibian-art"
-import { ImpactArt } from "./impact-art"
-import { HunterArt } from "./impact-arts/hunter-art"
-import { FisherArt } from "./impact-arts/fisher-art"
-import { ScareArt } from "./impact-arts/scare-art"
-import { VeterinarianArt } from "./impact-arts/veterinarian-art"
-import { ConfuseArt } from "./impact-arts/confuse-art"
-import { DomesticateArt } from "./impact-arts/domesticate-art"
-import { EpidemicArt } from "./impact-arts/epidemic-art"
-import { CompeteArt } from "./impact-arts/compete-art"
-import { PreyArt } from "./impact-arts/prey-art"
-import { EarthquakeArt } from "./impact-arts/earthquake-art"
-import { DolphinArt } from "./animal-arts/dolphin-art"
-import { OtterArt } from "./animal-arts/otter-art"
-import { LionArt } from "./animal-arts/lion-art"
 import { FrogArt } from "./animal-arts/frog-art"
 import { CrabArt } from "./animal-arts/crab-art"
-import { MouseArt } from "./animal-arts/mouse-art"
-import { OctopusArt } from "./animal-arts/octopus-art"
-import { SnakeArt } from "./animal-arts/snake-art"
+import { OtterArt } from "./animal-arts/otter-art"
 import { CrocodileArt } from "./animal-arts/crocodile-art"
+import { MouseArt } from "./animal-arts/mouse-art"
 import { SquirrelArt } from "./animal-arts/squirrel-art"
 import { FoxArt } from "./animal-arts/fox-art"
 import { ZebraArt } from "./animal-arts/zebra-art"
@@ -35,171 +16,143 @@ import { JellyfishArt } from "./animal-arts/jellyfish-art"
 import { TurtleArt } from "./animal-arts/turtle-art"
 import { StingrayArt } from "./animal-arts/stingray-art"
 import { SharkArt } from "./animal-arts/shark-art"
-import { FloodArt } from "./impact-arts/flood-art"
-import { StormArt } from "./impact-arts/storm-art"
+import { LionArt } from "./animal-arts/lion-art"
+import { SnakeArt } from "./animal-arts/snake-art"
+import { FishArt } from "./animal-arts/fish-art"
+import { DolphinArt } from "./animal-arts/dolphin-art"
+import { OctopusArt } from "./animal-arts/octopus-art"
+
+// Import impact art components
+import { HunterArt } from "./impact-arts/hunter-art"
+import { FisherArt } from "./impact-arts/fisher-art"
 import { DroughtArt } from "./impact-arts/drought-art"
+import { FloodArt } from "./impact-arts/flood-art"
+import { ScareArt } from "./impact-arts/scare-art"
+import { ConfuseArt } from "./impact-arts/confuse-art"
+import { DomesticateArt } from "./impact-arts/domesticate-art"
 import { ReleaseArt } from "./impact-arts/release-art"
+import { CompeteArt } from "./impact-arts/compete-art"
+import { PreyArt } from "./impact-arts/prey-art"
+import { FlourishArt } from "./impact-arts/flourish-art"
+import { EarthquakeArt } from "./impact-arts/earthquake-art"
+import { StormArt } from "./impact-arts/storm-art"
+import { EpidemicArt } from "./impact-arts/epidemic-art"
+import { VeterinarianArt } from "./impact-arts/veterinarian-art"
 import { TrapArt } from "./impact-arts/trap-art"
 import { CageArt } from "./impact-arts/cage-art"
 import { LimitArt } from "./impact-arts/limit-art"
-import { FlourishArt } from "./impact-arts/flourish-art"
 
-export function getCardArt(card: GameCard) {
-  // Handle undefined or null card
-  if (!card) {
-    return <div className="flex h-full w-full items-center justify-center bg-green-900">No Card</div>
-  }
+export function getCardArt(card: any) {
+  if (!card) return null
 
-  // Default to environment art if no specific art is found
-  if (!card.name && card.environment === "aquatic") {
-    return <AquaticArt />
-  }
-  if (!card.name && card.environment === "terrestrial") {
-    return <TerrestrialArt />
-  }
-  if (!card.name && card.environment === "amphibian") {
-    return <AmphibianArt />
-  }
-  if (!card.name && card.type === "impact") {
-    return <ImpactArt name="impact" />
-  }
-
-  // Impact cards
-  if (card.name === "Hunter") {
-    return <HunterArt />
-  }
-  if (card.name === "Fisher") {
-    return <FisherArt />
-  }
-  if (card.name === "Scare") {
-    return <ScareArt />
-  }
-  if (card.name === "Veterinarian") {
-    return <VeterinarianArt />
-  }
-  if (card.name === "Confuse" || card.name === "Confusion") {
-    return <ConfuseArt />
-  }
-  if (card.name === "Domesticate") {
-    return <DomesticateArt />
-  }
-  if (card.name === "Epidemic") {
-    return <EpidemicArt />
-  }
-  if (card.name === "Compete") {
-    return <CompeteArt />
-  }
-  if (card.name === "Prey" || card.name === "Prey Upon") {
-    return <PreyArt />
-  }
-  if (card.name === "Earthquake") {
-    return <EarthquakeArt />
-  }
-  if (card.name === "Flood") {
-    return <FloodArt />
-  }
-  if (card.name === "Storm") {
-    return <StormArt />
-  }
-  if (card.name === "Drought") {
-    return <DroughtArt />
-  }
-  if (card.name === "Release") {
-    return <ReleaseArt />
-  }
-  if (card.name === "Trap") {
-    return <TrapArt />
-  }
-  if (card.name === "Cage") {
-    return <CageArt />
-  }
-  if (card.name === "Limit") {
-    return <LimitArt />
-  }
-  if (card.name === "Flourish") {
-    return <FlourishArt />
+  // For animal cards, return the appropriate art component based on the animal name
+  if (card.type === "animal") {
+    switch (card.name) {
+      case "Frog":
+        return <FrogArt />
+      case "Crab":
+        return <CrabArt />
+      case "Otter":
+        return <OtterArt />
+      case "Crocodile":
+        return <CrocodileArt />
+      case "Mouse":
+        return <MouseArt />
+      case "Squirrel":
+        return <SquirrelArt />
+      case "Fox":
+        return <FoxArt />
+      case "Zebra":
+        return <ZebraArt />
+      case "Deer":
+        return <DeerArt />
+      case "Wolf":
+        return <WolfArt />
+      case "Tuna":
+        return <TunaArt />
+      case "Seahorse":
+        return <SeahorseArt />
+      case "Jellyfish":
+        return <JellyfishArt />
+      case "Turtle":
+        return <TurtleArt />
+      case "Stingray":
+        return <StingrayArt />
+      case "Shark":
+        return <SharkArt />
+      case "Lion":
+        return <LionArt />
+      case "Snake":
+        return <SnakeArt />
+      case "Fish":
+        return <FishArt />
+      case "Dolphin":
+        return <DolphinArt />
+      case "Octopus":
+        return <OctopusArt />
+      default:
+        // Default placeholder for unknown animal cards
+        return (
+          <div className="w-full h-full flex items-center justify-center bg-gray-200 rounded-md">
+            <span className="text-xs text-gray-600">{card.name}</span>
+          </div>
+        )
+    }
   }
 
-  // Animal cards - Terrestrial
-  if (card.name === "Mouse") {
-    return <MouseArt />
-  }
-  if (card.name === "Squirrel") {
-    return <SquirrelArt />
-  }
-  if (card.name === "Fox") {
-    return <FoxArt />
-  }
-  if (card.name === "Snake") {
-    return <SnakeArt />
-  }
-  if (card.name === "Zebra") {
-    return <ZebraArt />
-  }
-  if (card.name === "Deer") {
-    return <DeerArt />
-  }
-  if (card.name === "Wolf") {
-    return <WolfArt />
-  }
-  if (card.name === "Lion") {
-    return <LionArt />
-  }
-
-  // Animal cards - Aquatic
-  if (card.name === "Tuna") {
-    return <TunaArt />
-  }
-  if (card.name === "Seahorse") {
-    return <SeahorseArt />
-  }
-  if (card.name === "Jellyfish") {
-    return <JellyfishArt />
-  }
-  if (card.name === "Turtle") {
-    return <TurtleArt />
-  }
-  if (card.name === "Dolphin") {
-    return <DolphinArt />
-  }
-  if (card.name === "Octopus") {
-    return <OctopusArt />
-  }
-  if (card.name === "Stingray") {
-    return <StingrayArt />
-  }
-  if (card.name === "Shark") {
-    return <SharkArt />
-  }
-
-  // Animal cards - Amphibian
-  if (card.name === "Frog") {
-    return <FrogArt />
-  }
-  if (card.name === "Crab") {
-    return <CrabArt />
-  }
-  if (card.name === "Otter") {
-    return <OtterArt />
-  }
-  if (card.name === "Crocodile") {
-    return <CrocodileArt />
-  }
-
-  // Default to environment art if no specific art is found
-  if (card.environment === "aquatic") {
-    return <AquaticArt />
-  }
-  if (card.environment === "terrestrial") {
-    return <TerrestrialArt />
-  }
-  if (card.environment === "amphibian") {
-    return <AmphibianArt />
-  }
+  // For impact cards, return the appropriate art component based on the impact name
   if (card.type === "impact") {
-    return <ImpactArt name={card.name || "impact"} />
+    switch (card.name) {
+      case "Hunter":
+        return <HunterArt />
+      case "Fisher":
+        return <FisherArt />
+      case "Drought":
+        return <DroughtArt />
+      case "Flood":
+        return <FloodArt />
+      case "Scare":
+        return <ScareArt />
+      case "Confuse":
+        return <ConfuseArt />
+      case "Domesticate":
+        return <DomesticateArt />
+      case "Release":
+        return <ReleaseArt />
+      case "Compete":
+        return <CompeteArt />
+      case "Prey":
+        return <PreyArt />
+      case "Flourish":
+        return <FlourishArt />
+      case "Earthquake":
+        return <EarthquakeArt />
+      case "Storm":
+        return <StormArt />
+      case "Epidemic":
+        return <EpidemicArt />
+      case "Veterinarian":
+        return <VeterinarianArt />
+      case "Trap":
+        return <TrapArt />
+      case "Cage":
+        return <CageArt />
+      case "Limit":
+        return <LimitArt />
+      default:
+        // Default placeholder for unknown impact cards
+        return (
+          <div className="w-full h-full flex items-center justify-center bg-purple-200 rounded-md">
+            <span className="text-xs text-purple-600">{card.name}</span>
+          </div>
+        )
+    }
   }
 
-  // Fallback
-  return <div className="flex h-full w-full items-center justify-center bg-green-900">No Art</div>
+  // Default placeholder for unknown card types
+  return (
+    <div className="w-full h-full flex items-center justify-center bg-gray-200 rounded-md">
+      <span className="text-xs text-gray-600">Unknown Card</span>
+    </div>
+  )
 }

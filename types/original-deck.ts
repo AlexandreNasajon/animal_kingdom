@@ -66,7 +66,7 @@ export const ORIGINAL_DECK: GameCard[] = [
     name: "Fox",
     points: 2,
     environment: "terrestrial",
-    effect: "On play, your opponent sends a random card from hand to deck bottom.",
+    effect: "On play, your opponent discards 1 random card from hand.",
     imageUrl: "/alert-fox.png",
   },
   {
@@ -75,7 +75,7 @@ export const ORIGINAL_DECK: GameCard[] = [
     name: "Fox",
     points: 2,
     environment: "terrestrial",
-    effect: "On play, your opponent sends a random card from hand to deck bottom.",
+    effect: "On play, your opponent discards 1 random card from hand.",
     imageUrl: "/alert-fox.png",
   },
   // 2x Snake

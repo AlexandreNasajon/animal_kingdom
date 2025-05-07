@@ -17,7 +17,8 @@ interface PlayerHandSelectionModalProps {
   open: boolean
   onClose: () => void
   cards: GameCard[]
-  onSelect: (index: number) => void
+  onConfirm: (selectedIndex: number) => void
+  onCancel?: () => void
   title: string
   description: string
   filter?: (card: GameCard) => boolean
@@ -27,27 +28,20 @@ export function PlayerHandSelectionModal({
   open,
   onClose,
   cards,
-  onSelect,
+  onConfirm,
+  onCancel,
   title,
   description,
   filter,
 }: PlayerHandSelectionModalProps) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
-  const [filteredCards, setFilteredCards] = useState<GameCard[]>([])
 
-  // Reset selection when modal opens and filter cards
+  // Reset selection when modal opens
   useEffect(() => {
     if (open) {
       setSelectedIndex(null)
-
-      // Apply filter if provided
-      if (filter && typeof filter === "function") {
-        setFilteredCards(cards.filter(filter))
-      } else {
-        setFilteredCards(cards)
-      }
     }
-  }, [open, cards, filter])
+  }, [open])
 
   const handleCardClick = (index: number) => {
     setSelectedIndex(index)
@@ -55,12 +49,17 @@ export function PlayerHandSelectionModal({
 
   const handleConfirm = () => {
     if (selectedIndex !== null) {
-      onSelect(selectedIndex)
+      onConfirm(selectedIndex)
     }
   }
 
+  const isCardSelectable = (card: GameCard) => {
+    if (!filter) return true
+    return filter(card)
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-[90vw] max-h-[90vh] overflow-y-auto bg-green-900 border-2 border-green-700 text-white">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
@@ -68,30 +67,30 @@ export function PlayerHandSelectionModal({
         </DialogHeader>
 
         <div className="grid grid-cols-3 gap-2">
-          {filteredCards.length > 0 ? (
-            filteredCards.map((card, index) => (
-              <div
-                key={index}
-                className={`${selectedIndex === index ? "scale-105 ring-2 ring-yellow-500" : ""} cursor-pointer`}
-                onClick={() => handleCardClick(index)}
-              >
-                <GameCardTemplate card={card} size="sm" selected={selectedIndex === index} />
+          {cards.map((card, index) => {
+            const isSelectable = isCardSelectable(card)
+            return (
+              <div key={index} className="h-[120px]">
+                <GameCardTemplate
+                  card={card}
+                  size="sm"
+                  selected={selectedIndex === index}
+                  disabled={!isSelectable}
+                  onClick={() => isSelectable && handleCardClick(index)}
+                  className="w-full h-full"
+                />
               </div>
-            ))
-          ) : (
-            <div className="col-span-3 text-center text-sm text-gray-400 py-4">No valid cards available</div>
-          )}
+            )
+          })}
         </div>
 
         <DialogFooter className="mt-4">
-          <Button variant="outline" onClick={onClose} className="border-red-700 text-red-400">
-            Cancel
-          </Button>
-          <Button
-            onClick={handleConfirm}
-            disabled={selectedIndex === null || filteredCards.length === 0}
-            className="bg-green-700 hover:bg-green-600"
-          >
+          {onCancel && (
+            <Button variant="outline" onClick={onCancel} className="border-red-700 text-red-400">
+              Cancel
+            </Button>
+          )}
+          <Button onClick={handleConfirm} disabled={selectedIndex === null} className="bg-green-700 hover:bg-green-600">
             Confirm
           </Button>
         </DialogFooter>

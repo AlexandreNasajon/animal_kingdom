@@ -166,8 +166,11 @@ export function PlayerHand({
 
       // Add card name
       const nameDiv = document.createElement("div")
-      nameDiv.className = "text-center text-white text-xs font-bold mt-1"
+      nameDiv.className = "text-center text-white text-[9px] font-bold mt-1 px-1 truncate"
       nameDiv.textContent = card.name
+      nameDiv.style.overflow = "hidden"
+      nameDiv.style.textOverflow = "ellipsis"
+      nameDiv.style.whiteSpace = "nowrap"
       cardClone.appendChild(nameDiv)
 
       // Add card type/points
@@ -463,7 +466,9 @@ export function PlayerHand({
           >
             <div className="absolute inset-0 border-2 border-transparent bg-gradient-to-br from-white/10 to-black/20 pointer-events-none"></div>
             <div className="absolute inset-0 flex flex-col items-center justify-between overflow-hidden p-1">
-              <div className="w-full text-center text-[10px] font-bold truncate">{touchDragCard.name}</div>
+              <div className="w-full text-center text-[9px] font-bold truncate px-0.5 leading-tight">
+                {touchDragCard.name}
+              </div>
               <div className="relative h-[60px] w-full flex items-center justify-center">
                 {getCardArt(touchDragCard)}
               </div>

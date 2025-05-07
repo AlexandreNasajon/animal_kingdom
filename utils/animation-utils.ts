@@ -310,3 +310,103 @@ function createPathParticles(sourceRect: DOMRect, targetRect: DOMRect, color: st
     }, i * 50)
   }
 }
+
+// New function to create animation for drawing cards
+export function createDrawCardAnimation(
+  deckElement: HTMLElement,
+  handElement: HTMLElement,
+  count = 1,
+  isPlayer = true,
+): void {
+  if (!deckElement || !handElement) return
+
+  const deckRect = deckElement.getBoundingClientRect()
+  const handRect = handElement.getBoundingClientRect()
+
+  // Calculate the target position (center of hand area)
+  const targetX = handRect.left + handRect.width / 2
+  const targetY = handRect.top + handRect.height / 2
+
+  // Create a card counter element
+  if (count > 1) {
+    const counter = document.createElement("div")
+    counter.className =
+      "fixed pointer-events-none z-50 bg-green-700 text-white font-bold rounded-full px-2 py-1 text-sm"
+    counter.style.left = `${deckRect.left + deckRect.width / 2}px`
+    counter.style.top = `${deckRect.top - 20}px`
+    counter.style.transform = "translate(-50%, -50%)"
+    counter.textContent = `+${count}`
+    counter.style.opacity = "0"
+    document.body.appendChild(counter)
+
+    // Animate counter
+    setTimeout(() => {
+      counter.style.transition = "all 0.5s ease-out"
+      counter.style.opacity = "1"
+      counter.style.top = `${deckRect.top - 30}px`
+
+      setTimeout(() => {
+        counter.style.opacity = "0"
+        setTimeout(() => {
+          if (document.body.contains(counter)) {
+            document.body.removeChild(counter)
+          }
+        }, 500)
+      }, 1000)
+    }, 100)
+  }
+
+  // Create and animate each card
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => {
+      // Create card element
+      const card = document.createElement("div")
+      card.className = "fixed pointer-events-none z-50 transition-all duration-700"
+      card.style.width = "60px"
+      card.style.height = "90px"
+      card.style.left = `${deckRect.left + deckRect.width / 2 - 30}px`
+      card.style.top = `${deckRect.top + deckRect.height / 2 - 45}px`
+
+      // Create card content
+      const cardContent = document.createElement("div")
+      cardContent.className = "h-full w-full rounded-md shadow-lg border-2 border-green-700 bg-green-900"
+
+      // Add card back pattern
+      const cardBack = document.createElement("div")
+      cardBack.className = "card-back-pattern absolute inset-0"
+      cardContent.appendChild(cardBack)
+
+      card.appendChild(cardContent)
+      document.body.appendChild(card)
+
+      // Add glow effect to deck
+      deckElement.classList.add("animate-pulse-glow")
+
+      // Create path particles
+      const particleColor = isPlayer ? "#4ade80" : "#f87171"
+      setTimeout(() => {
+        createPathParticles(deckRect, handRect, particleColor, 8)
+      }, 100)
+
+      // Animate card
+      setTimeout(() => {
+        card.style.transform = `rotate(${(Math.random() - 0.5) * 20}deg) scale(0.9)`
+        card.style.left = `${targetX - 30 + (Math.random() - 0.5) * 40}px`
+        card.style.top = `${targetY - 45 + (Math.random() - 0.5) * 20}px`
+        card.style.opacity = "0.9"
+
+        // Remove card after animation
+        setTimeout(() => {
+          if (document.body.contains(card)) {
+            document.body.removeChild(card)
+          }
+
+          // Remove glow effect from deck after last card
+          if (i === count - 1) {
+            deckElement.classList.remove("animate-pulse-glow")
+          }
+        }, 700)
+      }, 50)
+    }, i * 200) // Stagger the animations
+  }
+}

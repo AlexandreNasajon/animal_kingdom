@@ -11,34 +11,6 @@ interface BoardCardZoomModalProps {
   isOpponentCard?: boolean
 }
 
-// Helper function to get environment color
-const getEnvironmentColor = (environment?: string) => {
-  switch (environment) {
-    case "terrestrial":
-      return "border-red-600 bg-red-900"
-    case "aquatic":
-      return "border-blue-600 bg-blue-900"
-    case "amphibian":
-      return "border-green-600 bg-green-900"
-    default:
-      return "border-gray-600 bg-gray-800"
-  }
-}
-
-// Helper function to get environment badge color
-const getEnvironmentBadgeColor = (environment?: string) => {
-  switch (environment) {
-    case "terrestrial":
-      return "bg-red-900 text-white"
-    case "aquatic":
-      return "bg-blue-900 text-white"
-    case "amphibian":
-      return "bg-green-900 text-white"
-    default:
-      return "bg-gray-900 text-white"
-  }
-}
-
 export function BoardCardZoomModal({ open, onClose, card, isOpponentCard = false }: BoardCardZoomModalProps) {
   if (!card) return null
 
@@ -52,14 +24,14 @@ export function BoardCardZoomModal({ open, onClose, card, isOpponentCard = false
 
   return (
     <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="border-2 border-green-700 bg-green-900 p-2 text-white">
+      <DialogContent className="border-2 border-green-700 bg-green-900 p-4 text-white">
         <DialogHeader>
           <DialogTitle className="text-base text-white">{card.name}</DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col items-center space-y-3">
-          <div className={`${isOpponentCard ? "ring-2 ring-red-500" : "ring-2 ring-blue-500"}`}>
-            <GameCardTemplate card={card} size="lg" />
+        <div className="flex flex-col items-center space-y-4">
+          <div className="w-[180px] h-[240px] relative">
+            <GameCardTemplate card={card} size="lg" className="w-full h-full" />
           </div>
 
           <div className="text-center">
