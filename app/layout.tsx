@@ -4,7 +4,7 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { AuthProvider } from "@/contexts/auth-context"
 import Script from "next/script"
-import PWAInstallPrompt from "@/components/pwa-install-prompt"
+import DownloadAppPopup from "@/components/download-app-popup"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -40,7 +40,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} h-full overflow-hidden`}>
         <AuthProvider>{children}</AuthProvider>
-        <PWAInstallPrompt />
+        <DownloadAppPopup />
         {/* Load the PWA script with defer to ensure it loads after page content */}
         <Script src="/pwa.js" strategy="afterInteractive" defer />
       </body>
