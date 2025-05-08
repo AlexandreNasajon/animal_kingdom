@@ -58,7 +58,7 @@ self.addEventListener("fetch", (event) => {
 
         // If both network and cache fail, return a simple offline page
         if (event.request.headers.get("Accept")?.includes("text/html")) {
-          return new Response("You are offline. Please reconnect to continue using BioDuel.", {
+          return new Response("You are offline. Please reconnect to continue using Vegan.", {
             headers: { "Content-Type": "text/html" },
           })
         }

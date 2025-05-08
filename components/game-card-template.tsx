@@ -38,7 +38,7 @@ export function GameCardTemplate({
     }
   }
 
-  // Update the getSizeStyles function to ensure proper art display in all card sizes
+  // Make sure the size styles are properly defined for all card sizes
   const getSizeStyles = () => {
     switch (size) {
       case "xs":
@@ -53,11 +53,11 @@ export function GameCardTemplate({
         }
       case "sm":
         return {
-          card: "h-full w-full",
+          card: "h-[120px] w-[90px]",
           points: "text-[14px] font-bold",
           typeLabel: "text-[8px] px-1.5 py-0.5",
           name: "text-[9px] mb-0 leading-tight",
-          art: "h-[40px] w-full flex items-center justify-center mt-1", // Adjusted margin
+          art: "h-[40px] w-full flex items-center justify-center mt-1",
           effect: "text-[7px] mt-1 max-h-[25px]",
           border: selected ? "border-2" : "border",
         }
@@ -67,7 +67,7 @@ export function GameCardTemplate({
           points: "text-[18px] font-bold",
           typeLabel: "text-[10px] px-2 py-0.5",
           name: "text-[10px] mb-1",
-          art: "h-[70px] w-full flex items-center justify-center mt-2", // Adjusted margin
+          art: "h-[70px] w-full flex items-center justify-center mt-2",
           effect: "text-[9px] mt-1 max-h-[35px]",
           border: selected ? "border-3" : "border-2",
         }
@@ -77,7 +77,7 @@ export function GameCardTemplate({
           points: "text-[22px] font-bold",
           typeLabel: "text-xs px-2 py-0.5",
           name: "text-xs mb-1.5",
-          art: "h-[90px] w-full flex items-center justify-center mt-3", // Adjusted margin
+          art: "h-[90px] w-full flex items-center justify-center mt-3",
           effect: "text-[10px] mt-1.5 max-h-[45px]",
           border: selected ? "border-4" : "border-2",
         }
@@ -87,7 +87,7 @@ export function GameCardTemplate({
           points: "text-[30px] font-bold",
           typeLabel: "text-sm px-2.5 py-0.5",
           name: "text-sm mb-2",
-          art: "h-[130px] w-full flex items-center justify-center mt-4", // Adjusted margin
+          art: "h-[130px] w-full flex items-center justify-center mt-4",
           effect: "text-xs mt-2 max-h-[60px]",
           border: selected ? "border-4" : "border-2",
         }
@@ -97,7 +97,7 @@ export function GameCardTemplate({
           points: "text-[18px] font-bold",
           typeLabel: "text-[10px] px-2 py-0.5",
           name: "text-[10px] mb-1",
-          art: "h-[70px] w-full flex items-center justify-center mt-2", // Adjusted margin
+          art: "h-[70px] w-full flex items-center justify-center mt-2",
           effect: "text-[9px] mt-1 max-h-[35px]",
           border: selected ? "border-3" : "border-2",
         }

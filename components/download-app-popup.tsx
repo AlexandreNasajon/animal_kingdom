@@ -147,11 +147,10 @@ export default function DownloadAppPopup() {
               <img src="/icons/icon-192x192.png" alt="Vegan Logo" className="w-12 h-12" />
             </div>
 
-            <h2 className="text-xl font-bold mb-2">Install Vegan</h2>
+            <h3 className="font-bold">Install Vegan</h3>
 
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
-              Install Vegan on your device for the best experience! Enjoy faster loading times, offline play, and easy
-              access from your home screen.
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              Add Vegan to your home screen for the best experience
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 w-full">
