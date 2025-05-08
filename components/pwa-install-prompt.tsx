@@ -86,7 +86,7 @@ export default function PWAInstallPrompt() {
   return (
     <div className="fixed bottom-4 left-0 right-0 mx-auto w-max z-50 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 flex items-center gap-3">
       <div>
-        <h3 className="font-bold">Install BioDuel</h3>
+        <h3 className="font-bold">Install Vegan</h3>
         <p className="text-sm text-gray-600 dark:text-gray-300">Add to your home screen</p>
       </div>
       <Button onClick={handleInstallClick} className="bg-green-500 hover:bg-green-600">

@@ -9,7 +9,7 @@ const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "Vegan",
-  description: "A strategic card game about biodiversity",
+  description: "A strategic card game about veganism",
   viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
   manifest: "/manifest.json",
   themeColor: "#34d399",

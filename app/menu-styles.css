@@ -1,4 +1,4 @@
-.bioquest-bg {
+.vegan-bg {
   min-height: 100vh;
   min-height: 100dvh; /* Use dynamic viewport height when available */
   width: 100%;
@@ -243,7 +243,7 @@
 
 /* For landscape orientation on small screens */
 @media (max-height: 450px) and (orientation: landscape) {
-  .bioquest-bg {
+  .vegan-bg {
     padding-top: 0.5rem;
     justify-content: flex-start;
   }

@@ -25,7 +25,7 @@ export default function Credits() {
               <strong>Alexandre Nasajon</strong> - Lead Game Designer & Developer
             </p>
             <p>
-              BioDuel was designed as an educational card game to teach players about ecosystems, animal habitats, and
+              Vegan was designed as an educational card game to teach players about veganism, animal welfare, and
               environmental impacts.
             </p>
 

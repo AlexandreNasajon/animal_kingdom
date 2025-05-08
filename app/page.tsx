@@ -9,7 +9,7 @@ export default function HomePage() {
   const { user } = useAuth()
 
   return (
-    <div className="bioquest-bg">
+    <div className="vegan-bg">
       <div className="mb-6 text-center">
         <h1 className="title-text">Vegan</h1>
         <h2 className="subtitle-text">card game</h2>
