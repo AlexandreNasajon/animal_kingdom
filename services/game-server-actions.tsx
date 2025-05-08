@@ -27,6 +27,34 @@ export async function createGameSession(hostId: string, hostName?: string) {
   return data
 }
 
+export async function createGame() {
+  const supabase = createServerSupabaseClient()
+  const roomCode = generateRoomCode()
+  const userId = (await supabase.auth.getUser()).data.user?.id
+
+  if (!userId) {
+    throw new Error("User not authenticated.")
+  }
+
+  const { data, error } = await supabase
+    .from("game_sessions")
+    .insert([
+      {
+        host_id: userId,
+        status: "waiting",
+        room_code: roomCode,
+      },
+    ])
+    .select()
+    .single()
+
+  if (error) {
+    throw new Error(`Failed to create game session: ${error.message}`)
+  }
+
+  return data.room_code
+}
+
 export async function getGameSession(roomCode: string) {
   const supabase = createServerSupabaseClient()
 

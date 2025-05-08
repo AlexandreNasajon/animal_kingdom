@@ -2,6 +2,16 @@ import type { GameCard, GameState } from "@/types/game"
 import { ORIGINAL_DECK } from "@/types/original-deck"
 import { applyAnimalEffect, resolveAnimalEffect } from "./game-effects"
 
+// Get all animal cards from the deck
+export function getAnimalCards(): GameCard[] {
+  return ORIGINAL_DECK.filter((card) => card.type === "animal")
+}
+
+// Get all impact cards from the deck
+export function getImpactCards(): GameCard[] {
+  return ORIGINAL_DECK.filter((card) => card.type === "impact")
+}
+
 // Shuffle an array using Fisher-Yates algorithm
 export function shuffleArray<T>(array: T[]): T[] {
   const newArray = [...array]

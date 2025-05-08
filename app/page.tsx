@@ -11,7 +11,7 @@ export default function HomePage() {
   return (
     <div className="bioquest-bg">
       <div className="mb-6 text-center">
-        <h1 className="title-text">BioQuest</h1>
+        <h1 className="title-text">Vegan</h1>
         <h2 className="subtitle-text">card game</h2>
       </div>
 

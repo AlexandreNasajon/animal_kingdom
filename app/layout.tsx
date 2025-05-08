@@ -8,7 +8,7 @@ import DownloadAppPopup from "@/components/download-app-popup"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "BioDuel",
+  title: "Vegan",
   description: "A strategic card game about biodiversity",
   viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
   manifest: "/manifest.json",
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "BioDuel",
+    title: "Vegan",
   },
   other: {
     "apple-mobile-web-app-capable": "yes",

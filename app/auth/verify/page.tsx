@@ -1,113 +1,40 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { useAuth } from "@/contexts/auth-context"
 import Link from "next/link"
+import { ArrowLeft, Check } from "lucide-react"
+import "@/app/menu-styles.css"
 
 export default function VerifyPage() {
-  const { user, isEmailVerified } = useAuth()
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const [countdown, setCountdown] = useState(5)
-
-  // Get redirect parameters from the URL or localStorage
-  const getRedirectParams = () => {
-    // Check URL first
-    const urlRedirect = searchParams.get("redirect")
-    if (urlRedirect) return urlRedirect
-
-    // Check localStorage as fallback
-    try {
-      return localStorage.getItem("authRedirect")
-    } catch (e) {
-      return null
-    }
-  }
-
-  const redirect = getRedirectParams()
-
-  useEffect(() => {
-    // Store redirect in localStorage if it exists
-    if (redirect) {
-      try {
-        localStorage.setItem("authRedirect", redirect)
-      } catch (e) {
-        console.error("Could not save redirect to localStorage", e)
-      }
-    }
-  }, [redirect])
-
-  useEffect(() => {
-    // If user is verified, start countdown to redirect
-    if (user && isEmailVerified) {
-      const timer = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer)
-            // Get redirect from localStorage in case URL params were lost
-            const savedRedirect = getRedirectParams()
-            if (savedRedirect) {
-              router.push(savedRedirect)
-              // Clear the saved redirect
-              try {
-                localStorage.removeItem("authRedirect")
-              } catch (e) {
-                console.error("Could not clear localStorage", e)
-              }
-            } else {
-              router.push("/")
-            }
-          }
-          return prev - 1
-        })
-      }, 1000)
-
-      return () => clearInterval(timer)
-    }
-  }, [user, isEmailVerified])
-
-  if (!user) {
-    return (
-      <div className="container mx-auto px-4 py-8 max-w-md">
-        <div className="bg-black/50 p-6 rounded-lg border border-green-600 shadow-lg text-center">
-          <h1 className="text-2xl font-bold text-green-400 mb-4">Verification Required</h1>
-          <p className="text-green-200 mb-6">Please sign in to verify your email.</p>
-          <Link href="/auth/sign-in" className="text-green-400 hover:underline">
-            Sign In
-          </Link>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="container mx-auto px-4 py-8 max-w-md">
-      <div className="bg-black/50 p-6 rounded-lg border border-green-600 shadow-lg text-center">
-        <h1 className="text-2xl font-bold text-green-400 mb-4">
-          {isEmailVerified ? "Email Verified!" : "Verify Your Email"}
-        </h1>
+    <div className="bioquest-bg">
+      <div className="mb-6 text-center">
+        <h1 className="title-text">Vegan</h1>
+        <h2 className="subtitle-text">verify email</h2>
+      </div>
 
-        {isEmailVerified ? (
-          <>
-            <p className="text-green-200 mb-6">
-              Your email has been verified. You will be redirected in {countdown} seconds.
-            </p>
-            <Link href={redirect || "/"} className="text-green-400 hover:underline">
-              Click here if you are not redirected
-            </Link>
-          </>
-        ) : (
-          <>
-            <p className="text-green-200 mb-6">
-              We've sent a verification link to your email address. Please check your inbox and click the link to verify
-              your account.
-            </p>
-            <p className="text-green-300 mb-4">
-              Once verified, you can refresh this page or sign in again to continue.
-            </p>
-          </>
-        )}
+      <div className="flex flex-col items-center gap-6 w-full max-w-md">
+        <div className="w-full bg-white/10 rounded-lg p-6 text-center">
+          <div className="flex justify-center mb-4">
+            <div className="bg-green-500 rounded-full p-3">
+              <Check className="text-white h-8 w-8" />
+            </div>
+          </div>
+          <h3 className="text-white text-xl mb-2">Check Your Email</h3>
+          <p className="text-white mb-4">
+            We've sent you a verification link. Please check your email and click the link to verify your account.
+          </p>
+        </div>
+
+        <Link href="/auth/sign-in" className="w-full">
+          <button className="menu-button menu-button-medium">Return to Sign In</button>
+        </Link>
+
+        <Link href="/" className="w-full">
+          <button className="menu-button menu-button-small">
+            <ArrowLeft className="menu-icon menu-icon-small" strokeWidth={2.5} />
+            Back to Home
+          </button>
+        </Link>
       </div>
     </div>
   )

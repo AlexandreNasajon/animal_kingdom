@@ -22,7 +22,7 @@ export default function DownloadAppPopup() {
       }
 
       // Check if user has dismissed the popup in the last 3 days
-      const lastDismissed = localStorage.getItem("bioduel_install_dismissed")
+      const lastDismissed = localStorage.getItem("vegan_install_dismissed")
       if (lastDismissed) {
         const dismissedTime = Number.parseInt(lastDismissed, 10)
         const threeDaysInMs = 3 * 24 * 60 * 60 * 1000
@@ -51,7 +51,7 @@ export default function DownloadAppPopup() {
       setShowPopup(false)
       setDeferredPrompt(null)
       // Store that the app was installed
-      localStorage.setItem("bioduel_installed", "true")
+      localStorage.setItem("vegan_installed", "true")
     }
 
     if (typeof window !== "undefined") {
@@ -60,7 +60,7 @@ export default function DownloadAppPopup() {
 
       // Check if we should show the popup immediately on page load
       // This is for browsers that fired the beforeinstallprompt event before our listener was attached
-      const showInstallPrompt = sessionStorage.getItem("bioduel_show_install_prompt")
+      const showInstallPrompt = sessionStorage.getItem("vegan_show_install_prompt")
       if (showInstallPrompt === "true" && !isInstalled) {
         // We'll show a simulated prompt since we don't have the actual event
         setShowPopup(true)
@@ -81,7 +81,7 @@ export default function DownloadAppPopup() {
     if (typeof window !== "undefined" && !isInstalled) {
       // Set a flag in sessionStorage to show the prompt on next page load
       // if the beforeinstallprompt event already fired
-      sessionStorage.setItem("bioduel_show_install_prompt", "true")
+      sessionStorage.setItem("vegan_show_install_prompt", "true")
     }
   }, [isInstalled])
 
@@ -89,7 +89,7 @@ export default function DownloadAppPopup() {
     if (!deferredPrompt) {
       // If we don't have the deferred prompt, try to show the native prompt
       // This is a fallback for when the beforeinstallprompt event wasn't captured
-      alert("To install BioDuel, tap the browser menu button and select 'Add to Home Screen' or 'Install App'")
+      alert("To install Vegan, tap the browser menu button and select 'Add to Home Screen' or 'Install App'")
       setShowPopup(false)
       return
     }
@@ -106,14 +106,14 @@ export default function DownloadAppPopup() {
       } else {
         console.log("User dismissed the install prompt")
         // Store dismissal time
-        localStorage.setItem("bioduel_install_dismissed", Date.now().toString())
+        localStorage.setItem("vegan_install_dismissed", Date.now().toString())
       }
 
       // Clear the saved prompt as it can't be used again
       setDeferredPrompt(null)
       setShowPopup(false)
       // Clear the session flag
-      sessionStorage.removeItem("bioduel_show_install_prompt")
+      sessionStorage.removeItem("vegan_show_install_prompt")
     } catch (error) {
       console.error("Error installing PWA:", error)
       setShowPopup(false)
@@ -123,9 +123,9 @@ export default function DownloadAppPopup() {
   const handleDismiss = () => {
     setShowPopup(false)
     // Store dismissal time
-    localStorage.setItem("bioduel_install_dismissed", Date.now().toString())
+    localStorage.setItem("vegan_install_dismissed", Date.now().toString())
     // Clear the session flag
-    sessionStorage.removeItem("bioduel_show_install_prompt")
+    sessionStorage.removeItem("vegan_show_install_prompt")
   }
 
   if (!showPopup || isInstalled) return null
@@ -144,13 +144,13 @@ export default function DownloadAppPopup() {
 
           <div className="flex flex-col items-center text-center">
             <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mb-4">
-              <img src="/icons/icon-192x192.png" alt="BioDuel Logo" className="w-12 h-12" />
+              <img src="/icons/icon-192x192.png" alt="Vegan Logo" className="w-12 h-12" />
             </div>
 
-            <h2 className="text-xl font-bold mb-2">Install BioDuel</h2>
+            <h2 className="text-xl font-bold mb-2">Install Vegan</h2>
 
             <p className="text-gray-600 dark:text-gray-300 mb-6">
-              Install BioDuel on your device for the best experience! Enjoy faster loading times, offline play, and easy
+              Install Vegan on your device for the best experience! Enjoy faster loading times, offline play, and easy
               access from your home screen.
             </p>
 
